@@ -31,7 +31,21 @@ Build, browser, architecture, and CI checks grow alongside the features they exe
 2. The probe report records the exact artifacts, applicable image and connector terms, bootstrap steps, selected ARM64 and AMD64 digests, observed Temurin build, and relevant findings from the earlier dependency reviews. The version matrix starts from current stable and applicable LTS releases, and cites the verification evidence and any blocker that required an older release.
 3. Small independent samples record TypeID interoperability between Kotlin and TypeScript, Kotlin 2.4 with JUnit 6 and Kotest, ktfmt behavior on representative KDoc, and the frontend path from a Gradle-driven npm build to packaging static assets with Paketo. Each check records a reproducible result or a concrete blocker before the affected tooling is adopted.
 
-**Plans:** TBD
+**Plans:** 0/5 plans executed
+**Wave 1**
+- [ ] 01-01-PLAN.md
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 01-02-PLAN.md
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 01-03-PLAN.md
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [ ] 01-04-PLAN.md
+
+**Wave 5** *(blocked on Wave 4 completion)*
+- [ ] 01-05-PLAN.md
 
 ### Phase 2: Build and UI Foundations
 
@@ -153,7 +167,7 @@ Build, browser, architecture, and CI checks grow alongside the features they exe
 
 | Phase | Plans Complete | Status | Completed |
 | --- | --- | --- | --- |
-| 1. Axon Server and Toolchain Feasibility | 0/TBD | Not started | - |
+| 1. Axon Server and Toolchain Feasibility | 0/5 | Planned     | - |
 | 2. Build and UI Foundations | 0/TBD | Not started | - |
 | 3. Core Enrollment and Live Views | 0/TBD | Not started | - |
 | 4. Course Names and Atomic Transfers | 0/TBD | Not started | - |
