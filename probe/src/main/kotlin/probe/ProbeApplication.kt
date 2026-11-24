@@ -5,13 +5,23 @@ import io.axoniq.framework.axonserver.connector.api.AxonServerConnectionManager
 import io.axoniq.framework.axonserver.connector.event.AxonServerEventStorageEngine
 import java.nio.file.Files
 import java.nio.file.Path
+import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit.SECONDS
 import org.axonframework.common.configuration.Configuration as AxonConfiguration
+import org.axonframework.eventsourcing.eventstore.AppendCondition
+import org.axonframework.eventsourcing.eventstore.ConsistencyMarker
 import org.axonframework.eventsourcing.eventstore.EventStorageEngine
-import org.axonframework.messaging.commandhandling.annotation.CommandHandler
+import org.axonframework.eventsourcing.eventstore.GenericTaggedEventMessage
+import org.axonframework.eventsourcing.eventstore.SourcingCondition
+import org.axonframework.eventsourcing.eventstore.TerminalEventMessage
 import org.axonframework.messaging.commandhandling.CommandMessage
+import org.axonframework.messaging.commandhandling.annotation.CommandHandler
+import org.axonframework.messaging.core.MessageType
+import org.axonframework.messaging.eventhandling.GenericEventMessage
+import org.axonframework.messaging.eventstreaming.EventCriteria
+import org.axonframework.messaging.eventstreaming.Tag
 import org.springframework.boot.SpringBootConfiguration
 import org.springframework.boot.WebApplicationType
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -57,10 +67,15 @@ class CommandRoleConfiguration {
         EnrollmentHandler(
             environment.getRequiredProperty("probe.run-id"),
             roleIdentity(axon),
+            storageEngine(axon),
         )
 }
 
-class EnrollmentHandler(private val runId: String, private val identity: RoleIdentity) {
+class EnrollmentHandler(
+    private val runId: String,
+    private val identity: RoleIdentity,
+    private val engine: EventStorageEngine,
+) {
     @CommandHandler(commandName = READY_COMMAND)
     fun ready(requestRunId: String): RoleIdentity {
         require(requestRunId == runId)
@@ -70,7 +85,33 @@ class EnrollmentHandler(private val runId: String, private val identity: RoleIde
     @CommandHandler(commandName = WRITE_COMMAND, routingKey = "courseId")
     fun enroll(command: EnrollStudent, message: CommandMessage): WriteReceipt {
         require(command.runId == runId)
-        return WriteReceipt(runId, message.identifier(), UUID.randomUUID().toString(), identity)
+        val courseTag = Tag.of("courseId", command.courseId)
+        val studentTag = Tag.of("studentId", command.studentId)
+        val boundary = EventCriteria.havingTags(courseTag).or(EventCriteria.havingTags(studentTag))
+        val source = engine.source(SourcingCondition.conditionFor(boundary), null)
+        val marker = try {
+            val markers = source.reduce(emptyList<ConsistencyMarker>()) { collected, entry ->
+                check(entry.message() is TerminalEventMessage) { "The enrollment boundary must start empty" }
+                checkNotNull(collected) + checkNotNull(entry.getResource(ConsistencyMarker.RESOURCE_KEY))
+            }.get(MESSAGE_TIMEOUT_SECONDS, SECONDS)
+            checkNotNull(markers).single()
+        } finally {
+            source.close()
+        }
+        val condition = AppendCondition.withCriteria(boundary).withMarker(marker)
+        val commandId = message.identifier()
+        val eventId = UUID.randomUUID().toString()
+        val event = GenericEventMessage(
+            eventId,
+            MessageType(ENROLLED_EVENT),
+            StudentEnrolled(runId, command.courseId, command.studentId, commandId),
+            emptyMap(),
+            Instant.now(),
+        )
+        val transaction = engine.appendEvents(condition, null, GenericTaggedEventMessage(event, setOf(courseTag, studentTag)))
+            .get(MESSAGE_TIMEOUT_SECONDS, SECONDS)
+        transaction.commit().get(MESSAGE_TIMEOUT_SECONDS, SECONDS)
+        return WriteReceipt(runId, commandId, eventId, identity)
     }
 }
 
@@ -83,6 +124,7 @@ fun startProbeRole(endpoint: String, clientId: String, runId: String, configFile
             "--spring.config.location=${configFile.toUri()}",
             "--spring.application.name=$clientId",
             "--spring.main.banner-mode=off",
+            "--axon.update-check.disabled=true",
             "--axon.axonserver.servers=$endpoint",
             "--axon.axonserver.context=$AXON_CONTEXT",
             "--axon.axonserver.client-id=$clientId",

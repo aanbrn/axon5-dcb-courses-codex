@@ -2,6 +2,7 @@ package probe
 
 import com.github.dockerjava.api.model.ExposedPort
 import com.github.dockerjava.api.model.Ports
+import io.axoniq.framework.axonserver.connector.api.AxonServerConnectionManager
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -21,6 +22,7 @@ import org.axonframework.eventsourcing.eventstore.TerminalEventMessage
 import org.axonframework.messaging.commandhandling.GenericCommandMessage
 import org.axonframework.messaging.commandhandling.gateway.CommandGateway
 import org.axonframework.messaging.core.GenericMessage
+import org.axonframework.messaging.core.MessageStream
 import org.axonframework.messaging.core.MessageType
 import org.axonframework.messaging.eventhandling.EventMessage
 import org.axonframework.messaging.eventstreaming.EventCriteria
@@ -68,6 +70,7 @@ class AxonProbeTest {
                 val imageArchitecture = checkNotNull(activeImage.arch)
                 assertArm64(imageArchitecture)
                 assertTrue(server.logs.contains("No license detected. Running in unregistered mode."))
+                assertTrue(live.hostConfig.binds.orEmpty().isEmpty())
                 for (port in SERVER_PORTS) {
                     val binding = live.networkSettings.ports.bindings.getValue(ExposedPort.tcp(port)).single()
                     assertEquals("127.0.0.1", binding.hostIp)
@@ -90,7 +93,7 @@ class AxonProbeTest {
                     assertRole(driverClient, driverRole)
 
                     val engine = storageEngine(axon)
-                    val initial = readHistory(engine.source(SourcingCondition.conditionFor(course.or(student)), null))
+                    val initial = readHistory(engine.source(SourcingCondition.conditionFor(EventCriteria.havingAnyTag()), null))
                     assertTrue(initial.isEmpty(), "Fresh fixture history must be empty")
 
                     val process = startCommandRole(endpoint, commandClient, runId, attempt)
@@ -107,6 +110,14 @@ class AxonProbeTest {
                         assertEquals(commandId, receipt.commandId)
                         assertEquals(5, setOf(runId, command.courseId, command.studentId, commandId, receipt.eventId).size)
 
+                        val connection = axon.getComponent(AxonServerConnectionManager::class.java).connection
+                        val registrations = connection.adminChannel().getAllConnectedApplications(AXON_CONTEXT)
+                            .get(MESSAGE_TIMEOUT_SECONDS, SECONDS).applicationsList.associateBy { it.name }
+                        val driverRegistration = registrations.getValue(driverClient)
+                        val writerRegistration = registrations.getValue(commandClient)
+                        assertTrue(driverRegistration.commandsList.isEmpty())
+                        assertTrue(WRITE_COMMAND in writerRegistration.commandsList)
+
                         val courseHistory = readHistory(engine.source(SourcingCondition.conditionFor(course), null))
                         val studentHistory = readHistory(engine.source(SourcingCondition.conditionFor(student), null))
                         assertEquals(1, courseHistory.size, "The remote command must persist one course-tagged event")
@@ -114,7 +125,7 @@ class AxonProbeTest {
                         val expected = StudentEnrolled(runId, command.courseId, command.studentId, commandId)
                         for (stored in listOf(courseHistory.single(), studentHistory.single())) {
                             assertEquals(receipt.eventId, stored.identifier())
-                            assertEquals(ENROLLED_EVENT, stored.type().qualifiedName().toString())
+                            assertEquals(ENROLLED_EVENT, stored.type().qualifiedName().fullName())
                             assertEquals(expected, stored.payloadAs(StudentEnrolled::class.java))
                         }
 
@@ -123,6 +134,8 @@ class AxonProbeTest {
                             "startedAt" to started.toString(), "finishedAt" to Instant.now().toString(),
                             "context" to AXON_CONTEXT, "dcb" to true, "initialEvents" to initial.size,
                             "worker" to driverRole, "command" to writerRole, "receipt" to receipt,
+                            "driverRegisteredClient" to driverRegistration.clientsList.single().name,
+                            "commandRegisteredClient" to writerRegistration.clientsList.single().name,
                             "courseId" to command.courseId, "studentId" to command.studentId,
                             "courseEventId" to courseHistory.single().identifier(),
                             "studentEventId" to studentHistory.single().identifier(),
@@ -196,7 +209,7 @@ private fun <T : Any> send(gateway: CommandGateway, name: String, payload: Any, 
     return gateway.send(message, result).get(MESSAGE_TIMEOUT_SECONDS, SECONDS)
 }
 
-private fun readHistory(stream: org.axonframework.messaging.core.MessageStream<EventMessage>): List<EventMessage> = try {
+private fun readHistory(stream: MessageStream<EventMessage>): List<EventMessage> = try {
     stream.filter { it.message() !is TerminalEventMessage }
         .collect({ mutableListOf<EventMessage>() }, MutableList<EventMessage>::add)
         .get(MESSAGE_TIMEOUT_SECONDS, SECONDS)
@@ -229,8 +242,8 @@ private data class ServerImage(val reference: String, val checkedAt: String, val
 
     companion object {
         fun verify(reference: String): ServerImage {
-            val match = requireNotNull(Regex("axoniq/axonserver:([0-9.]+)@(sha256:[a-f0-9]{64})").matchEntire(reference))
-            val (tag, indexDigest) = match.destructured
+            val match = requireNotNull(Regex("axoniq/axonserver:[0-9.]+@(sha256:[a-f0-9]{64})").matchEntire(reference))
+            val (indexDigest) = match.destructured
             HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NORMAL)
                 .build().use { http ->
                     val request = HttpRequest.newBuilder(URI.create(
@@ -250,7 +263,7 @@ private data class ServerImage(val reference: String, val checkedAt: String, val
                         return JSON.readTree(bytes)
                     }
 
-                    val index = registry("manifests/$tag", indexDigest, "application/vnd.oci.image.index.v1+json")
+                    val index = registry("manifests/$indexDigest", indexDigest, "application/vnd.oci.image.index.v1+json")
                     fun child(arch: String): ImageChild {
                         val descriptor = index.required("manifests").single {
                             it.path("platform").path("os").asString() == "linux" &&
