@@ -77,13 +77,13 @@ status: complete
 ## Accomplishments
 
 - The fixture has zero npm dependencies. Two clean builds with the same marker produced identical bytes, and a different marker changed the HTML. The lockfile stayed at SHA-256 `86015f6a4fddc302cefbfbf5c842d1711d3efb3d98dfac3a6878afd1c92e5880`.
-- The nested Gradle Node 7.1.0 build verified child executables Node `v26.13.1` and npm `12.2.3` before `npm ci`. The default staged HTML hash was `87d1cd7e7502b9df718f95140c75272c17b1fa3f9102cb84405a58681643a656`. Changing `-PprobeMarker` rebuilt the asset and produced hash `6cda0d8210b77abe0951933038b246d9e3289d6d355970772ae7f8e1270ab014`. The staged tree contained only `public/index.html`.
+- The nested Gradle Node 7.1.0 build verified child executables Node `v26.13.1` and npm `12.2.3` before `npm ci`. The default staged HTML hash was `87d1cd7e7502b9df718f95140c75272c17b1fa3f9102cb84405a58681643a656`. Changing `-PprobeMarker` rebuilt the asset and produced hash `6cda0d8210b77abe0951933038b246d9e3289d6d355970772ae7f8e1270ab014`. The staged tree contained one index document under the public directory.
 - The ordinary Gradle build ran its JVM smoke test. `./gradlew --console=plain build --dry-run` showed only the ordinary compile, test, and build graph. The image check and native Axon integration suite are explicit entry points.
 - Pack `0.40.11+git-523c9ce.build-7117` used lifecycle `0.21.29` on Linux/ARM64 Docker `29.10.0`. Web Servers `4.16.3` selected the nginx `1.3.8` buildpack with NGINX `1.31.9`. The active buildpacks were CA Certificates, Nginx, and Source Removal. The probe verified each running container's image ID and removed its scoped containers, networks, output tags, and build-cache volumes.
 
 ## Reproduction and Evidence
 
-The fresh required Axon proof `core-vn2dqfdj` anchors three `Pass` stages in `probe/build/reports/feasibility/secondary/frontend.json`. Each stage had raw exit `0`. The retained records contain the exact arguments, diagnostics, and hashes of the supporting files. The three frontend commands took about 2, 13 and 133 seconds during the final capture. The plan wall time includes the interval between direct verification and formal evidence collection.
+The fresh required Axon proof `core-vn2dqfdj` anchors three `Pass` stages in the generated report at probe/build/reports/feasibility/secondary/frontend.json. Each stage had raw exit `0`. The retained records contain the exact arguments, diagnostics, and hashes of the supporting files. The three frontend commands took about 2, 13 and 133 seconds during the final capture. The plan wall time includes the interval between direct verification and formal evidence collection.
 
 ```bash
 python3 probe/verify_secondary.py ensure-core
