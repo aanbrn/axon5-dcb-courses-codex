@@ -1,4 +1,5 @@
 import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 import java.security.MessageDigest
 import java.time.Duration
 import java.util.HexFormat
@@ -219,6 +220,25 @@ testing.suites {
                 systemProperty("probe.typeIdExchangeId", typeIdExchangeId)
                 timeout = Duration.ofMinutes(2)
                 doFirst { check(!output.exists() || output.delete()) { "Could not clear old Kotlin exchange" } }
+                doLast {
+                    verifySecondaryIsolation()
+                    val fixture = JsonSlurper().parse(typeIdFixture.asFile) as Map<*, *>
+                    val source = fixture["source"] as Map<*, *>
+                    val revision = source["revision"] as String
+                    val version = configurations.getByName("typeIdJvmVectorsRuntimeClasspath").moduleVersions()
+                        .getValue("de.fxlae:typeid-java")
+                    check(version == libs.versions.typeid.java.get()) { "Unexpected JVM TypeID version: $version" }
+                    val bytes = output.readBytes()
+                    val artifact = publishArtifact("typeid-jvm-origin.json", bytes)
+                    observation("typeid-jvm", mapOf(
+                        "artifacts" to listOf(artifact), "jvmArtifact" to "de.fxlae:typeid-java:$version",
+                        "sourceRevision" to revision,
+                        "positiveVectors" to (fixture["valid"] as List<*>).size,
+                        "negativeVectors" to (fixture["invalid"] as List<*>).size,
+                        "wrongExpectedPrefixRejected" to true, "kotlinOriginSha256" to sha256(bytes),
+                        "coreDependenciesIsolated" to true,
+                    ))
+                }
             }
         }
     }
