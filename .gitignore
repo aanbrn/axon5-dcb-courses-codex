@@ -1,0 +1,37 @@
+# Local IDE and Codex files
+/.idea/
+/.codex/
+*.iml
+
+# Operating system metadata
+.DS_Store
+Thumbs.db
+
+# Gradle, Kotlin, and JVM build output
+.gradle/
+.kotlin/
+build/
+out/
+*.class
+
+# Node.js dependencies and build output
+node_modules/
+.pnpm-store/
+dist/
+.vite/
+*.tsbuildinfo
+
+# Test and documentation output
+coverage/
+storybook-static/
+playwright-report/
+test-results/
+
+# Local environment and diagnostic files
+.env
+.env.*
+!.env.example
+!.env.*.example
+/.aws/
+.secrets/
+*.log
