@@ -92,5 +92,12 @@
   "resolve_model_ids": "omit",
   "mode": "interactive",
   "granularity": "standard",
-  "runtime": "codex"
+  "runtime": "codex",
+  "model_profile_overrides": {
+    "codex": {
+      "opus": "gpt-6.2-astra",
+      "sonnet": "gpt-6.2-sol",
+      "haiku": "gpt-6.2-sol"
+    }
+  }
 }
