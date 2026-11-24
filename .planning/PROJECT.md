@@ -95,6 +95,7 @@ None yet. Validate through shipped and verified work.
 - Separate command, query/projection, automation, and REST BFF services by responsibility.
 - Use React and TypeScript with Feature-Sliced Design (FSD), checked by Steiger.
 - Use Gradle JVM Test Suites and Java Test Fixtures to organize test levels and reuse test helpers.
+- Name Kotlin test methods with short English phrases in backticks that describe the expected behavior.
 - Auto-format and style-check all repository artifacts through a local pre-commit hook and in CI.
 - Use one Docker Compose setup for the full local system.
 - Hold code, tests, documentation, CI, and observability to reference-quality standards.

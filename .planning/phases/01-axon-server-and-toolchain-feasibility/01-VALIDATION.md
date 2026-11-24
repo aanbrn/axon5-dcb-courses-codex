@@ -33,9 +33,9 @@ Use the checks below from the repository root. The first task verifies the candi
 
 | Plan/task | Observable outcome and threat ref | Command or evidence | Status |
 | --- | --- | --- | --- |
-| 01-01 T1 | Cold native credential-free remote command and durable event, applicable terms, immutable image index and distinct runnable ARM64/AMD64 child metadata. T-01-01, T-01-02 | `gradle --console=plain :probe:integrationTest --tests 'probe.AxonProbeTest.remoteTaggedWrite' --rerun-tasks` | Pending |
-| 01-01 T2 | Same tracer via verified wrapper. T-01-01 | `./gradlew --console=plain :probe:integrationTest --tests 'probe.AxonProbeTest.remoteTaggedWrite' --rerun-tasks` | Pending |
-| 01-02 T1 | Real conflict at commit, same durable winner under both tags, absent loser, remote command/query, initial result and correlated update. T-01-03 | `./gradlew --console=plain :probe:integrationTest --tests 'probe.AxonProbeTest.overlapAndRemoteSubscription' --rerun-tasks` | Pending |
+| 01-01 T1 | Cold native credential-free remote command and durable event, applicable terms, immutable image index and distinct runnable ARM64/AMD64 child metadata. T-01-01, T-01-02 | `gradle --console=plain :probe:integrationTest --tests 'probe.AxonProbeTest.a remote command persists a tagged event' --rerun-tasks` | Pending |
+| 01-01 T2 | Same tracer via verified wrapper. T-01-01 | `./gradlew --console=plain :probe:integrationTest --tests 'probe.AxonProbeTest.a remote command persists a tagged event' --rerun-tasks` | Pending |
+| 01-02 T1 | Real conflict at commit, same durable winner under both tags, absent loser, remote command/query, initial result and correlated update. T-01-03 | `./gradlew --console=plain :probe:integrationTest --tests 'probe.AxonProbeTest.overlapping writes leave one winner and notify the remote subscriber' --rerun-tasks` | Pending |
 | 01-02 T2 | Bounded cleanup after success and forced failure, distinct empty starting states. T-01-04 | `./gradlew --console=plain :probe:integrationTest --rerun-tasks` twice | Pending |
 | 01-02 T3 | Persistent Temurin feature owner, secondary preflight and smoke test in an ordinary build with unreachable Docker. Selected toolchain and actual worker/role identities | `env DOCKER_HOST=tcp://127.0.0.1:1 ./gradlew --console=plain build --rerun-tasks` plus the full native suite and `python3 probe/verify_secondary.py self-test` | Pending |
 | 01-03 T1 | Reproducible checked input and deterministic static asset | `python3 probe/verify_secondary.py check frontend-fixture` | Pending |

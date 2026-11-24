@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInfo
 import org.testcontainers.DockerClientFactory
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.wait.strategy.Wait
@@ -41,7 +42,7 @@ import tools.jackson.databind.json.JsonMapper
 
 class AxonProbeTest {
     @Test
-    fun remoteTaggedWrite() {
+    fun `a remote command persists a tagged event`(testInfo: TestInfo) {
         val started = Instant.now()
         val runId = System.getProperty("probe.runId").ifBlank { newId() }
         require(runId.matches(Regex("[A-Za-z0-9_-]{1,80}"))) { "Invalid probe run ID" }
@@ -130,7 +131,7 @@ class AxonProbeTest {
                         }
 
                         val transcript = mapOf(
-                            "test" to "probe.AxonProbeTest.remoteTaggedWrite", "runId" to runId,
+                            "test" to "${javaClass.name}.${testInfo.testMethod.orElseThrow().name}", "runId" to runId,
                             "startedAt" to started.toString(), "finishedAt" to Instant.now().toString(),
                             "context" to AXON_CONTEXT, "dcb" to true, "initialEvents" to initial.size,
                             "worker" to driverRole, "command" to writerRole, "receipt" to receipt,
