@@ -108,4 +108,59 @@
 
 ## Traceability
 
-Phase mappings will be added after v1 scope confirmation during roadmap creation.
+| Requirement | Phase | Status |
+| --- | --- | --- |
+| FND-01 | Phase 1 | Pending |
+| FND-02 | Phase 2 | Pending |
+| FND-03 | Phase 3 | Pending |
+| FND-04 | Phase 5 | Pending |
+| FND-05 | Phase 2 | Pending |
+| FND-06 | Phase 2 | Pending |
+| DCB-01 | Phase 3 | Pending |
+| DCB-02 | Phase 4 | Pending |
+| DCB-03 | Phase 4 | Pending |
+| DCB-04 | Phase 3 | Pending |
+| DCB-05 | Phase 3 | Pending |
+| DCB-06 | Phase 3 | Pending |
+| DCB-07 | Phase 3 | Pending |
+| DCB-08 | Phase 3 | Pending |
+| DCB-09 | Phase 4 | Pending |
+| DCB-10 | Phase 4 | Pending |
+| DCB-11 | Phase 5 | Pending |
+| DCB-12 | Phase 5 | Pending |
+| CQRS-01 | Phase 3 | Pending |
+| CQRS-02 | Phase 3 | Pending |
+| CQRS-03 | Phase 5 | Pending |
+| CQRS-04 | Phase 2 | Pending |
+| UI-01 | Phase 2 | Pending |
+| UI-02 | Phase 5 | Pending |
+| UI-03 | Phase 2 | Pending |
+| UI-04 | Phase 6 | Pending |
+| UI-05 | Phase 6 | Pending |
+| UI-06 | Phase 6 | Pending |
+| UI-07 | Phase 8 | Pending |
+| QA-01 | Phase 3 | Pending |
+| QA-02 | Phase 5 | Pending |
+| QA-03 | Phase 4 | Pending |
+| QA-04 | Phase 6 | Pending |
+| QA-05 | Phase 6 | Pending |
+| QA-06 | Phase 7 | Pending |
+| QA-07 | Phase 2 | Pending |
+| QA-08 | Phase 2 | Pending |
+| CI-01 | Phase 7 | Pending |
+| CI-02 | Phase 7 | Pending |
+| CI-03 | Phase 7 | Pending |
+| CI-04 | Phase 7 | Pending |
+| CI-05 | Phase 7 | Pending |
+| CI-06 | Phase 7 | Pending |
+| OPS-01 | Phase 7 | Pending |
+| OPS-02 | Phase 6 | Pending |
+| OPS-03 | Phase 7 | Pending |
+| DOC-01 | Phase 8 | Pending |
+| DOC-02 | Phase 8 | Pending |
+| DOC-03 | Phase 8 | Pending |
+| DOC-04 | Phase 8 | Pending |
+| DOC-05 | Phase 8 | Pending |
+| DOC-06 | Phase 2 | Pending |
+
+All 52 v1 requirements map to one phase each.
