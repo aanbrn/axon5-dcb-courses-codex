@@ -109,3 +109,14 @@ testing.suites {
 configurations.configureEach {
     if (name == "integrationTestImplementation") extendsFrom(configurations.implementation.get())
 }
+
+tasks.register<Exec>("frontendAssets") {
+    group = "verification"
+    description = "Build and verify the probe's static assets with the isolated npm build."
+    val marker = providers.gradleProperty("probeMarker")
+    val repository = rootProject.layout.projectDirectory
+    workingDir(repository.asFile)
+    commandLine(repository.file("gradlew").asFile, "--console=plain", "-p", "probe/web", "frontendAssets")
+    if (gradle.startParameter.isRerunTasks) args("--rerun-tasks")
+    marker.orNull?.let { args("-PprobeMarker=$it") }
+}

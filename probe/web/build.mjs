@@ -50,7 +50,7 @@ function verifyFixture() {
   const markers = [defaultMarker, `${defaultMarker}-changed`];
   const stage = 'frontend-fixture';
   const evidence = resolve(process.env.PROBE_EVIDENCE_DIR ?? join(project, '../build/reports/feasibility'));
-  const env = { ...process.env, PROBE_STAGING: 'staged-fixture', npm_config_manage_package_manager_versions: 'false' };
+  const env = { ...process.env, PROBE_STAGING: 'staged-fixture' };
   const artifacts = [];
 
   function cleanBuild(marker) {
