@@ -44,9 +44,10 @@ val evidenceDirectory = providers.environmentVariable("PROBE_EVIDENCE_DIR")
     .orElse(buildDirectory.dir("reports/feasibility").map { it.asFile })
 val typeIdFixture = layout.projectDirectory.file("typeid/vectors.json")
 val typeIdRunId = providers.environmentVariable("PROBE_RUN_ID").orElse("local")
-val typeIdExchangeId = UUID.randomUUID().toString()
+val typeIdExchangeId: String by lazy { UUID.randomUUID().toString() }
 val kotlinExchange = buildDirectory.file("typeid/kotlin-origin.json")
 val typeScriptExchange = buildDirectory.file("typeid/typescript-origin.json")
+val typeIdLockfile = layout.projectDirectory.file("typeid/package-lock.json")
 
 fun sha256(bytes: ByteArray): String = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes))
 
@@ -354,5 +355,74 @@ val typeIdTypeScriptVectors = tasks.register<Exec>("typeIdTypeScriptVectors") {
     environment("PROBE_TYPEID_KOTLIN", kotlin.absolutePath)
     environment("PROBE_TYPEID_TYPESCRIPT", typeScript.absolutePath)
     environment("PROBE_TYPEID_RUN_ID", typeIdRunId.get())
-    doFirst { check(!typeScript.exists() || typeScript.delete()) { "Could not clear old TypeScript exchange" } }
+    environment("PROBE_TYPEID_EXCHANGE_ID", typeIdExchangeId)
+    lateinit var lockBefore: ByteArray
+    doFirst {
+        lockBefore = typeIdLockfile.asFile.readBytes()
+        check(!typeScript.exists() || typeScript.delete()) { "Could not clear old TypeScript exchange" }
+    }
+    doLast {
+        check(typeIdLockfile.asFile.readBytes().contentEquals(lockBefore)) { "TypeScript execution changed the npm lockfile" }
+        check(typeScript.isFile) { "TypeScript did not emit an exchange" }
+    }
+}
+
+tasks.register<JavaExec>("typeIdProbe") {
+    group = "verification"
+    description = "Validate independently produced Kotlin and TypeScript TypeID exchanges in both directions."
+    dependsOn(typeIdTypeScriptVectors)
+    javaLauncher = roleLauncher
+    classpath(sourceSets.named("typeIdJvmVectors").map { it.runtimeClasspath })
+    mainClass = "probe.TypeIdVectorsKt"
+    val kotlin = kotlinExchange.get().asFile
+    val typeScript = typeScriptExchange.get().asFile
+    inputs.files(typeIdFixture, kotlin, typeScript, typeIdLockfile).withPathSensitivity(PathSensitivity.RELATIVE)
+    args("consume", typeIdFixture.asFile.absolutePath, typeScript.absolutePath, typeIdRunId.get(), typeIdExchangeId)
+    timeout = Duration.ofMinutes(2)
+    doLast {
+        verifySecondaryIsolation()
+        val kotlinBytes = kotlin.readBytes()
+        val typeScriptBytes = typeScript.readBytes()
+        val fromKotlin = JsonSlurper().parseText(kotlinBytes.toString(Charsets.UTF_8)) as Map<*, *>
+        val fromTypeScript = JsonSlurper().parseText(typeScriptBytes.toString(Charsets.UTF_8)) as Map<*, *>
+        val fixture = JsonSlurper().parse(typeIdFixture.asFile) as Map<*, *>
+        val revision = (fixture["source"] as Map<*, *>)["revision"] as String
+        val kotlinVectors = fromKotlin["vectors"] as List<*>
+        val typeScriptVectors = fromTypeScript["vectors"] as List<*>
+        val locked = (JsonSlurper().parse(typeIdLockfile.asFile) as Map<*, *>)["packages"] as Map<*, *>
+        fun lockedVersion(name: String) = (locked["node_modules/$name"] as Map<*, *>)["version"] as String
+        val npmOwner = JsonSlurper().parse(layout.projectDirectory.file("web/package.json").asFile) as Map<*, *>
+        val node = "v" + rootProject.file(".nvmrc").readText().trim()
+        val npm = (npmOwner["packageManager"] as String).removePrefix("npm@")
+        val typeidJs = lockedVersion("typeid-js")
+        val compiler = lockedVersion("typescript")
+        val uuid = lockedVersion("uuid")
+        val nativeCompiler = fromTypeScript["nativeCompiler"] as String
+        check(fromTypeScript["nodeVersion"] == node && fromTypeScript["npmVersion"] == npm &&
+            fromTypeScript["typeidJsVersion"] == typeidJs && fromTypeScript["typescriptVersion"] == compiler &&
+            fromTypeScript["uuidVersion"] == uuid && lockedVersion(nativeCompiler) == compiler) {
+            "The TypeScript worker did not use the declared Node, npm and locked artifacts"
+        }
+        check(fromTypeScript["sourceRevision"] == revision &&
+            fromTypeScript["positiveVectors"] == (fixture["valid"] as List<*>).size &&
+            fromTypeScript["negativeVectors"] == (fixture["invalid"] as List<*>).size &&
+            fromTypeScript["validatedKotlinVectors"] == kotlinVectors.size) {
+            "The TypeScript worker did not report the expected fixture and inbound vector checks"
+        }
+        fun values(records: List<*>) = records.map { (it as Map<*, *>)["typeid"] as String }.toSet()
+        check(values(kotlinVectors).intersect(values(typeScriptVectors)).isEmpty()) {
+            "TypeScript reused a Kotlin-origin TypeID"
+        }
+
+        val forward = publishArtifact("typeid-kotlin-to-typescript.json", kotlinBytes)
+        val reverse = publishArtifact("typeid-typescript-to-kotlin.json", typeScriptBytes)
+        observation("typeid-exchange", mapOf(
+            "artifacts" to listOf(forward, reverse), "sourceRevision" to revision,
+            "jvmToTs" to mapOf("vectorCount" to kotlinVectors.size, "validatedBytesAndPrefix" to true, "sha256" to sha256(kotlinBytes)),
+            "tsToJvm" to mapOf("vectorCount" to typeScriptVectors.size, "validatedBytesAndPrefix" to true, "sha256" to sha256(typeScriptBytes)),
+            "nodeVersion" to node, "npmVersion" to npm, "typeidJsVersion" to typeidJs, "typescriptVersion" to compiler,
+            "nativeCompiler" to nativeCompiler, "uuidVersion" to uuid, "exchangeId" to typeIdExchangeId,
+            "lockfileSha256" to sha256(typeIdLockfile.asFile.readBytes()), "coreDependenciesIsolated" to true,
+        ))
+    }
 }
