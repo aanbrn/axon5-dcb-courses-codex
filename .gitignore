@@ -3,6 +3,9 @@
 /.codex/
 *.iml
 
+# Generated GSD state snapshot
+/.planning/state.json
+
 # Operating system metadata
 .DS_Store
 Thumbs.db
