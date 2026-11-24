@@ -46,6 +46,7 @@ val typeIdFixture = layout.projectDirectory.file("typeid/vectors.json")
 val typeIdRunId = providers.environmentVariable("PROBE_RUN_ID").orElse("local")
 val typeIdExchangeId = UUID.randomUUID().toString()
 val kotlinExchange = buildDirectory.file("typeid/kotlin-origin.json")
+val typeScriptExchange = buildDirectory.file("typeid/typescript-origin.json")
 
 fun sha256(bytes: ByteArray): String = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes))
 
@@ -330,4 +331,28 @@ tasks.register<Exec>("frontendImageProbe") {
     description = "Package and serve two static builds on a native ARM64 Docker daemon."
     mustRunAfter(frontendAssets)
     runFrontendTask("frontendImageProbe")
+}
+
+val typeIdTypeScriptVectors = tasks.register<Exec>("typeIdTypeScriptVectors") {
+    group = "verification"
+    description = "Compile the isolated TypeScript probe and verify Kotlin TypeID bytes."
+    dependsOn("typeIdJvmVectors")
+    runFrontendTask("scopedNpmBuild")
+    val fixture = typeIdFixture.asFile
+    val kotlin = kotlinExchange.get().asFile
+    val typeScript = typeScriptExchange.get().asFile
+    args(
+        "-PprobeNpmDir=probe/typeid", "-PprobeNpmScript=check-vectors",
+        "-PprobeNpmInputs=${rootProject.relativePath(fixture)},${rootProject.relativePath(kotlin)}",
+        "-PprobeNpmOutputs=${rootProject.relativePath(typeScript)}",
+    )
+    inputs.files(fixture, kotlin).withPathSensitivity(PathSensitivity.RELATIVE)
+    outputs.file(typeScriptExchange)
+    outputs.upToDateWhen { false }
+    timeout = Duration.ofMinutes(4)
+    environment("PROBE_TYPEID_FIXTURE", fixture.absolutePath)
+    environment("PROBE_TYPEID_KOTLIN", kotlin.absolutePath)
+    environment("PROBE_TYPEID_TYPESCRIPT", typeScript.absolutePath)
+    environment("PROBE_TYPEID_RUN_ID", typeIdRunId.get())
+    doFirst { check(!typeScript.exists() || typeScript.delete()) { "Could not clear old TypeScript exchange" } }
 }

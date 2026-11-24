@@ -1,0 +1,15 @@
+{
+  "name": "axon-typeid-probe",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check-vectors": "tsc --version && tsc --strict --target es2022 --module nodenext --outDir build check-vectors.ts && node --test --test-reporter=tap build/check-vectors.js"
+  },
+  "dependencies": {
+    "typeid-js": "1.2.0"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2"
+  }
+}
