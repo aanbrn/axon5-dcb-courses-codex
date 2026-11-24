@@ -26,6 +26,11 @@ dependencies {
     implementation(platform(libs.spring.boot.bom))
     implementation(platform(libs.axon.bom))
     implementation(platform(libs.axoniq.bom))
+    constraints {
+        implementation(libs.guava) {
+            because("The gRPC graph must select a Guava release with the GHSA-xxph-c9ww-hj94 fix")
+        }
+    }
     implementation(libs.spring.boot.starter)
     implementation(libs.axoniq.starter) {
         // The probe supplies its Docker server from the isolated integration suite.
