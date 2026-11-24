@@ -7,6 +7,7 @@ gradle-node = "7.1.0"
 junit = "6.1.3"
 kotlin = "2.4.21"
 kotest = "6.2.7"
+ktfmt = "0.65"
 paketo-builder-ref = "docker.io/paketobuildpacks/builder-jammy-buildpackless-base:0.0.363@sha256:5af7e0854783326ba6da9f038b6cb5206a5712478c7ffc096c43b122b94e3ea7"
 paketo-builder-child = "sha256:67707cbbb950ebcb578896984e41fb6b90a17b26e482cebbe2f395347a633516"
 paketo-builder-config = "sha256:18160026f9331ec8b13f4093f0bc61fa3fe95700f149d20210fcfbfa2a955162"
@@ -26,6 +27,7 @@ coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", ve
 jackson-databind = { module = "tools.jackson.core:jackson-databind" }
 kotest-assertions = { module = "io.kotest:kotest-assertions-core-jvm", version.ref = "kotest" }
 kotest-property = { module = "io.kotest:kotest-property-jvm", version.ref = "kotest" }
+ktfmt = { module = "org.jetbrains.kotlinx:ktfmt", version.ref = "ktfmt" }
 reactor-core = { module = "io.projectreactor:reactor-core" }
 spring-boot-bom = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
 spring-boot-starter = { module = "org.springframework.boot:spring-boot-starter" }

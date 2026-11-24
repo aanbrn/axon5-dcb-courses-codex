@@ -1,5 +1,6 @@
 package probe
 
+import io.kotest.common.ExperimentalKotest
 import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
 import io.kotest.property.PropTestConfig
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class KotestInteropTest {
+    @OptIn(ExperimentalKotest::class)
     @Test
     fun `Jupiter runs a seeded Kotest property`() = runBlocking {
         val seed = 20261124L
@@ -27,6 +29,8 @@ class KotestInteropTest {
             System.getProperty("probe.kotlinVersion"),
             "The worker Kotlin runtime must match the selected Kotlin version",
         )
-        println("PROBE_KOTEST_WORKER $seed $checks ${System.getProperty("java.vendor")}|${Runtime.version()}|${System.getProperty("os.arch")}")
+        val vendor = System.getProperty("java.vendor")
+        val architecture = System.getProperty("os.arch")
+        println("PROBE_KOTEST_WORKER $seed $checks $vendor|${Runtime.version()}|$architecture")
     }
 }
