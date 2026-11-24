@@ -8,7 +8,7 @@
 
 - **A successful boot misses a context or routing mismatch.** Verify the named context is DCB-enabled, run a tagged write with multiple tags, force overlapping appends, and check cross-process command, query, and subscription routing. Inspect the exact distribution, terms, and dependency coordinates used by the proof. [Axon Server DCB contexts](https://docs.axoniq.io/axon-server-reference/v2026.1/axon-server/administration/multi-context/) · [Axoniq Framework licensing](https://docs.axoniq.io/axoniq-platform-reference/licensing/)
 - **A declared dependency version differs from selection.** Compare the resolved affected and control graphs, selection reasons, and incoming paths before and after a scoped change. Prefer a compatible BOM update first, then use a catalog-backed constraint where the project policy calls for one. Run the applicable suites and repeat the comparisons at removal. [Gradle dependency constraints](https://docs.gradle.org/current/userguide/dependency_constraints.html) · [Gradle dependency reports](https://docs.gradle.org/current/userguide/viewing_debugging_dependencies.html)
-- **Image tags and frontend package tooling drift.** Capture image index and child digests, prove the intended CPU targets, verify clean pnpm and buildpack packaging, and keep inputs under their assigned version owners. [Paketo Web Servers](https://paketo.io/docs/howto/web-servers/)
+- **Image tags and frontend package tooling drift.** Capture image index and child digests, verify the applicable CPU targets, reproduce the npm build and Paketo packaging, and keep inputs under their assigned version owners. [Paketo Web Servers](https://paketo.io/docs/howto/web-servers/)
 
 ## Business Decisions and Delivery
 

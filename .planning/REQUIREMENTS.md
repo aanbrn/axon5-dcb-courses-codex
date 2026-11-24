@@ -11,7 +11,7 @@
 - [ ] **FND-01** Reproduce a Kotlin and Spring Boot compatibility probe that verifies the Axon 5 APIs, wiring, tagged conflict detection, and cross-process message routing in a DCB-enabled Axon Server context before pinning the version matrix. Record the official references, exact tested artifacts and image terms, bootstrap steps, and selected ARM64 and AMD64 image digests.
 - [ ] **FND-02** Build and check the toolchain with one authoritative version owner per ecosystem, pinned independent CLIs in mise, an inventory, and a `doctor` check. Keep `.java-version` at the Temurin feature version and record the actual build separately.
 - [ ] **FND-03** Exchange type-prefixed UUIDv7 TypeIDs between Kotlin and TypeScript and round-trip them through native `uuid` storage.
-- [ ] **FND-04** Build project images through Paketo Cloud Native Buildpacks, using `bootBuildImage` for JVM services and the Web Servers buildpack for the frontend. Reproduce the pnpm build and packaging path.
+- [ ] **FND-04** Build project images through Paketo Cloud Native Buildpacks, using `bootBuildImage` for JVM services and the Web Servers buildpack for the frontend. Package the static assets built by Gradle using npm and `package-lock.json`.
 - [ ] **FND-05** Run Gradle JVM Test Suites with shared Java Test Fixtures, JUnit 6, and compatible Kotest assertions and property tests. JUnit supplies the runner.
 - [ ] **FND-06** Build the frontend and documentation site from Gradle Node subprojects. On a clean `./gradlew build`, generate the frontend client from the BFF OpenAPI contract before building the frontend.
 
@@ -69,7 +69,7 @@
 
 ### Runtime and Observability
 
-- [ ] **OPS-01** A fresh checkout runs the full local system through one Docker Compose setup without AxonIQ Platform credentials.
+- [ ] **OPS-01** A fresh checkout runs the full local system through one Docker Compose setup without vendor registration, manual license acquisition, or AxonIQ Platform credentials. Document the applicable runtime limit of this mode.
 - [ ] **OPS-02** Docker Compose exposes metrics, traces, and logs via OpenTelemetry and a Grafana stack. A reader can follow a representative operation across the participating services.
 - [ ] **OPS-03** The optional AxonIQ Platform connection can be enabled separately and is verified with the author’s account when credentials are supplied securely outside Git and planning artifacts.
 

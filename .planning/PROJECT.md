@@ -121,7 +121,8 @@ None yet. Validate through shipped and verified work.
 | Pin CLI tools with mise and maintain a tooling inventory and `doctor` check | Reproduce the environment beyond Gradle | Pending implementation |
 | Use vetted third-party and project-owned skills locally in OpenCode | Treat skills as reviewed code and verify OpenCode compatibility before adoption | Pending selection and implementation |
 | Use the Gradle Node plugin for frontend and docs-site subprojects | Make the BFF OpenAPI contract, generated client, and frontend an explicit build graph under `./gradlew build` | Pending implementation |
-| Build all images with Cloud Native Buildpacks (Paketo), using `bootBuildImage` for JVM apps and the Web Servers buildpack for the frontend, with no Dockerfiles | Share a build approach, SBOM support, base rebase, and JVM memory tuning | Verify the pnpm path in Phase 1 |
+| Build all images with Cloud Native Buildpacks (Paketo), using `bootBuildImage` for JVM apps and the Web Servers buildpack for the frontend, with no Dockerfiles | Share a build approach, SBOM support, base rebase, and JVM memory tuning | Verify Gradle-driven npm builds and packaging of static assets in Phase 1 |
+| Use npm and `package-lock.json` for the frontend and docs site. Consider pnpm for specific tooling needs. | Use a reproducible install with one project build path | Selected for Phase 1 verification |
 | Use JUnit 6 as the runner with Kotest assertions and property testing | Align with Spring Boot 4, Testcontainers, Gradle Test Suites, and idiomatic Kotlin tests | Verify Kotlin 2.4 and Kotest compatibility in Phase 1 |
 | Use Gradle JVM Test Suites and Java Test Fixtures | Separate test levels without duplicating shared helpers | Pending implementation |
 | Enforce frontend FSD with Steiger | Make frontend boundaries as explicit as backend ones | Pending implementation |
@@ -132,7 +133,7 @@ None yet. Validate through shipped and verified work.
 
 Start with the latest stable release in the applicable major line. For components with an applicable LTS track, start with the current LTS line and its latest stable release. Verify compatibility before pinning or updating versions. Select or return to an older release only when a concrete blocker is documented with evidence.
 
-Use the Gradle wrapper for Gradle, the Gradle catalog for Gradle inputs including images, `.java-version` for the Temurin JDK feature version, `mise.toml` for independent CLIs, `.nvmrc` for Node.js, `packageManager` and the lockfile for pnpm/npm, and SHA pins for GitHub Actions. Keep `.java-version` feature-only and record full observed JDK patch/build versions as evidence.
+Use the Gradle wrapper for Gradle, the Gradle catalog for Gradle inputs including images, `.java-version` for the Temurin JDK feature version, `mise.toml` for independent CLIs, `.nvmrc` for Node.js, `packageManager` and the npm lockfile for the frontend and docs site, and SHA pins for GitHub Actions. Keep `.java-version` feature-only and record full observed JDK patch/build versions as evidence.
 
 For a hold, record the affected scope, owner, confirmed blocker and supporting evidence, dated review or expiry (normally within seven days), and the exact retry or removal trigger. Record any renewal explicitly. Triage security notices, including upstream advisories, immediately. Expedite a verified fix in the narrow affected graph and escalate unfixed high risk or incomplete verification immediately.
 
