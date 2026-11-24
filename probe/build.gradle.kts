@@ -27,7 +27,7 @@ dependencies {
     implementation(platform(libs.axon.bom))
     implementation(platform(libs.axoniq.bom))
     constraints {
-        implementation(libs.guava) {
+        implementation(libs.guava.android) {
             because("The gRPC graph must select a Guava release with the GHSA-xxph-c9ww-hj94 fix")
         }
     }
@@ -259,8 +259,18 @@ configurations.configureEach {
     if (name == "integrationTestImplementation") extendsFrom(configurations.implementation.get())
 }
 
-val kdocFormatter = configurations.resolvable("kdocFormatter")
-dependencies { add(kdocFormatter.name, libs.ktfmt) }
+val kdocFormatterImplementation = configurations.dependencyScope("kdocFormatterImplementation")
+val kdocFormatter = configurations.resolvable("kdocFormatter") {
+    extendsFrom(kdocFormatterImplementation.get())
+}.get()
+dependencies {
+    add(kdocFormatterImplementation.name, libs.ktfmt)
+    constraints {
+        add(kdocFormatterImplementation.name, libs.guava.jre) {
+            because("The formatter graph must select a Guava release with the GHSA-xxph-c9ww-hj94 fix")
+        }
+    }
+}
 
 val kdocFixture = layout.projectDirectory.file("kdoc/Specimen.kt")
 val firstKdocPass = buildDirectory.file("kdoc/first/Specimen.kt")
@@ -307,7 +317,7 @@ tasks.register<JavaExec>("kdocProbe") {
             "@param source the untrimmed label", "@return the trimmed label",
         )) { "ktfmt changed the KDoc list, fenced example, or parameter/return tags: $lines" }
         check(first.contentEquals(second)) { "The second ktfmt pass changed the first pass bytes" }
-        val version = kdocFormatter.get().moduleVersions().getValue("org.jetbrains.kotlinx:ktfmt")
+        val version = kdocFormatter.moduleVersions().getValue("org.jetbrains.kotlinx:ktfmt")
         check(version == libs.versions.ktfmt.get()) { "Unexpected ktfmt version: $version" }
         val artifact = publishArtifact("kdoc-formatted.kt", first)
         observation("kdoc", mapOf(
