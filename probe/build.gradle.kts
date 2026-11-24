@@ -104,6 +104,15 @@ testing.suites {
             }
         }
     }
+
+    register<JvmTestSuite>("kotestProbe") {
+        useJUnitJupiter(libs.versions.junit.get())
+        dependencies {
+            implementation(libs.coroutines.core)
+            implementation(libs.kotest.assertions)
+            implementation(libs.kotest.property)
+        }
+    }
 }
 
 configurations.configureEach {
