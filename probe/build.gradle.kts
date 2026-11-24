@@ -18,7 +18,10 @@ dependencies {
     implementation(platform(libs.axon.bom))
     implementation(platform(libs.axoniq.bom))
     implementation(libs.spring.boot.starter)
-    implementation(libs.axoniq.starter)
+    implementation(libs.axoniq.starter) {
+        // The probe supplies its Docker server from the isolated integration suite.
+        exclude(group = "io.axoniq.framework", module = "axoniq-testcontainer")
+    }
     implementation(kotlin("reflect"))
 }
 
