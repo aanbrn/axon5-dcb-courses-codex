@@ -5,16 +5,16 @@ milestone_name: Axon 5 DCB Courses
 current_phase: 01
 current_phase_name: Axon Server and Toolchain Feasibility
 status: executing
-stopped_at: Completed 01-01-PLAN.md
-last_updated: "2026-11-24T14:53:30.616Z"
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-11-24T16:18:12.445Z"
 last_activity: 2026-11-24
 last_activity_desc: Phase 01 execution started
-state_head: b72a951d85750696d2d991af79e52c06adb65408
+state_head: aaac408af73f306fb85b4f1f07f39cc509fa9445
 progress:
   total_phases: 8
   completed_phases: 0
   total_plans: 5
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -30,7 +30,7 @@ See [PROJECT.md](PROJECT.md), initialized 2026-11-24.
 ## Current Position
 
 Phase: 01 (Axon Server and Toolchain Feasibility) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-11-24 — Phase 01 execution started
 
@@ -46,6 +46,7 @@ Progress: [░░░░░░░░░░] 0%
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | Phase 01 P01 | 60min | 2 tasks | 9 files |
+| Phase 01 P02 | 82min | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -57,6 +58,8 @@ Progress: [░░░░░░░░░░] 0%
 - Version selection starts from current stable and applicable LTS releases. Choosing an older release requires a documented blocker.
 - GSD uses one branch per phase and disables tag creation. Release-please owns release tags.
 - [Phase 01]: Gradle-driven npm builds and Paketo static packaging supersede the earlier pnpm frontend sample. See 01-CONTEXT.md.
+- [Phase 01]: Give the phased projection an isolated token store and resolve its pooled processor from the Axon event processor module.
+- [Phase 01]: Use .java-version as the Temurin feature owner and validate each secondary stage against a complete current native core proof.
 
 ### Pending Todos
 
@@ -69,6 +72,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-24T14:52:56.131Z
-Stopped at: Completed 01-01-PLAN.md
-Resume file: .planning/phases/01-axon-server-and-toolchain-feasibility/01-02-PLAN.md
+Last session: 2026-11-24T16:18:12.419Z
+Stopped at: Completed 01-02-PLAN.md
+Resume file: .planning/phases/01-axon-server-and-toolchain-feasibility/01-03-PLAN.md
