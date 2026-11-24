@@ -32,6 +32,13 @@ val roleLauncher = javaToolchains.launcherFor(java.toolchain)
 val buildDirectory = layout.buildDirectory
 
 testing.suites {
+    named<JvmTestSuite>("test") {
+        useJUnitJupiter(libs.versions.junit.get())
+        dependencies {
+            implementation(libs.jackson.databind)
+        }
+    }
+
     register<JvmTestSuite>("integrationTest") {
         useJUnitJupiter(libs.versions.junit.get())
 
