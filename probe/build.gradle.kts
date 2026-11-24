@@ -23,6 +23,8 @@ dependencies {
         exclude(group = "io.axoniq.framework", module = "axoniq-testcontainer")
     }
     implementation(kotlin("reflect"))
+    // The Axon connector uses Reactor at runtime for subscription queries.
+    runtimeOnly(libs.reactor.core)
 }
 
 val roleClasspath = sourceSets.main.map { it.runtimeClasspath }

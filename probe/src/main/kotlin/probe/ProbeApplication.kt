@@ -3,6 +3,8 @@ package probe
 import io.axoniq.framework.axonserver.connector.api.AxonServerConfiguration
 import io.axoniq.framework.axonserver.connector.api.AxonServerConnectionManager
 import io.axoniq.framework.axonserver.connector.event.AxonServerEventStorageEngine
+import io.axoniq.framework.messaging.commandhandling.distributed.DistributedCommandBus
+import io.axoniq.framework.messaging.queryhandling.distributed.DistributedQueryBus
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
@@ -10,6 +12,7 @@ import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit.SECONDS
 import org.axonframework.common.configuration.Configuration as AxonConfiguration
+import org.axonframework.common.infra.FilesystemStyleComponentDescriptor
 import org.axonframework.eventsourcing.eventstore.AppendCondition
 import org.axonframework.eventsourcing.eventstore.ConsistencyMarker
 import org.axonframework.eventsourcing.eventstore.EventStorageEngine
@@ -17,11 +20,13 @@ import org.axonframework.eventsourcing.eventstore.GenericTaggedEventMessage
 import org.axonframework.eventsourcing.eventstore.SourcingCondition
 import org.axonframework.eventsourcing.eventstore.TerminalEventMessage
 import org.axonframework.messaging.commandhandling.CommandMessage
+import org.axonframework.messaging.commandhandling.CommandBus
 import org.axonframework.messaging.commandhandling.annotation.CommandHandler
 import org.axonframework.messaging.core.MessageType
 import org.axonframework.messaging.eventhandling.GenericEventMessage
 import org.axonframework.messaging.eventstreaming.EventCriteria
 import org.axonframework.messaging.eventstreaming.Tag
+import org.axonframework.messaging.queryhandling.QueryBus
 import org.springframework.boot.SpringBootConfiguration
 import org.springframework.boot.WebApplicationType
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -54,7 +59,12 @@ data class RoleIdentity(
     val javaVendor: String,
     val javaVersion: String,
     val engine: String,
+    val javaFeature: Int,
+    val commandBus: String,
+    val queryBus: String,
 )
+
+enum class ProbeRole { DRIVER, COMMAND, PROJECTION }
 
 @SpringBootConfiguration(proxyBeanMethods = false)
 @EnableAutoConfiguration
@@ -88,36 +98,42 @@ class EnrollmentHandler(
         val courseTag = Tag.of("courseId", command.courseId)
         val studentTag = Tag.of("studentId", command.studentId)
         val boundary = EventCriteria.havingTags(courseTag).or(EventCriteria.havingTags(studentTag))
-        val source = engine.source(SourcingCondition.conditionFor(boundary), null)
-        val marker = try {
-            val markers = source.reduce(emptyList<ConsistencyMarker>()) { collected, entry ->
-                check(entry.message() is TerminalEventMessage) { "The enrollment boundary must start empty" }
-                checkNotNull(collected) + checkNotNull(entry.getResource(ConsistencyMarker.RESOURCE_KEY))
-            }.get(MESSAGE_TIMEOUT_SECONDS, SECONDS)
-            checkNotNull(markers).single()
-        } finally {
-            source.close()
-        }
+        val marker = emptyHistoryMarker(engine, boundary)
         val condition = AppendCondition.withCriteria(boundary).withMarker(marker)
         val commandId = message.identifier()
         val eventId = UUID.randomUUID().toString()
-        val event = GenericEventMessage(
-            eventId,
-            MessageType(ENROLLED_EVENT),
-            StudentEnrolled(runId, command.courseId, command.studentId, commandId),
-            emptyMap(),
-            Instant.now(),
-        )
-        val transaction = engine.appendEvents(condition, null, GenericTaggedEventMessage(event, setOf(courseTag, studentTag)))
+        val event = enrollmentEvent(eventId, StudentEnrolled(runId, command.courseId, command.studentId, commandId))
+        val transaction = engine.appendEvents(condition, null, event)
             .get(MESSAGE_TIMEOUT_SECONDS, SECONDS)
         transaction.commit().get(MESSAGE_TIMEOUT_SECONDS, SECONDS)
         return WriteReceipt(runId, commandId, eventId, identity)
     }
 }
 
-fun startProbeRole(endpoint: String, clientId: String, runId: String, configFile: Path, command: Boolean): ConfigurableApplicationContext {
-    val sources = if (command) arrayOf(ProbeApplication::class.java, CommandRoleConfiguration::class.java)
-        else arrayOf(ProbeApplication::class.java)
+fun emptyHistoryMarker(engine: EventStorageEngine, boundary: EventCriteria): ConsistencyMarker {
+    val source = engine.source(SourcingCondition.conditionFor(boundary), null)
+    try {
+        val markers = source.reduce(emptyList<ConsistencyMarker>()) { collected, entry ->
+            check(entry.message() is TerminalEventMessage) { "The enrollment boundary must start empty" }
+            checkNotNull(collected) + checkNotNull(entry.getResource(ConsistencyMarker.RESOURCE_KEY))
+        }.get(MESSAGE_TIMEOUT_SECONDS, SECONDS)
+        return checkNotNull(markers).single()
+    } finally {
+        source.close()
+    }
+}
+
+fun enrollmentEvent(eventId: String, enrollment: StudentEnrolled): GenericTaggedEventMessage<GenericEventMessage> {
+    val event = GenericEventMessage(eventId, MessageType(ENROLLED_EVENT), enrollment, emptyMap(), Instant.now())
+    return GenericTaggedEventMessage(event, setOf(Tag.of("courseId", enrollment.courseId), Tag.of("studentId", enrollment.studentId)))
+}
+
+fun startProbeRole(endpoint: String, clientId: String, runId: String, configFile: Path, role: ProbeRole): ConfigurableApplicationContext {
+    val sources = when (role) {
+        ProbeRole.DRIVER -> arrayOf(ProbeApplication::class.java)
+        ProbeRole.COMMAND -> arrayOf(ProbeApplication::class.java, CommandRoleConfiguration::class.java)
+        ProbeRole.PROJECTION -> arrayOf(ProbeApplication::class.java, ProjectionRoleConfiguration::class.java)
+    }
     return SpringApplicationBuilder(*sources)
         .web(WebApplicationType.NONE)
         .run(
@@ -138,14 +154,28 @@ fun storageEngine(axon: AxonConfiguration): AxonServerEventStorageEngine =
         "The active event storage engine must be AxonServerEventStorageEngine"
     }
 
-fun roleIdentity(axon: AxonConfiguration): RoleIdentity = RoleIdentity(
-    ProcessHandle.current().pid(),
-    axon.getComponent(AxonServerConfiguration::class.java).clientId,
-    System.getProperty("os.arch"),
-    System.getProperty("java.vendor"),
-    Runtime.version().toString(),
-    storageEngine(axon).javaClass.name,
-)
+fun roleIdentity(axon: AxonConfiguration): RoleIdentity {
+    val commandBus = axon.getComponent(CommandBus::class.java)
+    val queryBus = axon.getComponent(QueryBus::class.java)
+    val buses = FilesystemStyleComponentDescriptor().apply {
+        describeProperty("commandBus", commandBus)
+        describeProperty("queryBus", queryBus)
+    }.describe()
+    check(DistributedCommandBus::class.java.name in buses && DistributedQueryBus::class.java.name in buses) {
+        "The configured bus wrappers must delegate to the distributed command and query buses"
+    }
+    return RoleIdentity(
+        ProcessHandle.current().pid(),
+        axon.getComponent(AxonServerConfiguration::class.java).clientId,
+        System.getProperty("os.arch"),
+        System.getProperty("java.vendor"),
+        Runtime.version().toString(),
+        storageEngine(axon).javaClass.name,
+        Runtime.version().feature(),
+        DistributedCommandBus::class.java.name,
+        DistributedQueryBus::class.java.name,
+    )
+}
 
 fun requireServerContext(axon: AxonConfiguration) {
     val context = axon.getComponent(AxonServerConnectionManager::class.java).connection
@@ -154,9 +184,9 @@ fun requireServerContext(axon: AxonConfiguration) {
 }
 
 fun main(args: Array<String>) {
-    require(args.size == 3) { "Expected an endpoint, client ID and run ID" }
+    require(args.size == 4) { "Expected an endpoint, client ID, run ID and role" }
     val configFile = Files.createFile(Path.of("application.properties"))
-    startProbeRole(args[0], args[1], args[2], configFile.toAbsolutePath(), command = true).use { context ->
+    startProbeRole(args[0], args[1], args[2], configFile.toAbsolutePath(), ProbeRole.valueOf(args[3])).use { context ->
         requireServerContext(context.getBean(AxonConfiguration::class.java))
         CountDownLatch(1).await()
     }

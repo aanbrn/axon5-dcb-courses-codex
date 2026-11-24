@@ -12,6 +12,7 @@ axon-bom = { module = "org.axonframework:axon-framework-bom", version.ref = "axo
 axoniq-bom = { module = "io.axoniq.framework:axoniq-framework-bom", version.ref = "axoniq" }
 axoniq-starter = { module = "io.axoniq.framework:axoniq-spring-boot-starter" }
 jackson-databind = { module = "tools.jackson.core:jackson-databind" }
+reactor-core = { module = "io.projectreactor:reactor-core" }
 spring-boot-bom = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
 spring-boot-starter = { module = "org.springframework.boot:spring-boot-starter" }
 testcontainers = { module = "org.testcontainers:testcontainers" }
