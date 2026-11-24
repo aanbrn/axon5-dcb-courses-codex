@@ -110,13 +110,23 @@ configurations.configureEach {
     if (name == "integrationTestImplementation") extendsFrom(configurations.implementation.get())
 }
 
-tasks.register<Exec>("frontendAssets") {
-    group = "verification"
-    description = "Build and verify the probe's static assets with the isolated npm build."
-    val marker = providers.gradleProperty("probeMarker")
+fun Exec.runFrontendTask(name: String) {
     val repository = rootProject.layout.projectDirectory
     workingDir(repository.asFile)
-    commandLine(repository.file("gradlew").asFile, "--console=plain", "-p", "probe/web", "frontendAssets")
+    commandLine(repository.file("gradlew").asFile, "--console=plain", "-p", "probe/web", name)
     if (gradle.startParameter.isRerunTasks) args("--rerun-tasks")
-    marker.orNull?.let { args("-PprobeMarker=$it") }
+}
+
+val frontendAssets = tasks.register<Exec>("frontendAssets") {
+    group = "verification"
+    description = "Build and verify the probe's static assets with the isolated npm build."
+    runFrontendTask("frontendAssets")
+    providers.gradleProperty("probeMarker").orNull?.let { args("-PprobeMarker=$it") }
+}
+
+tasks.register<Exec>("frontendImageProbe") {
+    group = "verification"
+    description = "Package and serve two static builds on a native ARM64 Docker daemon."
+    mustRunAfter(frontendAssets)
+    runFrontendTask("frontendImageProbe")
 }

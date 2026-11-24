@@ -5,6 +5,15 @@ axon-server-image = "axoniq/axonserver:2026.1.8@sha256:57b6ad30353cc0df1612d6a30
 gradle-node = "7.1.0"
 junit = "6.1.3"
 kotlin = "2.4.21"
+paketo-builder-ref = "docker.io/paketobuildpacks/builder-jammy-buildpackless-base:0.0.363@sha256:5af7e0854783326ba6da9f038b6cb5206a5712478c7ffc096c43b122b94e3ea7"
+paketo-builder-child = "sha256:67707cbbb950ebcb578896984e41fb6b90a17b26e482cebbe2f395347a633516"
+paketo-builder-config = "sha256:18160026f9331ec8b13f4093f0bc61fa3fe95700f149d20210fcfbfa2a955162"
+paketo-run-ref = "docker.io/paketobuildpacks/run-jammy-base@sha256:82fa301ed3ad37ace7cace269292f14abb7286dfb418f34465975322fd830af2"
+paketo-run-child = "sha256:e4238e2d789e29b4c7ad07f7f79d9a3d7db0511f40fd56f8c986b361622848b2"
+paketo-run-config = "sha256:1476b8e33ea3e063e2ce2875ec08b10db578f0af176d5ac1ca48fb4127249736"
+paketo-web-ref = "docker.io/paketobuildpacks/web-servers:4.16.3@sha256:a01f811143ca2629a1cfb2b053a63de0b845cf6e38d19ca375f2c3d6c62c6e97"
+paketo-web-child = "sha256:d0600f9c22f6fbb9f0900a75cb8667300374d5c3c81f0ba125304f6f4ebe4c73"
+paketo-web-config = "sha256:dc2c8e58401c379d8a8320b348de6705b9804720f26fb9b60e88236c7fe508c9"
 spring-boot = "4.2.0"
 
 [libraries]
