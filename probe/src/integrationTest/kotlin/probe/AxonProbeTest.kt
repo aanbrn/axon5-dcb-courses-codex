@@ -19,6 +19,28 @@ import org.junit.jupiter.api.TestInfo
 
 class AxonProbeTest {
     @Test
+    fun `a forced failure closes the subscription and owned resources`() {
+        val runId = newId()
+        lateinit var subscription: CourseSubscription
+        val failure = ControlledFailure()
+        val observed = assertThrows(ControlledFailure::class.java) {
+            ProbeFixture(runId).use { fixture ->
+                fixture.start()
+                fixture.startCommand()
+                val query = ReadCourse(runId, newId())
+                val before = fixture.startProjection(query)
+                assertTrue(fixture.readHistory(EventCriteria.havingAnyTag()).isEmpty())
+                subscription = fixture.subscribe(query)
+                assertEquals(before, subscription.next("forced failure subscription initial result"))
+                assertEquals(0, before.enrollments)
+                throw failure
+            }
+        }
+        assertTrue(observed === failure && failure.suppressed.isEmpty())
+        assertTrue(subscription.cancellationObserved, "The fixture must cancel its live subscription on failure")
+    }
+
+    @Test
     fun `a remote command persists a tagged event`(testInfo: TestInfo) {
         ProbeFixture(newId()).use { fixture ->
             fixture.start()
@@ -171,3 +193,5 @@ class AxonProbeTest {
 
     private fun testName(info: TestInfo) = "${javaClass.name}.${info.testMethod.orElseThrow().name}"
 }
+
+private class ControlledFailure : RuntimeException("controlled failure after subscription startup")

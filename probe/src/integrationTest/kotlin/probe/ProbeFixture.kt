@@ -193,6 +193,8 @@ internal class CourseSubscription : Subscriber<CourseState>, AutoCloseable {
     private val results = LinkedBlockingQueue<Result<CourseState>>()
     private var subscription: Subscription? = null
     private var closed = false
+    var cancellationObserved: Boolean = false
+        private set
 
     @Synchronized
     override fun onSubscribe(subscription: Subscription) {
@@ -216,7 +218,10 @@ internal class CourseSubscription : Subscriber<CourseState>, AutoCloseable {
     @Synchronized
     override fun close() {
         closed = true
-        subscription?.cancel()
+        subscription?.let {
+            it.cancel()
+            cancellationObserved = true
+        }
     }
 }
 
