@@ -18,6 +18,7 @@ paketo-web-ref = "docker.io/paketobuildpacks/web-servers:4.16.3@sha256:a01f81114
 paketo-web-child = "sha256:d0600f9c22f6fbb9f0900a75cb8667300374d5c3c81f0ba125304f6f4ebe4c73"
 paketo-web-config = "sha256:dc2c8e58401c379d8a8320b348de6705b9804720f26fb9b60e88236c7fe508c9"
 spring-boot = "4.2.0"
+typeid-java = "0.3.1"
 
 [libraries]
 axon-bom = { module = "org.axonframework:axon-framework-bom", version.ref = "axon" }
@@ -32,6 +33,7 @@ reactor-core = { module = "io.projectreactor:reactor-core" }
 spring-boot-bom = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
 spring-boot-starter = { module = "org.springframework.boot:spring-boot-starter" }
 testcontainers = { module = "org.testcontainers:testcontainers" }
+typeid-java = { module = "de.fxlae:typeid-java", version.ref = "typeid-java" }
 
 [plugins]
 gradle-node = { id = "com.github.node-gradle.node", version.ref = "gradle-node" }

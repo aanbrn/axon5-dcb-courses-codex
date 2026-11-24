@@ -2,6 +2,7 @@ import groovy.json.JsonOutput
 import java.security.MessageDigest
 import java.time.Duration
 import java.util.HexFormat
+import java.util.UUID
 import javax.xml.parsers.DocumentBuilderFactory
 
 plugins {
@@ -40,6 +41,10 @@ val buildDirectory = layout.buildDirectory
 val evidenceDirectory = providers.environmentVariable("PROBE_EVIDENCE_DIR")
     .map { rootProject.file(it) }
     .orElse(buildDirectory.dir("reports/feasibility").map { it.asFile })
+val typeIdFixture = layout.projectDirectory.file("typeid/vectors.json")
+val typeIdRunId = providers.environmentVariable("PROBE_RUN_ID").orElse("local")
+val typeIdExchangeId = UUID.randomUUID().toString()
+val kotlinExchange = buildDirectory.file("typeid/kotlin-origin.json")
 
 fun sha256(bytes: ByteArray): String = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes))
 
@@ -191,6 +196,36 @@ testing.suites {
             }
         }
     }
+
+    register<JvmTestSuite>("typeIdJvmVectors") {
+        useJUnitJupiter(libs.versions.junit.get())
+        dependencies {
+            implementation(platform(libs.spring.boot.bom))
+            implementation(libs.jackson.databind)
+            implementation(libs.typeid.java)
+        }
+        targets.configureEach {
+            testTask.configure {
+                val output = kotlinExchange.get().asFile
+                inputs.file(typeIdFixture).withPathSensitivity(PathSensitivity.RELATIVE)
+                outputs.file(kotlinExchange)
+                outputs.upToDateWhen { false }
+                useJUnitPlatform { includeEngines("junit-jupiter") }
+                filter.includeTestsMatching("probe.TypeIdVectorsTest.*")
+                filter.isFailOnNoMatchingTests = true
+                systemProperty("probe.typeIdFixture", typeIdFixture.asFile.absolutePath)
+                systemProperty("probe.typeIdKotlinExchange", output.absolutePath)
+                systemProperty("probe.typeIdRunId", typeIdRunId.get())
+                systemProperty("probe.typeIdExchangeId", typeIdExchangeId)
+                timeout = Duration.ofMinutes(2)
+                doFirst { check(!output.exists() || output.delete()) { "Could not clear old Kotlin exchange" } }
+            }
+        }
+    }
+}
+
+kotlin.sourceSets.named("typeIdJvmVectors") {
+    kotlin.setSrcDirs(listOf("src/typeIdProbe/kotlin"))
 }
 
 configurations.configureEach {
