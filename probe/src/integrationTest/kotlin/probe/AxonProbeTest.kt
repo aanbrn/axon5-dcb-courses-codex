@@ -42,7 +42,13 @@ import tools.jackson.databind.json.JsonMapper
 
 class AxonProbeTest {
     @Test
-    fun `a remote command persists a tagged event`(testInfo: TestInfo) {
+    fun `a remote command persists a tagged event`(testInfo: TestInfo) = traceWrite(testInfo)
+
+    @Test
+    fun `overlapping writes leave one winner and notify the remote subscriber`(testInfo: TestInfo) =
+        traceWrite(testInfo, requireProjection = true)
+
+    private fun traceWrite(testInfo: TestInfo, requireProjection: Boolean = false) {
         val started = Instant.now()
         val runId = System.getProperty("probe.runId").ifBlank { newId() }
         require(runId.matches(Regex("[A-Za-z0-9_-]{1,80}"))) { "Invalid probe run ID" }
@@ -118,6 +124,12 @@ class AxonProbeTest {
                         val writerRegistration = registrations.getValue(commandClient)
                         assertTrue(driverRegistration.commandsList.isEmpty())
                         assertTrue(WRITE_COMMAND in writerRegistration.commandsList)
+                        if (requireProjection) {
+                            assertTrue(
+                                registrations.containsKey("probe-projection-$runId"),
+                                "A distinct remote projection must register to serve the subscription",
+                            )
+                        }
 
                         val courseHistory = readHistory(engine.source(SourcingCondition.conditionFor(course), null))
                         val studentHistory = readHistory(engine.source(SourcingCondition.conditionFor(student), null))
