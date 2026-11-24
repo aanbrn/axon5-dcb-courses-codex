@@ -24,5 +24,7 @@ class ProbeContractsTest {
         assertEquals("Eclipse Adoptium", System.getProperty("java.vendor"))
         assertEquals(Runtime.version().feature().toString(), System.getProperty("probe.javaFeature"),
             "The worker feature must come from the repository toolchain owner")
+        assertEquals(System.getenv("HOME"), System.getProperty("user.home"))
+        println("PROBE_JAVA vendor=${System.getProperty("java.vendor")} version=${Runtime.version()} arch=${System.getProperty("os.arch")}")
     }
 }

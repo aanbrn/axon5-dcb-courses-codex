@@ -332,7 +332,7 @@ private fun assertRole(client: String, identity: RoleIdentity) {
     assertEquals(client, identity.clientId)
     assertArm64(identity.architecture)
     assertEquals("Eclipse Adoptium", identity.javaVendor)
-    assertEquals(25, identity.javaFeature)
+    assertEquals(System.getProperty("probe.javaFeature").toInt(), identity.javaFeature)
 }
 
 private fun assertArm64(architecture: String) {

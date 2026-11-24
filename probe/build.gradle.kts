@@ -6,9 +6,12 @@ plugins {
     id("jvm-test-suite")
 }
 
+val javaFeature = providers.fileContents(rootProject.layout.projectDirectory.file(".java-version"))
+    .asText.map { it.trim().toInt() }
+
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(libs.versions.jdk.get().toInt())
+        languageVersion = javaFeature.map(JavaLanguageVersion::of)
         vendor = JvmVendorSpec.ADOPTIUM
     }
 }
@@ -31,11 +34,30 @@ val roleClasspath = sourceSets.main.map { it.runtimeClasspath }
 val roleLauncher = javaToolchains.launcherFor(java.toolchain)
 val buildDirectory = layout.buildDirectory
 
+tasks.withType<Test>().configureEach {
+    javaLauncher = roleLauncher
+    systemProperty("probe.javaFeature", javaFeature.get())
+}
+
 testing.suites {
     named<JvmTestSuite>("test") {
         useJUnitJupiter(libs.versions.junit.get())
         dependencies {
             implementation(libs.jackson.databind)
+        }
+        targets.configureEach {
+            testTask.configure {
+                val workerHome = buildDirectory.dir("tmp/test/worker-home")
+                val workerDirectory = buildDirectory.dir("tmp/test/worker-work")
+                setEnvironment(mapOf("HOME" to workerHome.get().asFile.absolutePath))
+                workingDir(workerDirectory)
+                systemProperty("user.home", workerHome.get().asFile.absolutePath)
+                doFirst {
+                    for (directory in listOf(workerHome.get().asFile, workerDirectory.get().asFile)) {
+                        check(directory.deleteRecursively() && directory.mkdirs()) { "Cannot initialize $directory" }
+                    }
+                }
+            }
         }
     }
 
@@ -51,7 +73,6 @@ testing.suites {
         targets.configureEach {
             testTask.configure {
                 dependsOn(roleClasspath)
-                javaLauncher = roleLauncher
                 filter.isFailOnNoMatchingTests = true
                 timeout = Duration.ofMinutes(5)
                 testLogging.showStandardStreams = true
@@ -61,22 +82,22 @@ testing.suites {
                     .orElse(buildDirectory.dir("reports/feasibility").map { it.asFile })
                 val workerHome = buildDirectory.dir("tmp/integrationTest/worker-home")
                 val workerDirectory = buildDirectory.dir("tmp/integrationTest/worker-work")
-                val dockerEnvironment = listOf(
-                    "DOCKER_HOST", "TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE", "TESTCONTAINERS_HOST_OVERRIDE",
-                    "PATH", "LANG", "LC_ALL", "TMPDIR", "SystemRoot",
-                ).mapNotNull { key -> providers.environmentVariable(key).orNull?.let { key to it } }.toMap()
-
-                setEnvironment(dockerEnvironment + ("HOME" to workerHome.get().asFile.absolutePath))
                 workingDir(workerDirectory)
                 systemProperty("user.home", workerHome.get().asFile.absolutePath)
                 systemProperty("probe.evidenceDirectory", evidenceDirectory.get().absolutePath)
-                systemProperty("probe.serverImage", libs.versions.axon.server.image.get())
-                systemProperty("probe.runId", providers.environmentVariable("PROBE_RUN_ID").orElse("").get())
+                inputs.property("probe.serverImage", libs.versions.axon.server.image)
 
                 doFirst {
                     for (directory in listOf(workerHome.get().asFile, workerDirectory.get().asFile)) {
                         check(directory.deleteRecursively() && directory.mkdirs()) { "Cannot initialize $directory" }
                     }
+                    val dockerEnvironment = listOf(
+                        "DOCKER_HOST", "TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE", "TESTCONTAINERS_HOST_OVERRIDE",
+                        "PATH", "LANG", "LC_ALL", "TMPDIR", "SystemRoot",
+                    ).mapNotNull { key -> providers.environmentVariable(key).orNull?.let { key to it } }.toMap()
+                    setEnvironment(dockerEnvironment + ("HOME" to workerHome.get().asFile.absolutePath))
+                    systemProperty("probe.serverImage", libs.versions.axon.server.image.get())
+                    systemProperty("probe.runId", providers.environmentVariable("PROBE_RUN_ID").orElse("").get())
                     systemProperty("probe.roleClasspath", roleClasspath.get().asPath)
                     systemProperty("probe.roleJava", roleLauncher.get().executablePath.asFile.absolutePath)
                 }
