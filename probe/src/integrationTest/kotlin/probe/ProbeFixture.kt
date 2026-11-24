@@ -2,6 +2,7 @@ package probe
 
 import com.github.dockerjava.api.model.ExposedPort
 import com.github.dockerjava.api.model.Ports
+import com.github.dockerjava.api.exception.NotFoundException
 import io.axoniq.framework.axonserver.connector.api.AxonServerConnectionManager
 import java.net.URI
 import java.net.http.HttpClient
@@ -16,6 +17,8 @@ import java.util.HexFormat
 import java.util.UUID
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.TimeoutException
+import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.SECONDS
 import org.axonframework.common.configuration.Configuration as AxonConfiguration
 import org.axonframework.eventsourcing.eventstore.SourcingCondition
@@ -45,6 +48,7 @@ internal val JSON = JsonMapper.builder().build()
 private const val GRPC_PORT = 8124
 private const val HTTP_PORT = 8024
 private val SERVER_PORTS = listOf(HTTP_PORT, GRPC_PORT)
+private const val RUN_LABEL = "probe.run"
 
 internal class ProbeFixture(val runId: String) : AutoCloseable {
     val evidence: Path = Path.of(System.getProperty("probe.evidenceDirectory"))
@@ -52,7 +56,14 @@ internal class ProbeFixture(val runId: String) : AutoCloseable {
     private val docker = DockerClientFactory.instance().client()
     private val server = probeServer(serverImage.nativeReference, runId)
     private val processes = mutableMapOf<ProbeRole, Process>()
+    private val subscriptions = mutableListOf<CourseSubscription>()
+    private val timings = linkedMapOf<String, Long>()
     private var driver: ConfigurableApplicationContext? = null
+    private var containerId: String? = null
+    lateinit var imageEvidence: Map<String, Any>
+        private set
+    lateinit var cleanup: CleanupEvidence
+        private set
 
     val axon: AxonConfiguration get() = checkNotNull(driver).getBean(AxonConfiguration::class.java)
     val connection get() = axon.getComponent(AxonServerConnectionManager::class.java).connection
@@ -65,8 +76,17 @@ internal class ProbeFixture(val runId: String) : AutoCloseable {
         val daemon = docker.versionCmd().exec()
         assertEquals("linux", daemon.operatingSystem)
         assertArm64(checkNotNull(daemon.arch))
-        server.start()
-        val live = docker.inspectContainerCmd(server.containerId).exec()
+        measure("serverReadyMs") {
+            try {
+                server.start()
+            } catch (failure: RuntimeException) {
+                throw IllegalStateException("Readiness failed at server HTTP and default DCB leader", failure)
+            }
+        }
+        val id = checkNotNull(server.containerId)
+        containerId = id
+        val live = docker.inspectContainerCmd(id).exec()
+        assertEquals(runId, live.config.labels?.get(RUN_LABEL))
         val activeImage = docker.inspectImageCmd(live.imageId).exec()
         assertEquals(serverImage.arm64.config, activeImage.id)
         assertEquals("linux", activeImage.os)
@@ -78,25 +98,34 @@ internal class ProbeFixture(val runId: String) : AutoCloseable {
             val binding = live.networkSettings.ports.bindings.getValue(ExposedPort.tcp(port)).single()
             assertEquals("127.0.0.1", binding.hostIp)
         }
-        writeJson(evidence.resolve("images.json"), mapOf(
+        imageEvidence = mapOf(
             "runId" to runId, "checkedAt" to serverImage.checkedAt, "index" to serverImage.reference,
             "arm64" to serverImage.arm64, "amd64" to serverImage.amd64,
             "daemon" to "${daemon.operatingSystem}/${daemon.arch}", "daemonVersion" to checkNotNull(daemon.version),
             "runningImageId" to checkNotNull(activeImage.id), "runningArchitecture" to imageArchitecture,
-        ))
+        )
+        writeJson(attempt.resolve("images.json"), imageEvidence)
         val config = Files.createFile(attempt.resolve("application.properties"))
         driver = startProbeRole(endpoint, clientName(ProbeRole.DRIVER), runId, config, ProbeRole.DRIVER)
         assertTrue(checkNotNull(driver).getBeansOfType(EnrollmentHandler::class.java).isEmpty())
         assertTrue(checkNotNull(driver).getBeansOfType(CourseProjection::class.java).isEmpty())
-        requireServerContext(axon)
+        measure("driverContextReadyMs") {
+            try {
+                requireServerContext(axon)
+            } catch (failure: Exception) {
+                throw IllegalStateException("Readiness failed at driver DCB context", failure)
+            }
+        }
         assertRole(clientName(ProbeRole.DRIVER), driverRole)
         return this
     }
 
     fun startCommand(): RoleIdentity {
         val process = startChild(ProbeRole.COMMAND)
-        val identity = awaitRole("command handler registration", process) {
-            send(READY_COMMAND, runId, RoleIdentity::class.java)
+        val identity = measure("commandReadyMs") {
+            awaitRole("command handler registration", process) { timeout ->
+                send(READY_COMMAND, runId, RoleIdentity::class.java, timeoutMs = timeout)
+            }
         }
         assertChild(ProbeRole.COMMAND, process, identity)
         return identity
@@ -104,8 +133,10 @@ internal class ProbeFixture(val runId: String) : AutoCloseable {
 
     fun startProjection(query: ReadCourse): CourseState {
         val process = startChild(ProbeRole.PROJECTION)
-        val state = awaitRole("projection handler registration and event processor", process) {
-            readCourse(query).takeIf { it.processorReady }
+        val state = measure("projectionReadyMs") {
+            awaitRole("projection handler registration and event processor", process) { timeout ->
+                readCourse(query, timeout).takeIf { it.processorReady }
+            }
         }
         assertChild(ProbeRole.PROJECTION, process, state.role)
         return state
@@ -120,10 +151,11 @@ internal class ProbeFixture(val runId: String) : AutoCloseable {
 
     fun queryMessage(query: ReadCourse) = GenericQueryMessage(MessageType(READ_COURSE), query)
 
-    fun readCourse(query: ReadCourse): CourseState =
-        queries.query(queryMessage(query), CourseState::class.java).get(MESSAGE_TIMEOUT_SECONDS, SECONDS)
+    fun readCourse(query: ReadCourse, timeoutMs: Long = SECONDS.toMillis(MESSAGE_TIMEOUT_SECONDS)): CourseState =
+        queries.query(queryMessage(query), CourseState::class.java).get(timeoutMs, MILLISECONDS)
 
     fun subscribe(query: ReadCourse): CourseSubscription = CourseSubscription().also {
+        subscriptions.add(it)
         queries.subscriptionQuery(queryMessage(query), CourseState::class.java, 8).subscribe(it)
     }
 
@@ -141,9 +173,10 @@ internal class ProbeFixture(val runId: String) : AutoCloseable {
         }
     }
 
-    fun <T : Any> send(name: String, payload: Any, result: Class<T>, id: String = newId()): T {
+    fun <T : Any> send(name: String, payload: Any, result: Class<T>, id: String = newId(),
+                       timeoutMs: Long = SECONDS.toMillis(MESSAGE_TIMEOUT_SECONDS)): T {
         val message = GenericCommandMessage(GenericMessage(id, MessageType(name), payload, emptyMap()))
-        return axon.getComponent(CommandGateway::class.java).send(message, result).get(MESSAGE_TIMEOUT_SECONDS, SECONDS)
+        return axon.getComponent(CommandGateway::class.java).send(message, result).get(timeoutMs, MILLISECONDS)
     }
 
     fun clientName(role: ProbeRole): String = "probe-${role.name.lowercase()}-$runId"
@@ -163,24 +196,48 @@ internal class ProbeFixture(val runId: String) : AutoCloseable {
     }
 
     override fun close() {
-        server.use {
+        var error: Exception? = null
+        fun closeResource(action: () -> Unit) {
             try {
-                driver?.use {
-                    var failure: Throwable? = null
-                    processes.values.forEach { process ->
-                        try {
-                            process.destroy()
-                            if (!process.waitFor(10, SECONDS)) process.destroyForcibly()
-                            check(process.waitFor(5, SECONDS)) { "Process ${process.pid()} did not exit" }
-                        } catch (error: Exception) {
-                            failure?.addSuppressed(error) ?: run { failure = error }
-                        }
-                    }
-                    failure?.let { throw it }
-                }
-            } finally {
+                action()
+            } catch (failure: Exception) {
+                error?.addSuppressed(failure) ?: run { error = failure }
+            }
+        }
+        measure("cleanupMs") {
+            subscriptions.forEach { closeResource(it::close) }
+            processes.values.forEach { process -> closeResource {
+                process.destroy()
+                if (!process.waitFor(10, SECONDS)) process.destroyForcibly()
+                check(process.waitFor(5, SECONDS)) { "Process ${process.pid()} did not exit" }
+            } }
+            closeResource { driver?.close() }
+            closeResource {
                 if (server.containerId != null) Files.writeString(attempt.resolve("server.log"), server.logs)
             }
+            closeResource(server::close)
+        }
+        error?.let { throw it }
+        val id = containerId ?: return
+        val removed = try {
+            docker.inspectContainerCmd(id).exec()
+            false
+        } catch (_: NotFoundException) {
+            true
+        }
+        check(removed && docker.listContainersCmd().withShowAll(true)
+            .withLabelFilter(mapOf(RUN_LABEL to runId)).exec().isEmpty()) { "Probe container was not removed" }
+        check(processes.values.none { it.isAlive }) { "A probe child process did not exit" }
+        check(subscriptions.all { it.cancellationObserved }) { "A probe subscription was not cancelled" }
+        cleanup = CleanupEvidence(id, processes.values.map { it.pid() }, subscriptions.size, removed, timings.toMap())
+    }
+
+    private inline fun <T> measure(stage: String, action: () -> T): T {
+        val start = System.nanoTime()
+        try {
+            return action()
+        } finally {
+            timings[stage] = Duration.ofNanos(System.nanoTime() - start).toMillis()
         }
     }
 
@@ -188,6 +245,15 @@ internal class ProbeFixture(val runId: String) : AutoCloseable {
         private val serverImage by lazy { ServerImage.verify(System.getProperty("probe.serverImage")) }
     }
 }
+
+@JvmRecord
+internal data class CleanupEvidence(
+    val containerId: String,
+    val exitedPids: List<Long>,
+    val cancelledSubscriptions: Int,
+    val containerRemoved: Boolean,
+    val timingsMs: Map<String, Long>,
+)
 
 internal class CourseSubscription : Subscriber<CourseState>, AutoCloseable {
     private val results = LinkedBlockingQueue<Result<CourseState>>()
@@ -217,6 +283,7 @@ internal class CourseSubscription : Subscriber<CourseState>, AutoCloseable {
 
     @Synchronized
     override fun close() {
+        if (closed) return
         closed = true
         subscription?.let {
             it.cancel()
@@ -229,7 +296,7 @@ private class ProbeServer(image: DockerImageName) : GenericContainer<ProbeServer
 
 private fun probeServer(image: String, runId: String): ProbeServer = ProbeServer(DockerImageName.parse(image)).apply {
     withReuse(false)
-    withLabel("probe.run", runId)
+    withLabel(RUN_LABEL, runId)
     withEnv("AXONIQ_AXONSERVER_STANDALONE_DCB", "true")
     withExposedPorts(*SERVER_PORTS.toTypedArray())
     withCreateContainerCmdModifier { create ->
@@ -244,13 +311,16 @@ private fun probeServer(image: String, runId: String): ProbeServer = ProbeServer
         .withStartupTimeout(Duration.ofSeconds(90)))
 }
 
-private fun <T : Any> awaitRole(stage: String, process: Process, request: () -> T?): T {
+private fun <T : Any> awaitRole(stage: String, process: Process, request: (Long) -> T?): T {
     val end = System.nanoTime() + Duration.ofSeconds(45).toNanos()
-    var lastFailure: ExecutionException? = null
+    var lastFailure: Exception? = null
     while (System.nanoTime() < end && process.isAlive) {
         try {
-            request()?.let { return it }
+            val remainingMs = Duration.ofNanos(end - System.nanoTime()).toMillis().coerceIn(1, 2_000)
+            request(remainingMs)?.let { return it }
         } catch (failure: ExecutionException) {
+            lastFailure = failure
+        } catch (failure: TimeoutException) {
             lastFailure = failure
         }
         Thread.sleep(200)

@@ -16,28 +16,48 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInfo
+import org.junit.jupiter.api.Timeout
+import org.testcontainers.DockerClientFactory
+import org.testcontainers.containers.Network
 
+@Timeout(value = 5, unit = java.util.concurrent.TimeUnit.MINUTES)
 class AxonProbeTest {
     @Test
-    fun `a forced failure closes the subscription and owned resources`() {
+    fun `a forced failure closes the subscription and owned resources`(testInfo: TestInfo) {
         val runId = newId()
         lateinit var subscription: CourseSubscription
         val failure = ControlledFailure()
-        val observed = assertThrows(ControlledFailure::class.java) {
-            ProbeFixture(runId).use { fixture ->
-                fixture.start()
-                fixture.startCommand()
-                val query = ReadCourse(runId, newId())
-                val before = fixture.startProjection(query)
-                assertTrue(fixture.readHistory(EventCriteria.havingAnyTag()).isEmpty())
-                subscription = fixture.subscribe(query)
-                assertEquals(before, subscription.next("forced failure subscription initial result"))
-                assertEquals(0, before.enrollments)
-                throw failure
+        val fixture = ProbeFixture(runId)
+        val childPids = mutableListOf<Long>()
+        Network.newNetwork().use { unrelated ->
+            val unrelatedId = unrelated.id
+            val observed = assertThrows(ControlledFailure::class.java) {
+                fixture.use {
+                    fixture.start()
+                    childPids.add(fixture.startCommand().pid)
+                    val query = ReadCourse(runId, newId())
+                    val before = fixture.startProjection(query)
+                    childPids.add(before.role.pid)
+                    assertTrue(fixture.readHistory(EventCriteria.havingAnyTag()).isEmpty())
+                    subscription = fixture.subscribe(query)
+                    assertEquals(before, subscription.next("forced failure subscription initial result"))
+                    assertEquals(0, before.enrollments)
+                    throw failure
+                }
             }
+            assertTrue(observed === failure && failure.suppressed.isEmpty())
+            val survivingNetwork = DockerClientFactory.instance().client().inspectNetworkCmd().withNetworkId(unrelatedId).exec()
+            assertEquals(unrelatedId, survivingNetwork.id)
         }
-        assertTrue(observed === failure && failure.suppressed.isEmpty())
         assertTrue(subscription.cancellationObserved, "The fixture must cancel its live subscription on failure")
+        assertEquals(childPids, fixture.cleanup.exitedPids)
+        assertEquals(1, fixture.cleanup.cancelledSubscriptions)
+        val transcript = mapOf(
+            "test" to testName(testInfo), "runId" to runId, "initialEvents" to 0,
+            "reason" to checkNotNull(failure.message), "cleanup" to fixture.cleanup, "unrelatedNetworkPreserved" to true,
+        )
+        writeJson(fixture.evidence.resolve("cleanup.json"), transcript)
+        println("PROBE_CLEANUP " + JSON.writeValueAsString(transcript))
     }
 
     @Test
@@ -76,7 +96,8 @@ class AxonProbeTest {
         val started = Instant.now()
         val runId = System.getProperty("probe.runId").ifBlank { newId() }
         require(runId.matches(Regex("[A-Za-z0-9_-]{1,80}"))) { "Invalid probe run ID" }
-        ProbeFixture(runId).use { fixture ->
+        val fixture = ProbeFixture(runId)
+        val observations = fixture.use {
             fixture.start()
             val command = EnrollStudent(runId, newId(), newId())
             val losingStudent = newId()
@@ -149,9 +170,9 @@ class AxonProbeTest {
                 val after = fixture.readCourse(query)
                 assertEquals(update, after)
 
-                val transcript = mapOf(
+                mapOf(
                     "test" to testName(testInfo), "runId" to runId,
-                    "startedAt" to started.toString(), "finishedAt" to Instant.now().toString(),
+                    "startedAt" to started.toString(),
                     "context" to AXON_CONTEXT, "dcb" to true, "credentialFree" to true, "initialEvents" to 0,
                     "worker" to fixture.driverRole, "command" to writer, "projection" to baseline.role,
                     "registeredClients" to registeredClients,
@@ -163,10 +184,14 @@ class AxonProbeTest {
                     "tagReads" to mapOf("course" to courseEvents.ids(), "winnerStudent" to studentEvents.ids(),
                         "courseAndStudent" to jointEvents.ids(), "loserStudent" to losingEvents.ids(), "history" to allEvents.ids()),
                 )
-                writeJson(fixture.evidence.resolve("core.json"), transcript)
-                println("PROBE_CORE " + JSON.writeValueAsString(transcript))
             }
         }
+        assertEquals(1, fixture.cleanup.cancelledSubscriptions)
+        assertEquals(2, fixture.cleanup.exitedPids.distinct().size)
+        val transcript = observations + mapOf("finishedAt" to Instant.now().toString(), "cleanup" to fixture.cleanup)
+        writeJson(fixture.evidence.resolve("images.json"), fixture.imageEvidence)
+        writeJson(fixture.evidence.resolve("core.json"), transcript)
+        println("PROBE_CORE " + JSON.writeValueAsString(transcript))
     }
 
     private fun assertReceipt(fixture: ProbeFixture, writer: RoleIdentity, command: EnrollStudent, commandId: String, receipt: WriteReceipt) {
