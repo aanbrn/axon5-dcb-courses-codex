@@ -53,7 +53,7 @@ covered_files: [
   "probe/web/settings.gradle.kts",
   "settings.gradle.kts"
 ]
-covered_digest: "v4:sha256:75b61b2899de13bc66a31406e2ebe7002c297a79f990b8bad30df8ba7b79ff0f"
+covered_digest: "v4:sha256:fb72bb0f832d305f65bd6fd312ec8e9141af1febe6e7e68432c18c143bf0b822"
 behavior_unverified: 0
 overrides_applied: 0
 decision_coverage:
@@ -83,6 +83,8 @@ As a maintainer, I want to select a compatible stack by running a repeatable DCB
 ## Goal Achievement
 
 The verifier ran the report check against the retained `acceptance-nvahwpkb` directory. It exited 0 on the actual manifest, JUnit XML, command outputs, secondary observations and OCI files from tested revision `0f3101a5d7195f2c5d9d26d42e95849232a8028d`. No executable source changed between that revision and the reviewed phase head, `3fe3b95`. The report check recomputes the current execution-input hash.
+
+The publication check confirmed that reproduction revision `6af08e257c63673114afbd3d9d9c511a9507565b` has the same Git tree as the tested revision. The report check passed again with the published reproduction link.
 
 ### Observable Truths
 

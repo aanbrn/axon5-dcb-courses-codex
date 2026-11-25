@@ -6,6 +6,7 @@ On 2026-11-25 the native ARM64 probe passed a multi-tag write, an overlapping ap
 | --- | --- |
 | Acceptance run | `acceptance-nvahwpkb` |
 | Tested revision | `0f3101a5d7195f2c5d9d26d42e95849232a8028d` |
+| Reproduction revision | `6af08e257c63673114afbd3d9d9c511a9507565b` |
 | Input tree SHA-256 | `d4cccac9e0439c65fce4dbfb7bdd41803dbed864aaf4b179228ff6ddb21ca198` |
 | Manifest SHA-256 | `7e658ac02d887445d2846e32716ec3de1acba3b7de199628e0cff90be644b948` |
 | Gradle | `9.9.2` |
@@ -35,7 +36,7 @@ On 2026-11-25 the native ARM64 probe passed a multi-tag write, an overlapping ap
 
 ## Reproduce the proof
 
-Start from a clean checkout of the tested revision. The revision includes the full harness and remains the entry point after the module is retired. Use a native ARM64 host, Eclipse Temurin 25 for the Gradle launcher and toolchain, Python 3.9 or newer, and a reachable Linux/ARM64 Docker daemon for the opt-in checks. Put the Pack version declared in `mise.toml` on `PATH` for the optional image check. Gradle provisions the selected Node and npm.
+Start from a clean checkout of the reproduction revision. It has the same Git tree as the tested revision, which remains recorded in the original acceptance manifest. The reproduction revision includes the full harness and remains the entry point after the module is retired. Use a native ARM64 host, Eclipse Temurin 25 for the Gradle launcher and toolchain, Python 3.9 or newer, and a reachable Linux/ARM64 Docker daemon for the opt-in checks. Put the Pack version declared in `mise.toml` on `PATH` for the optional image check. Gradle provisions the selected Node and npm. [Reproduction revision](https://github.com/aanbrn/axon5-dcb-courses-codex/commit/6af08e257c63673114afbd3d9d9c511a9507565b)
 
 ```sh
 ./gradlew --console=plain --version
