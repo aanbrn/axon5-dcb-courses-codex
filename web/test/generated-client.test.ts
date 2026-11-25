@@ -7,6 +7,7 @@ import { createServer as createViteServer } from "vite";
 const vite = await createViteServer({
   configFile: false,
   appType: "custom",
+  optimizeDeps: { noDiscovery: true },
   server: { middlewareMode: true, watch: null, ws: false },
 });
 after(() => vite.close());

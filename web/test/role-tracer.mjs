@@ -16,6 +16,7 @@ const vite = fileURLToPath(new URL("../node_modules/vite/bin/vite.js", import.me
 const testLoader = await createViteServer({
   configFile: false,
   appType: "custom",
+  optimizeDeps: { noDiscovery: true },
   server: { middlewareMode: true, watch: null, ws: false },
 });
 const { registerRoleStateTests } = await testLoader
@@ -228,6 +229,147 @@ for (const [name, stored, students] of [
     assert.equal(await page.getByText(fallbackMessage, { exact: true }).count(), 0, "The fallback is announced once");
   });
 }
+
+async function assertNoPageOverflow(page, context) {
+  const { clientWidth, scrollWidth } = await page.evaluate(() => ({
+    clientWidth: document.documentElement.clientWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+  }));
+  assert.ok(scrollWidth <= clientWidth, `${context} must fit: ${scrollWidth}px > ${clientWidth}px`);
+}
+
+test("wraps the shell and shows full selected names at narrow widths and enlarged text", async (t) => {
+  const page = await (await openContext(t)).newPage();
+  const mediumName = "M".repeat(20);
+  const longName = `<strong data-role-proof>Demo student ${"LongName".repeat(18)}</strong>`;
+  const students = [
+    { id: "student_medium", label: mediumName, kind: "student" },
+    { id: "student_long", label: longName, kind: "student" },
+  ];
+  await page.route(`**${directoryPath}`, (route) => route.fulfill({
+    json: { administrator: { id: "admin", label: "Administrator", kind: "administrator" }, students },
+  }));
+  await page.goto(webOrigin);
+  await page.evaluate(() => document.fonts.ready.then(() => {}));
+  const loadedFont = await page.evaluate(() =>
+    [...document.fonts].some(({ family, status }) => family === "Geist Variable" && status === "loaded"),
+  );
+  assert.equal(loadedFont, true, "The production shell must load the bundled Geist face");
+
+  const select = await readySelector(page, longName);
+  const fullName = page.locator(".role-full-name");
+  await select.selectOption("student_medium");
+  assert.equal(await fullName.count(), 0, "A fitting value does not need a duplicate label");
+  await page.setViewportSize({ width: 320, height: 900 });
+  await fullName.waitFor({ state: "visible" });
+  assert.equal(await fullName.textContent(), mediumName);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await fullName.waitFor({ state: "detached" });
+
+  await select.selectOption("student_long");
+  assert.equal(await select.locator("option:checked").textContent(), longName);
+  assert.equal(await page.locator("[data-role-proof]").count(), 0, "Directory labels render as literal text");
+  for (const width of [320, 768, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const scale of [100, 200]) {
+      await page.evaluate((size) => { document.documentElement.style.fontSize = `${size}%`; }, scale);
+      const context = `${width}px at ${scale}% text size`;
+      await assertNoPageOverflow(page, context);
+      await fullName.waitFor({ state: "visible" });
+      assert.equal(await fullName.textContent(), longName);
+      assert.ok(await fullName.evaluate((element) =>
+        element.getBoundingClientRect().height > parseFloat(getComputedStyle(element).lineHeight),
+      ), `The complete label must wrap at ${context}`);
+      for (const control of [
+        select,
+        page.getByRole("link", { name: "DCB Courses", exact: true }),
+        page.getByRole("link", { name: "Documentation", exact: true }),
+        page.getByRole("link", { name: "Quick start", exact: true }),
+        page.getByRole("link", { name: "Read feasibility report" }),
+      ]) {
+        const box = await control.boundingBox();
+        assert.ok(box && box.x >= 0 && box.x + box.width <= width && box.height >= 48, context);
+      }
+      if (width === 320) {
+        const { x, width: selectWidth } = await select.boundingBox();
+        assert.equal(x, 16 * scale / 100, "The role group starts at the compact gutter");
+        assert.equal(selectWidth, width - 2 * x, "The select fills its own row");
+      }
+    }
+  }
+
+  await page.setViewportSize({ width: 320, height: 900 });
+  await page.evaluate((copy) => {
+    for (const selector of ["h1", "label[for=demo-role]", "nav a", "[role=status]"]) {
+      document.querySelector(selector).textContent = copy;
+    }
+  }, "UnbrokenCopy".repeat(20));
+  await assertNoPageOverflow(page, "Long heading, label, navigation, and status at 320px and 200% text size");
+});
+
+test("keeps keyboard order and focus visible in the compact shell and forced colors", async (t) => {
+  const page = await (await openContext(t)).newPage();
+  await page.setViewportSize({ width: 320, height: 900 });
+  await page.goto(webOrigin);
+  const select = await readySelector(page, "Maya Chen");
+  const skip = page.getByRole("link", { name: "Skip to main content" });
+  const main = page.getByRole("main");
+  const docs = page.getByRole("link", { name: "Documentation", exact: true });
+  const report = page.getByRole("link", { name: "Read feasibility report" });
+  assert.equal(await page.getByRole("heading", { level: 1, name: "Axon 5 DCB Courses" }).count(), 1);
+  assert.equal(await docs.evaluate((link) => getComputedStyle(link).textDecorationLine), "underline");
+  assert.equal(await skip.evaluate((link) => getComputedStyle(link).clipPath), "inset(50%)");
+
+  for (const target of [
+    skip,
+    page.getByRole("link", { name: "DCB Courses", exact: true }),
+    docs,
+    page.getByRole("link", { name: "Quick start", exact: true }),
+    select,
+    report,
+  ]) {
+    await page.keyboard.press("Tab");
+    assert.equal(await target.evaluate((element) => element === document.activeElement), true);
+    const focus = await target.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return [style.outlineWidth, style.outlineOffset, style.outlineStyle, style.outlineColor];
+    });
+    assert.deepEqual(focus, ["2px", "2px", "solid", "rgb(67, 56, 202)"]);
+    if (target === skip) {
+      assert.equal(await skip.evaluate((link) => getComputedStyle(link).clipPath), "none");
+    }
+  }
+  await page.keyboard.press("Shift+Tab");
+  assert.equal(await select.evaluate((element) => element === document.activeElement), true);
+  await page.emulateMedia({ forcedColors: "active" });
+  const forcedColors = await select.evaluate((element) => {
+    const reference = document.createElement("span");
+    reference.style.outlineColor = "Highlight";
+    reference.style.borderColor = "ButtonText";
+    element.after(reference);
+    const expected = getComputedStyle(reference);
+    const actual = getComputedStyle(element);
+    const matches = actual.outlineColor === expected.outlineColor &&
+      actual.borderTopColor === expected.borderTopColor;
+    const outline = [actual.outlineWidth, actual.outlineOffset, actual.outlineStyle];
+    reference.remove();
+    return { matches, outline };
+  });
+  assert.deepEqual(forcedColors, { matches: true, outline: ["2px", "2px", "solid"] });
+  await skip.focus();
+  await page.keyboard.press("Enter");
+  assert.equal(await main.evaluate((element) => element === document.activeElement), true);
+
+  await page.emulateMedia({ forcedColors: "none" });
+  await page.route(`**${directoryPath}`, (route) => route.fulfill({ status: 503 }));
+  await page.reload();
+  await page.evaluate(() => { document.documentElement.style.fontSize = "200%"; });
+  await page.getByRole("alert").waitFor();
+  await assertNoPageOverflow(page, "Role directory failure at 320px and 200% text size");
+  const retry = page.getByRole("button", { name: "Retry loading roles" });
+  assert.equal(await retry.evaluate((element) => getComputedStyle(element).backgroundColor), "rgb(255, 255, 255)");
+  assert.ok((await retry.boundingBox()).height >= 48);
+});
 
 registerRoleStateTests({
   openContext,
