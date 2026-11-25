@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { once } from "node:events";
+import { createServer } from "node:http";
 import { test, type TestContext } from "node:test";
 import type { BrowserContext, Page, Route } from "playwright";
 
@@ -17,7 +19,7 @@ const errorMessage = "Could not load demo roles. Try again to switch roles.";
 type RoleFixture = {
   openContext: (t: TestContext) => Promise<BrowserContext>;
   webOrigin: () => string;
-  developmentOrigin: (t: TestContext) => Promise<string>;
+  developmentOrigin: (t: TestContext, apiOrigin?: string) => Promise<string>;
 };
 
 function saveRoleOnLoad(page: Page, id: string) {
@@ -111,6 +113,66 @@ export function registerRoleStateTests({
   async function openPage(t: TestContext) {
     return (await openContext(t)).newPage();
   }
+
+  test("times out stalled initial and retry response bodies, then recovers", async (t) => {
+    const loopback = "127.0.0.1";
+    let stall = true;
+    const server = createServer((request, response) => {
+      assert.equal(request.url, "/api/demo-roles");
+      response.writeHead(200, { "Content-Type": "application/json" });
+      if (stall) response.write('{"administrator":');
+      else response.end(JSON.stringify(oneStudent));
+    });
+    server.listen(0, loopback);
+    await once(server, "listening");
+    t.after(async () => {
+      const closed = once(server, "close");
+      server.close();
+      server.closeAllConnections();
+      await closed;
+    });
+    const address = server.address();
+    assert.ok(address && typeof address === "object");
+    const origin = await developmentOrigin(
+      t,
+      `http://${loopback}:${address.port}`,
+    );
+    const page = await openPage(t);
+    await page.clock.install();
+    await saveRoleOnLoad(page, maya.id);
+    const retry = page.getByRole("button", { name: "Retry loading roles" });
+
+    for (const start of [() => page.goto(origin), () => retry.click()]) {
+      const [response] = await Promise.all([
+        page.waitForResponse(roleRequest),
+        start(),
+      ]);
+      assert.equal(response.status(), 200);
+      await page
+        .getByRole("status")
+        .filter({ hasText: loadingMessage })
+        .waitFor();
+      assert.equal(await roleSelector(page).isDisabled(), true);
+
+      const canceled = page.waitForEvent(
+        "requestfailed",
+        (request) => request === response.request(),
+      );
+      await page.clock.fastForward(5_000);
+      assert.equal((await canceled).failure()?.errorText, "net::ERR_ABORTED");
+      await assertFailure(page);
+      assert.equal(await retry.isEnabled(), true);
+    }
+
+    stall = false;
+    await retry.click();
+    const select = roleSelector(page);
+    await select
+      .locator(`option[value="${maya.id}"]`)
+      .waitFor({ state: "attached" });
+    assert.equal(await select.inputValue(), maya.id);
+    assert.equal(await retry.count(), 0);
+  });
 
   test("keeps retry mounted, ignores repeat keys and restores focus after recovery", async (t) => {
     const page = await openPage(t);

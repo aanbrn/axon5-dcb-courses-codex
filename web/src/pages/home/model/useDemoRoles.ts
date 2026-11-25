@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { loadDemoRoles, type DemoRoleDirectory } from "@/shared/api";
 
 const roleStorageKey = "courses.demo.role";
+const roleDirectoryTimeoutMs = 5_000;
 
 type DemoRole =
   DemoRoleDirectory["administrator"] | DemoRoleDirectory["students"][number];
@@ -33,15 +34,25 @@ function storeRole(id: string) {
 
 export function useDemoRoles() {
   const [state, setState] = useState<RoleState>({ status: "initial" });
-  const activeRequest = useRef<AbortController | null>(null);
+  const activeRequest = useRef<{
+    controller: AbortController;
+    timeout: number;
+  } | null>(null);
 
   const requestDirectory = useCallback((status: "loading" | "retrying") => {
     if (activeRequest.current) return;
-    const request = new AbortController();
+    const controller = new AbortController();
+    const request = {
+      controller,
+      timeout: window.setTimeout(
+        () => controller.abort(),
+        roleDirectoryTimeoutMs,
+      ),
+    };
     activeRequest.current = request;
     setState({ status });
 
-    loadDemoRoles(request.signal)
+    loadDemoRoles(controller.signal)
       .then(({ administrator, students }) => {
         if (activeRequest.current !== request) return;
         const roles = [administrator, ...students];
@@ -60,6 +71,7 @@ export function useDemoRoles() {
         if (activeRequest.current === request) setState({ status: "failed" });
       })
       .finally(() => {
+        window.clearTimeout(request.timeout);
         if (activeRequest.current === request) activeRequest.current = null;
       });
   }, []);
@@ -67,8 +79,12 @@ export function useDemoRoles() {
   useEffect(() => {
     requestDirectory("loading");
     return () => {
-      activeRequest.current?.abort();
+      const request = activeRequest.current;
       activeRequest.current = null;
+      if (request) {
+        window.clearTimeout(request.timeout);
+        request.controller.abort();
+      }
     };
   }, [requestDirectory]);
 

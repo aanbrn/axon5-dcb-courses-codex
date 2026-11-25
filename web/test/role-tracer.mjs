@@ -585,13 +585,13 @@ test("keeps keyboard order and focus visible in the compact shell and forced col
 registerRoleStateTests({
   openContext,
   webOrigin: () => webOrigin,
-  async developmentOrigin(t) {
+  async developmentOrigin(t, apiOrigin = bffOrigin) {
     const port = await loopbackPort();
     const origin = `http://${loopback}:${port}`;
     const dev = startService(
       process.execPath,
       [vite, "--host", loopback, "--port", String(port), "--strictPort"],
-      { ...process.env, VITE_BFF_ORIGIN: bffOrigin },
+      { ...process.env, VITE_BFF_ORIGIN: apiOrigin },
     );
     t.after(() => dev.stop());
     await awaitReady(dev, new URL(origin));
