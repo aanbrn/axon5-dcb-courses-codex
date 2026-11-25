@@ -57,9 +57,12 @@ FORBIDDEN = re.compile(
     re.IGNORECASE,
 )
 BUILD_PATHS = (
+    ".githooks",
+    ".gitignore",
     ".java-version",
     ".nvmrc",
     "build.gradle.kts",
+    "mise.toml",
     "settings.gradle.kts",
     "gradlew",
     "bff",
@@ -180,6 +183,67 @@ def launch(command, directory, environment, endpoint):
 
 
 class Phase2BuildTest(unittest.TestCase):
+    def test_installed_hook_survives_a_clean_build(self):
+        with tempfile.TemporaryDirectory(prefix="courses-post-clean-hook-") as scratch:
+            directory = Path(scratch) / "candidate"
+            copy_candidate(directory)
+            environment = {
+                **os.environ,
+                "DOCKER_HOST": "tcp://127.0.0.1:1",
+                "GIT_CONFIG_GLOBAL": os.devnull,
+                "GIT_CONFIG_NOSYSTEM": "1",
+            }
+            for name in (
+                "DOCKER_CONTEXT",
+                "GIT_DIR",
+                "GIT_INDEX_FILE",
+                "GIT_WORK_TREE",
+                "GIT_CONFIG_COUNT",
+            ):
+                environment.pop(name, None)
+
+            def git(*args):
+                result = subprocess.run(
+                    ["git", *args],
+                    cwd=directory,
+                    env=environment,
+                    capture_output=True,
+                    timeout=120,
+                    check=False,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr.decode())
+                return result.stdout
+
+            git("init", "-q", "--initial-branch=hook-fixture")
+            git("config", "user.name", "Post-clean Hook Fixture")
+            git("config", "user.email", "hook-fixture@example.test")
+            git("add", "--", *BUILD_PATHS)
+            git("commit", "-qm", "Baseline build inputs")
+            self.run_build(directory, environment, "installGitHooks")
+            self.assertEqual(git("config", "--local", "core.hooksPath"), b".githooks\n")
+            self.run_build(directory, environment, "clean", "build", "--no-build-cache")
+
+            kotlin = "HookProof.kt"
+            (directory / kotlin).write_bytes(
+                b"/** Returns the proof value. */\nfun proof( ):Int=1\n"
+            )
+            typescript = "web/src/app/main.tsx"
+            app = directory / typescript
+            original = app.read_bytes()
+            app.write_bytes(original.rstrip(b"\n") + b"   \n")
+            git("add", "--", kotlin, typescript)
+            git("commit", "-qm", "Format an ordinary commit after clean build")
+            self.assertEqual(
+                git("show", f"HEAD:{kotlin}"),
+                b"/** Returns the proof value. */\nfun proof(): Int = 1\n",
+            )
+            self.assertEqual(git("show", f"HEAD:{typescript}"), original)
+            self.assertEqual(app.read_bytes(), original)
+            print(
+                "The installed hook formatted Kotlin and TypeScript after clean build.",
+                flush=True,
+            )
+
     def test_site_smoke_is_a_public_verification_task(self):
         result = subprocess.run(
             ["./gradlew", "--console=plain", ":web:tasks", "--group", "verification"],

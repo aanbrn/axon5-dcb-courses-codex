@@ -67,7 +67,8 @@ val npmInstall =
         }
     }
 
-val styleCommands = layout.buildDirectory.file("style/commands.json")
+// The installed Git hook needs the managed tool paths after a regular clean.
+val styleCommands = layout.projectDirectory.file(".gradle/style/commands.json")
 val kotlinCommands = project(":bff").layout.buildDirectory.file("kotlin-quality/commands.json")
 val prettier = layout.projectDirectory.file("tools/style/node_modules/prettier/bin/prettier.cjs")
 val webModules = layout.projectDirectory.dir("web/node_modules")
@@ -103,7 +104,7 @@ val styleRuntime =
                     "steiger" to listOf(nodeExecutable.get(), steiger.asFile.absolutePath),
                     "webModules" to webModules.asFile.absolutePath,
                 )
-            styleCommands.get().asFile.writeText(JsonOutput.toJson(commands) + "\n")
+            styleCommands.asFile.writeText(JsonOutput.toJson(commands) + "\n")
         }
     }
 
@@ -111,7 +112,7 @@ tasks.register<Exec>("styleCheck") {
     group = "verification"
     description = "Check formatting and lint for the tracked checkout without editing sources."
     dependsOn(styleRuntime)
-    commandLine("python3", styleDriver, "--check", "--runtime", styleCommands.get().asFile)
+    commandLine("python3", styleDriver, "--check", "--runtime", styleCommands.asFile)
 }
 
 tasks.register<Exec>("installGitHooks") {

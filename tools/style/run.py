@@ -20,7 +20,7 @@ from pathlib import Path
 
 POLICY = "tools/style/policy.json"
 DETEKT_CONFIG = "config/detekt/comments.yml"
-DEFAULT_RUNTIME = "build/style/commands.json"
+DEFAULT_RUNTIME = ".gradle/style/commands.json"
 SEMVER = r"[0-9]+\.[0-9]+\.[0-9]+"
 
 

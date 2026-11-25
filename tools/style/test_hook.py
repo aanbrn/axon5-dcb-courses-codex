@@ -14,7 +14,7 @@ from pathlib import Path
 PROJECT = Path(__file__).resolve().parents[2]
 HOOK = ".githooks/pre-commit"
 POLICY = "tools/style/policy.json"
-RUNTIME = "build/style/commands.json"
+RUNTIME = ".gradle/style/commands.json"
 DRIVER = "tools/style/run.py"
 DETEKT = "config/detekt/comments.yml"
 
