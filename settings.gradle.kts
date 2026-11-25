@@ -12,4 +12,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "axon5-dcb-courses"
-include(":probe")
+include(":probe", ":bff", ":web")

@@ -1,0 +1,64 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Axon 5 DCB Courses BFF",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/demo-roles": {
+      "get": {
+        "operationId": "listDemoRoles",
+        "summary": "List the demo roles",
+        "responses": {
+          "200": {
+            "description": "The administrator and the ordered list of demo students",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoRoleDirectory"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DemoRoleDirectory": {
+        "type": "object",
+        "required": ["administrator", "students"],
+        "properties": {
+          "administrator": {
+            "$ref": "#/components/schemas/AdministratorRole"
+          },
+          "students": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StudentRole"
+            }
+          }
+        }
+      },
+      "AdministratorRole": {
+        "type": "object",
+        "required": ["id", "label", "kind"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "label": { "type": "string", "minLength": 1 },
+          "kind": { "type": "string", "enum": ["administrator"] }
+        }
+      },
+      "StudentRole": {
+        "type": "object",
+        "required": ["id", "label", "kind"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "label": { "type": "string", "minLength": 1 },
+          "kind": { "type": "string", "enum": ["student"] }
+        }
+      }
+    }
+  }
+}

@@ -1,8 +1,66 @@
 import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
+import { once } from "node:events";
+import { createServer } from "node:net";
 import { test } from "node:test";
+import { setTimeout as delay } from "node:timers/promises";
+import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 
 const directoryPath = "/api/demo-roles";
+const loopback = "127.0.0.1";
+const vite = fileURLToPath(new URL("../node_modules/vite/bin/vite.js", import.meta.url));
+
+async function loopbackPort() {
+  const server = createServer().listen(0, loopback);
+  await once(server, "listening");
+  const { port } = server.address();
+  await new Promise((resolve, reject) => {
+    server.close((error) => (error ? reject(error) : resolve()));
+  });
+  return port;
+}
+
+function startService(command, args, env = process.env) {
+  const child = spawn(command, args, { env, stdio: ["ignore", "pipe", "pipe"] });
+  let output = "";
+  let exited = false;
+  for (const stream of [child.stdout, child.stderr]) {
+    stream.setEncoding("utf8").on("data", (chunk) => {
+      output = (output + chunk).slice(-8_000);
+    });
+  }
+  child.on("error", (error) => { output += error.message; });
+  const closed = new Promise((resolve) => {
+    child.once("close", () => {
+      exited = true;
+      resolve();
+    });
+  });
+  return {
+    get exited() { return exited; },
+    get output() { return output; },
+    async stop() {
+      if (!exited) {
+        child.kill();
+        await Promise.race([closed, delay(3_000, undefined, { ref: false })]);
+      }
+      if (!exited) child.kill("SIGKILL");
+      await closed;
+    },
+  };
+}
+
+async function awaitReady(service, url) {
+  const deadline = Date.now() + 25_000;
+  while (!service.exited && Date.now() < deadline) {
+    const response = await fetch(url, { signal: AbortSignal.timeout(500) }).catch(() => undefined);
+    await response?.body?.cancel();
+    if (response?.ok && !service.exited) return;
+    await delay(100);
+  }
+  throw new Error(`Timed out waiting for ${url}\n${service.output}`);
+}
 
 async function traceRoles(page, webOrigin, bffOrigin) {
   const directoryResponse = page
@@ -52,11 +110,33 @@ async function traceRoles(page, webOrigin, bffOrigin) {
 }
 
 test("selects a role from the first live BFF response", async () => {
-  const browser = await chromium.launch({ timeout: 10_000 });
+  const { ROLE_TRACER_JAVA, ROLE_TRACER_BFF_JAR, ROLE_TRACER_WEB_DIST } = process.env;
+  const bffPort = await loopbackPort();
+  const bffOrigin = `http://${loopback}:${bffPort}`;
+  const bff = startService(ROLE_TRACER_JAVA, [
+    "-jar", ROLE_TRACER_BFF_JAR, `--server.address=${loopback}`, `--server.port=${bffPort}`,
+  ]);
+  let web;
   try {
-    const page = await browser.newPage();
-    await traceRoles(page, process.env.ROLE_TRACER_WEB_ORIGIN, process.env.ROLE_TRACER_BFF_ORIGIN);
+    await awaitReady(bff, new URL("/openapi.json", bffOrigin));
+    const webPort = await loopbackPort();
+    const webOrigin = `http://${loopback}:${webPort}`;
+    web = startService(process.execPath, [
+      vite, "preview", "--host", loopback, "--port", String(webPort), "--strictPort",
+      "--outDir", ROLE_TRACER_WEB_DIST,
+    ], { ...process.env, VITE_BFF_ORIGIN: bffOrigin });
+    await awaitReady(web, new URL(webOrigin));
+    if (process.env.ROLE_TRACER_STOP_BFF === "1") await bff.stop();
+
+    const browser = await chromium.launch({ timeout: 10_000 });
+    try {
+      const page = await browser.newPage();
+      await traceRoles(page, webOrigin, bffOrigin);
+      console.log(`Chromium ${browser.version()} selected Alex Rivera from the live BFF.`);
+    } finally {
+      await browser.close();
+    }
   } finally {
-    await browser.close();
+    await Promise.all([web?.stop(), bff.stop()]);
   }
 });
