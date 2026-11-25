@@ -444,12 +444,16 @@ class FullTreeTest(unittest.TestCase):
             repo.show("equivalent snapshot.js"), b"const example = 'value';\n"
         )
         self.assertEqual(candidate.read_bytes(), working)
+        self.assertEqual(js.read_bytes(), b'const example = "value";\n')
+        repo.tracked()
+
+        repo.write(POLICY, repo.show(POLICY))
         diagnostic = repo.tracked(expected=1)
         self.assertIn(
             b'"equivalent snapshot.js" [prettier] needs formatting', diagnostic.stdout
         )
         self.assertEqual(js.read_bytes(), b'const example = "value";\n')
-        repo.write(POLICY, repo.show(POLICY))
+        repo.write("equivalent snapshot.js", repo.show("equivalent snapshot.js"))
         repo.tracked()
 
     def test_detekt_reads_candidate_config_and_lints_after_formatting(self):
