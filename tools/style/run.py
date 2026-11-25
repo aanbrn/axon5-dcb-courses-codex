@@ -547,6 +547,16 @@ def format_staged(root, runtime):
                 print(failure, file=sys.stderr)
             return 1
         if changed:
+            # Git names the temporary index after its own PID. The installed
+            # hook execs this driver, so that Git process is also our parent.
+            if index.name == f"next-index-{os.getppid()}.lock":
+                git_dir = git(root, "rev-parse", "--absolute-git-dir")
+                if index.parent == Path(os.fsdecode(git_dir.removesuffix(b"\n"))):
+                    raise StyleError(
+                        "A path-limited commit needs formatting. "
+                        "Stage the intended paths with git add -- <paths>, "
+                        "review git diff --cached, then run git commit without paths."
+                    )
             update_candidate(root, candidate, entries, changed)
         publish_index(index, original, candidate if changed else None)
 

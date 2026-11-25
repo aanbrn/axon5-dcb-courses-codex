@@ -177,6 +177,68 @@ class HookTest(unittest.TestCase):
         self.assertEqual(target.read_bytes(), b"alternate staged   \n")
         self.assertEqual(self.index.read_bytes(), primary_index)
 
+    def test_path_limited_commit_requires_clean_formatting(self):
+        repo = self.repo
+        path = "selected.txt"
+        other = "separate.txt"
+        repo.stage(path, b"before\n")
+        repo.stage(other, b"before\n")
+        repo.git("commit", "-qm", "Baseline selection")
+        repo.stage(other, b"already staged\n")
+        local = repo.write(path, b"selected   \n")
+        primary_index = self.index.read_bytes()
+        head = repo.git("rev-parse", "HEAD").stdout
+
+        result = repo.git("commit", "-qm", "Needs formatting", "--", path, expected=1)
+        self.assertIn(b"path-limited commit needs formatting", result.stderr)
+        self.assertIn(b"git add -- <paths>", result.stderr)
+        self.assertEqual(repo.git("rev-parse", "HEAD").stdout, head)
+        self.assertEqual(self.index.read_bytes(), primary_index)
+        self.assertEqual(local.read_bytes(), b"selected   \n")
+        self.assertEqual(list(self.index.parent.glob("*.lock")), [])
+
+        repo.write(path, b"selected\n")
+        repo.git("commit", "-qm", "Already formatted", "--", path)
+        self.assertEqual(repo.show(path), b"selected\n")
+        self.assertEqual(repo.show(path, ""), b"selected\n")
+        self.assertEqual(repo.show(other), b"before\n")
+        self.assertEqual(repo.show(other, ""), b"already staged\n")
+
+        repo.stage(path, b"selected again   \n")
+        repo.git("commit", "-qm", "Commit the staged selection")
+        self.assertEqual(repo.show(path), b"selected again\n")
+        self.assertEqual(repo.show(other), b"already staged\n")
+        self.assertEqual(repo.git("diff", "--cached", "--name-only").stdout, b"")
+        self.assertEqual(local.read_bytes(), b"selected again   \n")
+
+    def test_path_limited_commit_with_alternate_index_distinguishes_git_lock(self):
+        repo = self.repo
+        path = "alternate.txt"
+        repo.stage(path, b"baseline\n")
+        repo.git("commit", "-qm", "Baseline alternate file")
+        primary_index = self.index.read_bytes()
+        alternate = self.index.with_name("next-index-1.lock")
+        env = {"GIT_INDEX_FILE": str(alternate)}
+        repo.git("read-tree", "HEAD", extra_env=env)
+        repo.write(path, b"alternate   \n")
+        original_alternate = alternate.read_bytes()
+
+        result = repo.git(
+            "commit",
+            "-qm",
+            "Limited alternate selection",
+            "--",
+            path,
+            expected=1,
+            extra_env=env,
+        )
+        self.assertIn(b"path-limited commit needs formatting", result.stderr)
+        self.assertEqual(alternate.read_bytes(), original_alternate)
+        repo.git("add", "--", path, extra_env=env)
+        repo.git("commit", "-qm", "Ordinary alternate commit", extra_env=env)
+        self.assertEqual(repo.show(path), b"alternate\n")
+        self.assertEqual(self.index.read_bytes(), primary_index)
+
     def assert_aborted(self, diagnostic):
         repo = self.repo
         before = self.index.read_bytes()
