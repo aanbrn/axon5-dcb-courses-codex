@@ -4,6 +4,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 
 plugins {
     id("courses.jvm")
+    id("org.jetbrains.dokka")
 }
 
 val catalog = extensions.getByType<VersionCatalogsExtension>().named("libs")
@@ -107,4 +108,22 @@ tasks.register("kotlinQualityRuntime") {
     }
 }
 
-tasks.check { dependsOn(ktfmtCheck, detektComments) }
+val publicationSourceSet = objects.property<String>().convention("main")
+
+pluginManager.withPlugin("java-test-fixtures") { publicationSourceSet.set("testFixtures") }
+
+dokka {
+    dokkaPublications.named("html") {
+        failOnWarning.set(true)
+        offlineMode.set(true)
+    }
+    dokkaSourceSets.configureEach {
+        val sourceSetName = name
+        suppress.set(publicationSourceSet.map { it != sourceSetName })
+        reportUndocumented.set(true)
+    }
+}
+
+tasks.check {
+    dependsOn(ktfmtCheck, detektComments, tasks.named("dokkaGeneratePublicationHtml"))
+}

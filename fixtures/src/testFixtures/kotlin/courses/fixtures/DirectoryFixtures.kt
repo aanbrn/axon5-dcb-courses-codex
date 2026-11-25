@@ -1,18 +1,39 @@
 package courses.fixtures
 
+/**
+ * Represents one entry in a test directory.
+ *
+ * @property id stable identifier expected by directory tests.
+ * @property label role name expected by directory tests.
+ * @property kind role category expected by directory tests.
+ */
 data class DirectoryRole(val id: String, val label: String, val kind: String)
 
+/**
+ * Provides the expected directory for the selected test case.
+ *
+ * @property administrator the administrator entry.
+ * @property students the student entries in expected response order.
+ */
 data class DirectorySample(val administrator: DirectoryRole, val students: List<DirectoryRole>) {
+    /** Lists the administrator followed by the configured students. */
     val roles: List<DirectoryRole>
         get() = listOf(administrator) + students
 
+    /**
+     * Returns a sample containing the first [count] students.
+     *
+     * @param count student count from zero through the size of [students].
+     */
     fun withStudentCount(count: Int): DirectorySample {
         require(count in 0..students.size) { "Expected between zero and ${students.size} students" }
         return copy(students = students.take(count))
     }
 }
 
+/** Supplies shared directory expectations for the BFF test suites. */
 object DirectoryFixtures {
+    /** Provides the complete directory used by the default demo. */
     val defaultDirectory =
         DirectorySample(
             administrator =

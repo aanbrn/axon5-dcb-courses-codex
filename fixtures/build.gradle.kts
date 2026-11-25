@@ -1,4 +1,4 @@
 plugins {
-    id("courses.jvm")
+    id("courses.kotlin-quality")
     `java-test-fixtures`
 }
