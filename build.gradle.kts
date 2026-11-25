@@ -10,8 +10,10 @@ val applicationProjects = listOf(project(":bff"), project(":web"))
 listOf(tasks.clean, tasks.assemble, tasks.check).forEach { lifecycle ->
     lifecycle.configure {
         val taskName = name
-        dependsOn(applicationProjects.map { application ->
-            providers.provider { application.tasks.named(taskName) }
-        })
+        dependsOn(
+            applicationProjects.map { application ->
+                providers.provider { application.tasks.named(taskName) }
+            },
+        )
     }
 }
