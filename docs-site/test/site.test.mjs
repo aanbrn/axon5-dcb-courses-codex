@@ -153,6 +153,37 @@ test("publication excludes a private fixture and detects contamination of a rend
   assert.throws(() => verifyPublication(site.output, "/courses/", leak), /Excluded fixture bytes in site.css/);
 });
 
+test("the rendered maintainer guide publishes scope and provenance without advisory inputs", (t) => {
+  const site = variant(t);
+  const fixtureName = "synthetic-b8-input";
+  const excludedBytes = Buffer.from(
+    "synthetic-b8-inventory-feed-result-879fcfa6",
+  );
+  writeFileSync(join(site.workspace, `${fixtureName}.json`), excludedBytes);
+  const result = site.build();
+  assert.equal(result.status, 0, result.stderr);
+  verifyPublication(site.output, "/courses/", {
+    excludedName: fixtureName,
+    excludedBytes,
+  });
+
+  const guide = readFileSync(
+    join(site.output, "maintainer-guide/index.html"),
+    "utf8",
+  );
+  assert.match(
+    guide,
+    /href="\/courses\/feasibility\/phase-01\/#dependency-and-image-review"/,
+  );
+  assert.match(guide, /<strong>B8 status: incomplete\.<\/strong>/);
+  assert.match(guide, /<code>:bff:runtimeClasspath<\/code>/);
+  assert.match(guide, /<code>:probe:testRuntimeClasspath<\/code>/);
+  assert.match(guide, /<code>:probe:integrationTestRuntimeClasspath<\/code>/);
+  assert.match(guide, /authorized external local directory/);
+  assert.match(guide, /2026-12-01/);
+  assert.match(guide, /2026-12-02/);
+});
+
 test("publication rejects a broken prefixed report fragment", (t) => {
   const site = variant(t);
   const guide = join(site.input, "maintainer-guide.md");

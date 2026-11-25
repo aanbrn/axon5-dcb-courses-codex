@@ -57,3 +57,60 @@ For hosted deployments, provide an HTTPS `docsAppUrl` and include its origin in 
 ## Feasibility probe
 
 The [probe build](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/probe/build.gradle.kts) provides the opt-in DCB integration suite. Follow the [probe runbook](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/probe/README.md) to reproduce the native proof. The [feasibility report](/feasibility/phase-01/#hosted-amd64-verification-and-retirement) records the evidence and conditions for retiring the probe.
+
+## Extending the API contract
+
+The [OpenAPI contract](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/bff/src/main/resources/static/openapi.json) currently publishes the demo role directory. Add operations for browser commands, reads and live subscriptions as the corresponding behavior ships. Define the operation, schema, success and error responses in the contract, keep existing operation IDs stable, and add BFF component coverage against the checked-in contract. Run `./gradlew :bff:componentTest :web:generateClient :web:webCheck` to verify the implementation, regenerate the client and exercise consumers. Extend the shell through the generated client.
+
+The selected demo role is local tab state. If a future version adds login, use a signed cookie for the login session and verify session behavior with that feature.
+
+## Dependency maintenance
+
+Start with the latest stable release in the applicable major or LTS line. Verify compatibility before changing an owner. Record the scope, owner, concrete blocker and evidence for any hold. Review it within seven days unless the record specifies a date, and earlier after an upstream release, relevant advisory or terms change. Record any renewal with its evidence and removal trigger.
+
+Prefer a BOM or parent update that fixes the consuming graph within scope. Where the BOM cannot deliver the fix, use a catalog-backed ordinary lower-bound constraint with a reason on the affected declarable configuration. Use a strict bound only when reproduced selection behavior requires it, and record the case. Keep application and formatter scopes independent. Capture the full affected and control graphs, incoming paths and selection reasons, and run their applicable tests. Repeat those checks before removing a bound.
+
+The source brief cites the 2026-11-24 historical records in `phases/01-axon-server-feasibility-and-build-foundation/01-13-PLAN.md#b17-reference-scoped-transitive-review` (B17) and `phases/01-axon-server-feasibility-and-build-foundation/01-09-PLAN.md#b8-reference-private-jvm-advisory-check` (B8). Those original paths and their output are unavailable in this checkout. The [2026-11-25 Phase 1 public record](/feasibility/phase-01/#dependency-and-image-review) and the Phase 2 checks below document the observations that can be reproduced here.
+
+### Public JVM selection evidence
+
+```sh
+python3 tools/verify_dependency_evidence.py
+# With the public artifacts already cached
+python3 tools/verify_dependency_evidence.py --offline
+```
+
+The verifier uses disposable build sources to record Gradle `dependencies`, `dependencyInsight` and selected graph edges. It compares the checked-in graph, a baseline with only the ordinary Guava bounds removed, and the restored graph. The BFF unit and component tests, fixture isolation, ktfmt, probe unit tests and KDoc fixture run across those states. Probe integration compile and runtime graphs are included. The Docker-backed integration suite is opt-in and its runtime needs separate evidence.
+
+| Scope                                                | Selection and incoming paths                                                                                                                                                                                                                                                                                                                  |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Probe main, unit and integration compile and runtime | Boot manages gRPC at `1.84.1`. The Axon Java transport `2026.1.1` leads to the gRPC graph. The compile classpaths expose `grpc-stub` as the incoming Guava edge. Runtime also exposes `grpc-api` and other gRPC modules. They request `33.6.0-android`, and the ordinary probe implementation constraint selects component `33.8.0-android` by conflict resolution. Gradle reports `jreApiElements` for compile and `jreRuntimeElements` for runtime. |
+| `:bff:ktfmtTool` and `:probe:kdocFormatter`          | ktfmt `0.65` brings Guava `33.5.0-jre`, and its google-java-format `1.23.0` path brings `32.1.3-jre`. The ordinary formatter constraint selects `33.8.0-jre` by conflict resolution.                                                                                                                                                          |
+| BFF main, unit and component compile and runtime     | The full graphs stayed equal across the removal and restoration controls, with no selected Guava in these classpaths.                                                                                                                                                                                                                         |
+| BFF detekt, probe Kotest and probe JVM TypeID        | The graph checks cover these independent tool and suite configurations as additional controls.                                                                                                                                                                                                                                                |
+
+The build maintainer owns both Guava bounds and reviews them by **2026-12-01** or sooner after a relevant upstream or BOM change. The unconstrained gRPC and formatter graphs select versions affected by GHSA-xxph-c9ww-hj94 / CVE-2026-102554. Remove each bound when the upstream graph independently selects a compatible fixed release, the affected and control comparisons and applicable tests pass, and the applicable private review has run. [Guava advisory](https://github.com/advisories/GHSA-xxph-c9ww-hj94)
+
+The selected Spring Boot `4.2.0` BOM POM declares pgJDBC `42.7.14`. The observed BFF and probe application and test graphs select no `org.postgresql:postgresql` artifact. The build maintainer rechecks by **2026-12-01**, at first consumption and after each Boot change. Confirm the driver selected in real consuming role, worker and test graphs. Prefer the BOM when it supplies `42.7.15` or a verified newer fix. If the BOM still selects an affected version for a real consumer, add a scoped explicit version and remove it when the BOM independently selects a fixed version and the consuming checks pass. [pgJDBC 42.7.15 release](https://github.com/pgjdbc/pgjdbc/releases/tag/REL42.7.15)
+
+### Image and npm review
+
+The build maintainer reviews the pinned Axon Server `2026.1.8` catalog entry by **2026-12-01** or sooner after an advisory or terms change. The Phase 1 report records the immutable index and both ARM64 and AMD64 child manifests and configs, the native ARM64 proof, and the terms governing the image and application artifacts. Before changing the pin, verify the replacement index, both children, current applicable terms and a fresh local runtime result. Phase 7 owns the first hosted AMD64 DCB runtime proof. PostgreSQL currently has no selected image. The build maintainer reviews this record by **2026-12-01** and verifies the selected index, both child manifests and configs, applicable terms and a fresh runtime test at first consumption. [Phase 1 versions and terms](/feasibility/phase-01/#applicable-terms)
+
+Review each npm consumer's own manifest and lockfile. To change a package, verify its registry origin, version, integrity and support, regenerate the affected lock with the Gradle-managed npm, then run strict-peer `npm ci`, `npm ls --all` and the consuming checks. Review the resulting lock diff and audit coverage for that consumer. Keep this work within the public npm graph and registry advisory boundary.
+
+On 2026-11-25, managed npm `12.2.3` ran `npm ls --all --json --offline` successfully against the installed public trees. It reported 28 direct web packages, Eleventy `3.1.8` for docs, Prettier `3.10.1` and git-format-staged `4.0.2` for style, no direct packages in the static probe, and two in the TypeID probe. This command checks the installed dependency tree and peer relationships. The dated npm advisory assessment below has its own scope.
+
+The isolated TypeID probe selects `typeid-js@1.2.0` and its transitive `uuid@10.0.0`. The 2026-11-25 public npm audit reported two Moderate entries for the same underlying advisory. The fixture exercises the bundle's stringify and v7 paths, while GHSA-w5hq-g745-h8pq concerns v3, v5 and v6 supplied output buffers. Jetify's `^10.0.0` range cannot select the fix. The build maintainer reviews by **2026-12-02** and immediately if probe inputs or API use change. Retire the hold when a verified Jetify release resolves a fixed uuid, then repeat the audit and TypeID vector check. The application TypeID package decision is pending. [Phase 1 npm evidence](/feasibility/phase-01/#secondary-checks)
+
+The web lock selects app and Storybook TypeScript `7.0.2`. Its package extension gives `@feature-sliced/steiger-plugin@0.8.2` tooling-only TypeScript `5.9.3` for `tsconfck@3.1.6` and its optional `^5.0.0` peer. The control without the extension passed strict install and failed `npm ls --all` with `ELSPROBLEMS` for `typescript@7.0.2`. The web tooling maintainer reviews by **2026-12-02** and whenever the Steiger plugin or config reader is upgraded. Remove the extension only after a disposable lock regenerated without it passes strict managed npm install, `npm ls --all`, native TypeScript compilation, and Steiger and Chromium checks.
+
+### Private JVM advisory procedure (B8)
+
+**B8 status: incomplete.** The authorized feed, scanner and private inputs were unavailable for this review. Keep the result open and escalate incomplete coverage immediately to the build maintainer.
+
+1. Opt in only with an authorized scanner, current authorized feed and an authorized external local directory. From Gradle's selected resolution results, produce inventories of Maven coordinates for `:bff:runtimeClasspath`, `:probe:testRuntimeClasspath` and `:probe:integrationTestRuntimeClasspath`. Include selected transitives and selected platform/BOM metadata. Exclude project components. Add `:command:runtimeClasspath` and `:query:runtimeClasspath` when those modules exist.
+2. Run the authorized scanner with the scoped inventories and feed. Record the checked revision, configurations, scan time, feed identity and time, scanner version, result and limitations in the authorized external local directory. Keep the full inventories, feed and results out of the repository, published site, CI and logs.
+3. Repeat at least weekly and after dependency changes or relevant advisories. Escalate incomplete results and High or Critical findings immediately. Assess unrated findings individually against their evidence and exposure.
+
+A complete no-match applies only to the examined inventories and feed. Scope excludes Gradle plugins, JDK and other toolchain inputs, npm and other non-Maven inputs, container images, operating-system packages and advisories absent from the feed. A public Gradle graph reproduction, an npm audit and a hosted dependency or image scan have their own evidence and coverage.
