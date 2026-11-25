@@ -3,6 +3,7 @@ axon = "5.4.2"
 axoniq = "5.4.2"
 axon-server-image = "axoniq/axonserver:2026.1.8@sha256:57b6ad30353cc0df1612d6a30be03a1df85b4b49b5f2feee218a70d1cb7794c2"
 coroutines = "1.10.2"
+detekt = "1.23.8"
 gradle-node = "7.1.0"
 guava-android = "33.8.0-android"
 guava-jre = "33.8.0-jre"
@@ -28,6 +29,7 @@ axon-bom = { module = "org.axonframework:axon-framework-bom", version.ref = "axo
 axoniq-bom = { module = "io.axoniq.framework:axoniq-framework-bom", version.ref = "axoniq" }
 axoniq-starter = { module = "io.axoniq.framework:axoniq-spring-boot-starter" }
 coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+detekt-cli = { module = "io.gitlab.arturbosch.detekt:detekt-cli", version.ref = "detekt" }
 guava-android = { module = "com.google.guava:guava", version.ref = "guava-android" }
 guava-jre = { module = "com.google.guava:guava", version.ref = "guava-jre" }
 jackson-databind = { module = "tools.jackson.core:jackson-databind" }
