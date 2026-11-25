@@ -6,12 +6,21 @@ import { after, before, test } from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
+import { createServer as createViteServer } from "vite";
 
 const directoryPath = "/api/demo-roles";
 const roleStorageKey = "courses.demo.role";
 const fallbackMessage = "Your previous demo student is unavailable. You’re now using Administrator.";
 const loopback = "127.0.0.1";
 const vite = fileURLToPath(new URL("../node_modules/vite/bin/vite.js", import.meta.url));
+const testLoader = await createViteServer({
+  configFile: false,
+  appType: "custom",
+  server: { middlewareMode: true, watch: null, ws: false },
+});
+const { registerRoleStateTests } = await testLoader
+  .ssrLoadModule("/test/role-states.test.tsx")
+  .finally(() => testLoader.close());
 
 async function loopbackPort() {
   const server = createServer().listen(0, loopback);
@@ -209,8 +218,28 @@ for (const [name, stored, students] of [
     assert.equal(await selector.inputValue(), administrator.id);
     assert.equal(await readStoredRole(page), administrator.id, "A valid response must persist the fallback");
     assert.equal(await page.getByRole("status").filter({ hasText: fallbackMessage }).count(), 1);
+    if (students.length === 0) {
+      await page.getByRole("heading", { name: "No demo students available" }).waitFor();
+      assert.equal(await page.getByText("You can continue as Administrator or read the quick start.").count(), 1);
+      assert.equal(await page.getByRole("link", { name: "quick start", exact: true }).count(), 1);
+    }
     await page.reload();
     await readySelector(page, administrator.label);
     assert.equal(await page.getByText(fallbackMessage, { exact: true }).count(), 0, "The fallback is announced once");
   });
 }
+
+registerRoleStateTests({
+  openContext,
+  webOrigin: () => webOrigin,
+  async developmentOrigin(t) {
+    const port = await loopbackPort();
+    const origin = `http://${loopback}:${port}`;
+    const dev = startService(process.execPath, [
+      vite, "--host", loopback, "--port", String(port), "--strictPort",
+    ], { ...process.env, VITE_BFF_ORIGIN: bffOrigin });
+    t.after(() => dev.stop());
+    await awaitReady(dev, new URL(origin));
+    return origin;
+  },
+});
