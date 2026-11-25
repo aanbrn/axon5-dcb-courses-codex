@@ -1,9 +1,9 @@
 ---
 phase: "01"
 slug: axon-server-and-toolchain-feasibility
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: validated
+nyquist_compliant: true
+wave_0_complete: true
 created: "2026-11-24"
 ---
 
@@ -15,7 +15,7 @@ created: "2026-11-24"
 | --- | --- |
 | Framework | JUnit Jupiter 6 and Testcontainers. Kotlin, npm, ktfmt, and Pack secondary samples run through explicit Gradle tasks. |
 | Config file | Root Gradle Wrapper and `probe/build.gradle.kts`, provisioned by the first plan. |
-| Quick run | `./gradlew --console=plain :probe:test` after 01-02 Task 3 provisions the smoke test. |
+| Quick run | `./gradlew --console=plain :probe:test` runs the contract smoke test. |
 | Required full run | `./gradlew --console=plain :probe:integrationTest --rerun-tasks` on native ARM64 with clean state. |
 | Docker-free graph | `./gradlew --console=plain build --dry-run` omits `:probe:integrationTest` and Docker image tasks. |
 | Runtime | Target a warm integration run within five minutes once dependencies and images are present. Measure and report cold setup separately. |
@@ -31,21 +31,23 @@ created: "2026-11-24"
 
 Use the checks below from the repository root. The first task verifies the candidate Gradle distribution before the wrapper exists. Commands using `./gradlew` apply after 01-01 Task 2 has generated and verified it. Run the actual gate even where the table also calls for reviewing documentation or diagnostics.
 
+The plan summaries record the individual executions. Acceptance run `acceptance-nvahwpkb` replayed the final wrapper, both ordinary builds, the three native DCB cases, and all seven secondary stages. The report checker replayed the retained evidence and verified the published fields on Python 3.9.6 and 3.12.1. [Feasibility record](../../../docs/feasibility/phase-01.md)
+
 | Plan/task | Observable outcome and threat ref | Command or evidence | Status |
 | --- | --- | --- | --- |
-| 01-01 T1 | Cold native credential-free remote command and durable event, applicable terms, immutable image index and distinct runnable ARM64/AMD64 child metadata. T-01-01, T-01-02 | `gradle --console=plain :probe:integrationTest --tests 'probe.AxonProbeTest.a remote command persists a tagged event' --rerun-tasks` | Pending |
-| 01-01 T2 | Same tracer via verified wrapper. T-01-01 | `./gradlew --console=plain :probe:integrationTest --tests 'probe.AxonProbeTest.a remote command persists a tagged event' --rerun-tasks` | Pending |
-| 01-02 T1 | Real conflict at commit, same durable winner under both tags, absent loser, remote command/query, initial result and correlated update. T-01-03 | `./gradlew --console=plain :probe:integrationTest --tests 'probe.AxonProbeTest.overlapping writes leave one winner and notify the remote subscriber' --rerun-tasks` | Pending |
-| 01-02 T2 | Bounded cleanup after success and forced failure, distinct empty starting states. T-01-04 | `./gradlew --console=plain :probe:integrationTest --rerun-tasks` twice | Pending |
-| 01-02 T3 | Persistent Temurin feature owner, secondary preflight and smoke test in an ordinary build with unreachable Docker. Selected toolchain and actual worker/role identities | `env DOCKER_HOST=tcp://127.0.0.1:1 ./gradlew --console=plain build --rerun-tasks` plus the full native suite and `python3 probe/verify_secondary.py self-test` | Pending |
-| 01-03 T1 | Reproducible checked input and deterministic static asset | `python3 probe/verify_secondary.py check frontend-fixture` | Pending |
-| 01-03 T2 | Gradle uses the selected Node/npm, clean lockfile and staged bytes | `python3 probe/verify_secondary.py check frontend-assets` | Pending |
-| 01-03 T3 | Native Paketo image serves two distinguishable staged assets and cleans up. T-01-05, T-01-06 | `python3 probe/verify_secondary.py check frontend-image` | Pending |
-| 01-04 T1 | Named Jupiter test with Kotest matcher/seeded property. ktfmt expected delta, preserved KDoc and idempotence | `python3 probe/verify_secondary.py check kotest` and `python3 probe/verify_secondary.py check kdoc` | Pending |
-| 01-04 T2 | JVM canonical TypeID encodings and malformed/wrong-prefix rejections | `python3 probe/verify_secondary.py check typeid-jvm` | Pending |
-| 01-04 T3 | Independent JVM→TS and TS→JVM exchanges verify 16 bytes and prefix. T-01-07 | `python3 probe/verify_secondary.py check typeid-exchange` | Pending |
-| 01-05 T1 | Both verifier modes complete before capture. Clean hard gate, four independent secondary statuses, actual resolved graphs, prior review and private check scope. T-01-08 | `python3 probe/verify_evidence.py --capture --evidence probe/build/reports/feasibility` | Pending |
-| 01-05 T2 | Documentation-only changes checked with the captured verifier. Permanent report, exact terms and future AMD64/retirement criteria agree with observed results. T-01-09 | `python3 probe/verify_evidence.py --evidence probe/build/reports/feasibility --report docs/feasibility/phase-01.md` plus source review | Pending |
+| 01-01 T1 | Cold native credential-free remote command and durable event, applicable terms, immutable image index and distinct runnable ARM64/AMD64 child metadata. T-01-01, T-01-02 | `gradle --console=plain :probe:integrationTest --tests 'probe.AxonProbeTest.a remote command persists a tagged event' --rerun-tasks` | Pass |
+| 01-01 T2 | Same tracer via verified wrapper. T-01-01 | `./gradlew --console=plain :probe:integrationTest --tests 'probe.AxonProbeTest.a remote command persists a tagged event' --rerun-tasks` | Pass |
+| 01-02 T1 | Real conflict at commit, same durable winner under both tags, absent loser, remote command/query, initial result and correlated update. T-01-03 | `./gradlew --console=plain :probe:integrationTest --tests 'probe.AxonProbeTest.overlapping writes leave one winner and notify the remote subscriber' --rerun-tasks` | Pass |
+| 01-02 T2 | Bounded cleanup after success and forced failure, distinct empty starting states. T-01-04 | `./gradlew --console=plain :probe:integrationTest --rerun-tasks` twice | Pass |
+| 01-02 T3 | Persistent Temurin feature owner, secondary preflight and smoke test in an ordinary build with unreachable Docker. Selected toolchain and actual worker/role identities | `env DOCKER_HOST=tcp://127.0.0.1:1 ./gradlew --console=plain build --rerun-tasks` plus the full native suite and `python3 probe/verify_secondary.py self-test` | Pass |
+| 01-03 T1 | Reproducible checked input and deterministic static asset | `python3 probe/verify_secondary.py check frontend-fixture` | Pass |
+| 01-03 T2 | Gradle uses the selected Node/npm, clean lockfile and staged bytes | `python3 probe/verify_secondary.py check frontend-assets` | Pass |
+| 01-03 T3 | Native Paketo image serves two distinguishable staged assets and cleans up. T-01-05, T-01-06 | `python3 probe/verify_secondary.py check frontend-image` | Pass |
+| 01-04 T1 | Named Jupiter test with Kotest matcher/seeded property. ktfmt expected delta, preserved KDoc and idempotence | `python3 probe/verify_secondary.py check kotest` and `python3 probe/verify_secondary.py check kdoc` | Pass |
+| 01-04 T2 | JVM canonical TypeID encodings and malformed/wrong-prefix rejections | `python3 probe/verify_secondary.py check typeid-jvm` | Pass |
+| 01-04 T3 | Independent JVM→TS and TS→JVM exchanges verify 16 bytes and prefix. T-01-07 | `python3 probe/verify_secondary.py check typeid-exchange` | Pass |
+| 01-05 T1 | Both verifier modes complete before capture. Clean hard gate, four independent secondary statuses, actual resolved graphs, prior review and private check scope. T-01-08 | `python3 probe/verify_evidence.py --capture --evidence probe/build/reports/feasibility` | Pass |
+| 01-05 T2 | Documentation-only changes checked with the captured verifier. Permanent report, exact terms and future AMD64/retirement criteria agree with observed results. T-01-09 | `python3 probe/verify_evidence.py --evidence probe/build/reports/feasibility --report docs/feasibility/phase-01.md` plus source review | Pass |
 
 ## Local evidence contract
 
@@ -95,9 +97,9 @@ In the current checkout, `--capture` allocates an empty run root and recomputes 
 
 ## Wave 0 Requirements
 
-- [ ] Add a checksummed Gradle Wrapper and minimal Kotlin/Spring build for the probe.
-- [ ] Provision the JUnit suite, clean scoped Testcontainers launcher, application role fixtures, readiness checks, and cleanup.
-- [ ] Add the secondary fixture tasks before running their verification commands.
+- [x] Add a checksummed Gradle Wrapper and minimal Kotlin/Spring build for the probe.
+- [x] Provision the JUnit suite, clean scoped Testcontainers launcher, application role fixtures, readiness checks, and cleanup.
+- [x] Add the secondary fixture tasks before running their verification commands.
 
 ## Manual-Only Verifications
 
@@ -106,11 +108,21 @@ In the current checkout, `--capture` allocates an empty run root and recomputes 
 | Confirm intended use of the exact image and connector | FND-01, D-11–D-13 | Publisher terms and entitlement interpretation require source review. | Check exact publisher terms, date, resolved artifacts, and runtime evidence. Record the unlicensed limit and any detected network dependency. |
 | Evaluate evidence for a non-passing secondary | D-07–D-08 | Classification depends on the first observed failure and stage. | Retain a reproducible command and redacted result or a concrete environmental cause and retry trigger. |
 
+The publisher-terms review is recorded in the feasibility report alongside the observed unregistered launch. No secondary non-pass required disposition in the final acceptance run.
+
 ## Validation Sign-Off
 
-- [ ] Task verifiers are runnable and have explicit failing directions.
-- [ ] The required ARM64 integration proof and Docker-free graph are green.
-- [ ] All four secondary probes have an evidenced outcome and any retry trigger.
-- [ ] The report scopes the image metadata and runtime evidence, records terms, and preserves the AMD64 and probe-retirement conditions.
+- [x] Task verifiers are runnable and have explicit failing directions.
+- [x] The required ARM64 integration proof and Docker-free graph are green.
+- [x] All four secondary probes have an evidenced outcome and any retry trigger.
+- [x] The report scopes the image metadata and runtime evidence, records terms, and preserves the AMD64 and probe-retirement conditions.
 
-**Approval:** Pending execution evidence.
+**Sign-off.** Verified on 2026-11-25 against `acceptance-nvahwpkb`. The Phase 1 requirement FND-01 has automated coverage. The private JVM advisory procedure and hosted AMD64 runtime remain separate from this acceptance evidence.
+
+## Validation Audit 2026-11-25
+
+| Metric | Count |
+|---|---|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
