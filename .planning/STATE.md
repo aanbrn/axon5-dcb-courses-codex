@@ -4,18 +4,18 @@ milestone: v1.0
 milestone_name: Axon 5 DCB Courses
 current_phase: 02
 current_phase_name: Build and UI Foundations
-current_plan: 2
+current_plan: 3
 status: executing
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-11-25T12:38:28.722Z"
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-11-25T13:00:59.920Z"
 last_activity: 2026-11-25
 last_activity_desc: Completed the live role directory tracer
-state_head: 6aed3de5b169df7c260933e337ded6aeb6a65119
+state_head: f971d0a2852d77d2838d400eb833a8566a7e08b3
 progress:
   total_phases: 8
   completed_phases: 1
   total_plans: 16
-  completed_plans: 6
+  completed_plans: 7
   percent: 13
 ---
 
@@ -31,7 +31,7 @@ See [PROJECT.md](PROJECT.md), initialized 2026-11-24.
 ## Current Position
 
 Phase: 02 (Build and UI Foundations)
-Current Plan: 2
+Current Plan: 3
 Total Plans in Phase: 11
 Status: Ready to execute
 Last activity: 2026-11-25 -- Completed the live role directory tracer
@@ -53,6 +53,7 @@ Progress: [█░░░░░░░░░] 13%
 | Phase 01 P04 | 21min | 3 tasks | 9 files |
 | Phase 01 P05 | 47min | 2 tasks | 6 files |
 | Phase 02 P01 | 12m20s | 2 tasks | 15 files |
+| Phase 02 P02 | 18m54s | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,8 @@ Progress: [█░░░░░░░░░] 13%
 - [Phase 01]: Preserve the permanent report and require hosted AMD64 Testcontainers and Playwright coverage before probe retirement.
 - [Phase 02]: Keep the canonical OpenAPI file as the published Gradle artifact and Spring static resource.
 - [Phase 02]: Disable implicit npm lifecycle scripts and provision the pinned Chromium through an explicit task.
+- [Phase 02]: Use the root Gradle catalog and .java-version in the reusable JVM convention.
+- [Phase 02]: Restrict NetworkNT to the BFF component suite and allow schema references only within the packaged contract.
 
 ### Pending Todos
 
@@ -87,6 +90,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-25T12:37:53.520Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-11-25T13:00:59.853Z
+Stopped at: Completed 02-02-PLAN.md
 Resume file: None

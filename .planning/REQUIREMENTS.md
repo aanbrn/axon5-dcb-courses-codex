@@ -12,7 +12,7 @@
 - [x] **FND-02** Build and check the toolchain with one authoritative version owner per ecosystem, pinned independent CLIs in mise, an inventory, and a `doctor` check. Keep `.java-version` at the Temurin feature version and record the actual build separately.
 - [ ] **FND-03** Exchange type-prefixed UUIDv7 TypeIDs between Kotlin and TypeScript and round-trip them through native `uuid` storage.
 - [ ] **FND-04** Build project images through Paketo Cloud Native Buildpacks, using `bootBuildImage` for JVM services and the Web Servers buildpack for the frontend. Package the static assets built by Gradle using npm and `package-lock.json`.
-- [ ] **FND-05** Run Gradle JVM Test Suites with shared Java Test Fixtures, JUnit 6, and compatible Kotest assertions and property tests. JUnit supplies the runner.
+- [x] **FND-05** Run Gradle JVM Test Suites with shared Java Test Fixtures, JUnit 6, and compatible Kotest assertions and property tests. JUnit supplies the runner.
 - [x] **FND-06** Build the frontend and documentation site from Gradle Node subprojects. On a clean `./gradlew build`, generate the frontend client from the BFF OpenAPI contract before building the frontend.
 
 ### Domain and Consistency
@@ -114,7 +114,7 @@
 | FND-02 | Phase 2 | Complete |
 | FND-03 | Phase 3 | Pending |
 | FND-04 | Phase 5 | Pending |
-| FND-05 | Phase 2 | Pending |
+| FND-05 | Phase 2 | Complete |
 | FND-06 | Phase 2 | Complete |
 | DCB-01 | Phase 3 | Pending |
 | DCB-02 | Phase 4 | Pending |
