@@ -74,6 +74,7 @@ dependencies {
 
 val generated = layout.buildDirectory.dir("generated")
 val distribution = layout.buildDirectory.dir("dist")
+val storybookDistribution = layout.buildDirectory.dir("storybook")
 val source = layout.projectDirectory.dir("src")
 val vite = layout.projectDirectory.file("node_modules/vite/bin/vite.js")
 
@@ -140,7 +141,18 @@ tasks.register<Exec>("verifyClientGraph") {
     timeout = Duration.ofMinutes(10)
 }
 
-tasks.named("assemble") { dependsOn(webBuild) }
+val buildStorybook =
+    tasks.register<NodeTask>("buildStorybook") {
+        group = "build"
+        description = "Build the static Storybook from the production components."
+        dependsOn(typecheck)
+        useWebDependencies(source, generated, ".storybook", "vite.config.ts", "tsconfig.json")
+        script = layout.projectDirectory.file("node_modules/storybook/dist/bin/dispatcher.js")
+        args = listOf("build", "--output-dir", "build/storybook", "--disable-telemetry")
+        outputs.dir(storybookDistribution)
+    }
+
+tasks.named("assemble") { dependsOn(webBuild, buildStorybook) }
 
 tasks.named("check") { dependsOn(webCheck) }
 
@@ -156,6 +168,15 @@ val provisionBrowser =
         args = listOf("install", "chromium")
         timeout = Duration.ofMinutes(5)
     }
+
+tasks.register<NodeTask>("storyTest") {
+    group = "verification"
+    description = "Run the Storybook interactions and accessibility checks in Chromium."
+    dependsOn(provisionBrowser, generateClient)
+    useWebDependencies(source, generated, ".storybook", "vitest.config.ts", "tsconfig.json")
+    script = layout.projectDirectory.file("node_modules/vitest/vitest.mjs")
+    args = listOf("run", "--project", "storybook")
+}
 
 val shellSmoke =
     tasks.register<NodeTask>("shellSmoke") {
