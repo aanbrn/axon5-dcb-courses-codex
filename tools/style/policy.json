@@ -1,0 +1,97 @@
+{
+  "prettier": {
+    "embeddedLanguageFormatting": "off",
+    "endOfLine": "lf"
+  },
+  "wrapper": {
+    "gradlew": {
+      "mode": "100755",
+      "sha256": "a5a5c199ba02189ae8c46a334223371a20599d9c298ef65e7540ede4a3f72d59"
+    },
+    "gradlew.bat": {
+      "mode": "100644",
+      "sha256": "f17917f8dbe61182b149273ee78090fec1197442c3f38276af907bfa5190db16"
+    },
+    "gradle/wrapper/gradle-wrapper.jar": {
+      "mode": "100644",
+      "sha256": "621008afc4f5d59357fcf06ffa644dd5aade5e091bdc363742710445f73cdaf8"
+    },
+    "distributionUrl": "https://services.gradle.org/distributions/gradle-9.9.2-bin.zip",
+    "distributionSha256Sum": "971fcd7150ca4ba04852c0b2ca0d2d0ab9468e14b03473eab19528809914c76b"
+  },
+  "rules": [
+    {
+      "id": "wrapper",
+      "paths": [
+        "gradlew",
+        "gradlew.bat",
+        "gradle/wrapper/gradle-wrapper.jar",
+        "gradle/wrapper/gradle-wrapper.properties"
+      ],
+      "reason": "Gradle owns wrapper scripts, the binary and the verified distribution."
+    },
+    {
+      "id": "versions",
+      "paths": [".java-version", ".nvmrc"],
+      "reason": "The JDK feature and exact Node release have their own version syntax."
+    },
+    {
+      "id": "npm-lock",
+      "paths": ["*/package-lock.json", "package-lock.json"],
+      "reason": "npm owns lock formatting. Check JSON, manifest agreement and registry integrity."
+    },
+    {
+      "id": "evidence",
+      "paths": [".planning/*.md", "docs/feasibility/phase-01.md"],
+      "reason": "GSD plans and feasibility records contain machine-readable blocks, tables and evidence. Preserve their Markdown bytes within lines and verify UTF-8 and line endings."
+    },
+    {
+      "id": "kotlin",
+      "paths": ["*.kt", "*.kts"],
+      "reason": "ktfmt owns Kotlin, KDoc and Gradle Kotlin DSL. detekt checks comments."
+    },
+    {
+      "id": "python",
+      "paths": ["*.py"],
+      "reason": "Ruff formats Python and checks lint after formatting."
+    },
+    {
+      "id": "toml",
+      "paths": ["*.toml"],
+      "reason": "Taplo formats and checks TOML syntax and duplicate keys."
+    },
+    {
+      "id": "shell",
+      "paths": [".githooks/pre-commit", "*.sh"],
+      "reason": "Apply the text format and check shell syntax without executing scripts."
+    },
+    {
+      "id": "prettier",
+      "paths": [
+        "*.md",
+        "*.json",
+        "*.yaml",
+        "*.yml",
+        "*.js",
+        "*.jsx",
+        "*.cjs",
+        "*.mjs",
+        "*.ts",
+        "*.tsx",
+        "*.css",
+        "*.html"
+      ],
+      "except": [
+        ".planning/*.md",
+        "docs/feasibility/phase-01.md",
+        "*/package-lock.json",
+        "package-lock.json"
+      ],
+      "reason": "Prettier formats authored Markdown, browser assets and structured text. Steiger checks authored FSD source."
+    }
+  ],
+  "default": {
+    "id": "text",
+    "reason": "Other tracked files must be UTF-8 text with LF, a terminal newline and no trailing horizontal whitespace. Generated output and caches are ignored by Git."
+  }
+}

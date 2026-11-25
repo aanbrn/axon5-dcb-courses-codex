@@ -1,0 +1,10 @@
+{
+  "name": "axon5-dcb-courses-style",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "npm@12.2.3",
+  "devDependencies": {
+    "git-format-staged": "4.0.2",
+    "prettier": "3.10.1"
+  }
+}
