@@ -23,7 +23,7 @@ layout: page.11ty.js
 ./gradlew :docs-site:serve -PdocsBase=/courses/
 ```
 
-Gradle stages the public sources and renders the static site into `docs-site/build/site`. The optional `docsBase` is a deployment path with a leading and trailing slash. With `/courses/`, mount the output there and open [http://127.0.0.1:8081/courses/](http://127.0.0.1:8081/courses/) for the local preview.
+Gradle stages the public sources and renders the static site into `docs-site/build/site`. The optional `docsBase` is a deployment path with a leading and trailing slash. With `/courses/`, mount the output there. The local preview prints `http://127.0.0.1:8081/courses/` when it is ready.
 
 For hosted deployments, provide an HTTPS `docsAppUrl` and include its origin in the comma-separated `docsTrustedAppOrigins` build setting. The local Vite origin `http://127.0.0.1:5173` is already allowed. Invalid values fail the build.
 

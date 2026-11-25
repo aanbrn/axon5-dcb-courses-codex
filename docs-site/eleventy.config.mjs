@@ -1,5 +1,6 @@
 import { join } from "node:path";
 import { HtmlBasePlugin } from "@11ty/eleventy";
+import { verifyPublication } from "./verify-site.mjs";
 
 const localAppOrigin = "http://127.0.0.1:5173";
 
@@ -41,8 +42,10 @@ export default function (eleventyConfig) {
 
   eleventyConfig.addPlugin(HtmlBasePlugin);
   eleventyConfig.addGlobalData("launch", launchAction());
-  eleventyConfig.setServerOptions({ host: "127.0.0.1", showAllHosts: false, liveReload: false });
   eleventyConfig.addPassthroughCopy({ [join(input, "site.css")]: "site.css" });
+  eleventyConfig.on("eleventy.after", ({ directories, outputMode }) => {
+    if (outputMode === "fs") verifyPublication(directories.output, pathPrefix);
+  });
 
   const slugify = eleventyConfig.getFilter("slugify");
   eleventyConfig.amendLibrary("md", (markdown) => {

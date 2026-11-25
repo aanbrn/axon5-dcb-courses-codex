@@ -23,7 +23,7 @@ From the repository root, run one command per terminal.
    ./gradlew :web:dev
    ```
 
-3. Start the documentation at [http://127.0.0.1:8081/](http://127.0.0.1:8081/).
+3. Start the documentation at `http://127.0.0.1:8081/`.
 
    ```sh
    ./gradlew :docs-site:serve -PdocsAppUrl=http://127.0.0.1:5173/
