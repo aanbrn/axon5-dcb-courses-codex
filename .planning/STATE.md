@@ -4,18 +4,18 @@ milestone: v1.0
 milestone_name: Axon 5 DCB Courses
 current_phase: 02
 current_phase_name: Build and UI Foundations
-current_plan: 9
+current_plan: 10
 status: executing
-stopped_at: Completed 02-11-PLAN.md
-last_updated: "2026-11-25T15:09:44.126Z"
+stopped_at: Completed 02-07-PLAN.md
+last_updated: "2026-11-25T15:36:01.805Z"
 last_activity: 2026-11-25
 last_activity_desc: Completed per-tab demo roles and directory recovery
-state_head: bb50476bb6c24f9d213f7b66581a8d97698b5375
+state_head: 0ee10d400db64e347ad711d90c26e5b0a5f36ef3
 progress:
   total_phases: 8
   completed_phases: 1
   total_plans: 16
-  completed_plans: 13
+  completed_plans: 14
   percent: 13
 ---
 
@@ -31,7 +31,7 @@ See [PROJECT.md](PROJECT.md), initialized 2026-11-24.
 ## Current Position
 
 Phase: 02 (Build and UI Foundations)
-Current Plan: 9
+Current Plan: 10
 Total Plans in Phase: 11
 Status: Ready to execute
 Last activity: 2026-11-25 -- Completed per-tab demo roles and directory recovery
@@ -60,6 +60,7 @@ Progress: [█░░░░░░░░░] 13%
 | Phase 02 P04 | 25m16s | 3 tasks | 16 files |
 | Phase 02 P06 | 15m50s | 2 tasks | 15 files |
 | Phase 02 P11 | 18m51s | 2 tasks | 15 files |
+| Phase 02 P07 | 21m00s | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -100,6 +101,9 @@ Progress: [█░░░░░░░░░] 13%
 - [Phase 02]: Build static Storybook during assemble and require explicit Chromium provisioning for storyTest and foundationProof.
 - [Phase 02]: Use public FSD entry points for the home slice and shared API, with Steiger scanning authored source.
 - [Phase 02]: Scope TypeScript 5.9.3 to the approved Steiger plugin to satisfy tsconfck's peer and review the package extension by 2026-12-02.
+- [Phase 02]: Use the same rules over raw staged blobs and checked-out tracked files, with configuration from the corresponding snapshot.
+- [Phase 02]: Validate the whole candidate before taking the Git index lock and replacing the original index.
+- [Phase 02]: Preserve Phase 01 evidence and npm-owned lock bytes while checking their text or structured content.
 
 ### Pending Todos
 
@@ -112,6 +116,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-25T15:09:44.057Z
-Stopped at: Completed 02-11-PLAN.md
+Last session: 2026-11-25T15:36:01.736Z
+Stopped at: Completed 02-07-PLAN.md
 Resume file: None

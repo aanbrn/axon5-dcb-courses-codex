@@ -2,9 +2,9 @@
 schema_version: 1
 open_count: 0
 waived_count: 0
-fixed_count: 8
-total_count: 8
-last_updated: 2026-11-25T15:10:02.759Z
+fixed_count: 10
+total_count: 10
+last_updated: 2026-11-25T15:36:00.649Z
 ---
 
 # Broken Windows Ledger
@@ -23,6 +23,8 @@ last_updated: 2026-11-25T15:10:02.759Z
 | 6 | 02 | deviation | web/src/pages/home/index.ts |  | Add the required authored FSD segments and public APIs. | fixed |  | 2026-11-25T15:09:51.334Z | 2026-11-25T15:10:02.483Z |
 | 7 | 02 | deviation | web/package.json |  | Satisfy the Steiger toolchain peer in its own dependency graph. | fixed |  | 2026-11-25T15:10:02.551Z | 2026-11-25T15:10:02.620Z |
 | 8 | 02 | deviation | web/vitest.config.ts |  | Allow the proof to read the installed dependency directory. | fixed |  | 2026-11-25T15:10:02.692Z | 2026-11-25T15:10:02.759Z |
+| 9 | 02 | deviation | build.gradle.kts |  | Regenerated stale Gradle Kotlin DSL accessors. | fixed |  | 2026-11-25T15:36:00.432Z | 2026-11-25T15:36:00.506Z |
+| 10 | 02 | deviation | tools/style/policy.json |  | Selected explicit Ruff lint rules. | fixed |  | 2026-11-25T15:36:00.575Z | 2026-11-25T15:36:00.649Z |
 
 ````json
 [
@@ -128,6 +130,32 @@ last_updated: 2026-11-25T15:10:02.759Z
     "reason": "",
     "recorded_at": "2026-11-25T15:10:02.692Z",
     "resolved_at": "2026-11-25T15:10:02.759Z",
+    "milestone": "v1.0"
+  },
+  {
+    "id": 9,
+    "kind": "deviation",
+    "phase": "02",
+    "file": "build.gradle.kts",
+    "line": null,
+    "description": "Regenerated stale Gradle Kotlin DSL accessors.",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-11-25T15:36:00.432Z",
+    "resolved_at": "2026-11-25T15:36:00.506Z",
+    "milestone": "v1.0"
+  },
+  {
+    "id": 10,
+    "kind": "deviation",
+    "phase": "02",
+    "file": "tools/style/policy.json",
+    "line": null,
+    "description": "Selected explicit Ruff lint rules.",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-11-25T15:36:00.575Z",
+    "resolved_at": "2026-11-25T15:36:00.649Z",
     "milestone": "v1.0"
   }
 ]

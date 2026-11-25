@@ -62,7 +62,7 @@ Build, browser, architecture, and CI checks grow alongside the features they exe
 4. A maintainer can run `doctor`, audit authoritative version owners, and run JUnit 6 and Kotest through Gradle JVM Test Suites with shared Java Test Fixtures. The documented dependency maintenance process links recovered or reproduced evidence and keeps advisory inputs and results private.
 5. The pre-commit hook and CI use the same repository formatting and style checks. Representative Kotlin and KDoc pass ktfmt and detekt, and a Dokka warning fails the build.
 
-**Plans:** 8/11 plans executed
+**Plans:** 9/11 plans executed
 **Wave 1**
 - [x] 02-01-PLAN.md
 
@@ -82,7 +82,7 @@ Build, browser, architecture, and CI checks grow alongside the features they exe
 - [x] 02-11-PLAN.md
 
 **Wave 6** *(blocked on Wave 5 completion)*
-- [ ] 02-07-PLAN.md
+- [x] 02-07-PLAN.md
 
 **Wave 7** *(blocked on Wave 6 completion)*
 - [ ] 02-08-PLAN.md
@@ -194,7 +194,7 @@ Build, browser, architecture, and CI checks grow alongside the features they exe
 | Phase | Plans Complete | Status | Completed |
 | --- | --- | --- | --- |
 | 1. Axon Server and Toolchain Feasibility | 5/5 | Complete    | 2026-11-25 |
-| 2. Build and UI Foundations | 8/11 | In Progress | - |
+| 2. Build and UI Foundations | 9/11 | In Progress | - |
 | 3. Core Enrollment and Live Views | 0/TBD | Not started | - |
 | 4. Course Names and Atomic Transfers | 0/TBD | Not started | - |
 | 5. Scheduling and Waitlist Automation | 0/TBD | Not started | - |
