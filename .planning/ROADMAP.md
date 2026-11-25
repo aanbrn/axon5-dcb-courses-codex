@@ -8,7 +8,7 @@ Build, browser, architecture, and CI checks grow alongside the features they exe
 
 ## Phases
 
-- [ ] **Phase 1: Axon Server and Toolchain Feasibility** - Run the DCB compatibility probe and record the evidence for stack selection.
+- [x] **Phase 1: Axon Server and Toolchain Feasibility** - Run the DCB compatibility probe and record the evidence for stack selection. (completed 2026-11-25)
 - [ ] **Phase 2: Build and UI Foundations** - Set up the shared build, test conventions, and browser shell with a generated OpenAPI client.
 - [ ] **Phase 3: Core Enrollment and Live Views** - Ship a complete course and student enrollment workflow with live updates and contention tests.
 - [ ] **Phase 4: Course Names and Atomic Transfers** - Teach cross-entity decisions through unique names, capacity changes, and transfers.
@@ -21,7 +21,7 @@ Build, browser, architecture, and CI checks grow alongside the features they exe
 
 ### Phase 1: Axon Server and Toolchain Feasibility
 
-**Goal:** Select a compatible stack by running a minimal repeatable DCB probe and targeted toolchain checks.
+**Goal:** As a maintainer, I want to select a compatible stack by running a repeatable DCB probe and targeted toolchain checks, so that readers can reproduce the stack selection.
 **Mode:** mvp
 **Depends on:** None
 **Requirements:** FND-01
@@ -31,7 +31,7 @@ Build, browser, architecture, and CI checks grow alongside the features they exe
 2. The probe report records the exact artifacts, applicable image and connector terms, bootstrap steps, selected ARM64 and AMD64 digests, observed Temurin build, and relevant findings from the earlier dependency reviews. The version matrix starts from current stable and applicable LTS releases, and cites the verification evidence and any blocker that required an older release.
 3. Small independent samples record TypeID interoperability between Kotlin and TypeScript, Kotlin 2.4 with JUnit 6 and Kotest, ktfmt behavior on representative KDoc, and the frontend path from a Gradle-driven npm build to packaging static assets with Paketo. Each check records a reproducible result or a concrete blocker before the affected tooling is adopted.
 
-**Plans:** 5/5 plans executed
+**Plans:** 5/5 plans complete
 **Wave 1**
 - [x] 01-01-PLAN.md
 
@@ -167,7 +167,7 @@ Build, browser, architecture, and CI checks grow alongside the features they exe
 
 | Phase | Plans Complete | Status | Completed |
 | --- | --- | --- | --- |
-| 1. Axon Server and Toolchain Feasibility | 5/5 | In Progress | - |
+| 1. Axon Server and Toolchain Feasibility | 5/5 | Complete    | 2026-11-25 |
 | 2. Build and UI Foundations | 0/TBD | Not started | - |
 | 3. Core Enrollment and Live Views | 0/TBD | Not started | - |
 | 4. Course Names and Atomic Transfers | 0/TBD | Not started | - |
