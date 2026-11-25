@@ -157,15 +157,27 @@ val provisionBrowser =
         timeout = Duration.ofMinutes(5)
     }
 
-tasks.register<NodeTask>("roleTracer") {
-    dependsOn(provisionBrowser, webBuild)
-    useWebDependencies(roleTracerJar, distribution, "test/role-tracer.mjs")
-    options = listOf("--test", "--test-reporter=tap")
-    script = layout.projectDirectory.file("test/role-tracer.mjs")
-    environment.put("ROLE_TRACER_JAVA", javaLauncher.map { it.executablePath.asFile.absolutePath })
-    environment.put(
-        "ROLE_TRACER_BFF_JAR",
-        roleTracerJar.get().elements.map { it.single().asFile.absolutePath },
-    )
-    environment.put("ROLE_TRACER_WEB_DIST", distribution.map { it.asFile.absolutePath })
+val shellSmoke =
+    tasks.register<NodeTask>("shellSmoke") {
+        group = "verification"
+        description = "Verify the built browser shell and live role directory in Chromium."
+        dependsOn(provisionBrowser, webBuild)
+        useWebDependencies(roleTracerJar, distribution, "test/role-tracer.mjs")
+        options = listOf("--test", "--test-reporter=tap")
+        script = layout.projectDirectory.file("test/role-tracer.mjs")
+        environment.put(
+            "ROLE_TRACER_JAVA",
+            javaLauncher.map { it.executablePath.asFile.absolutePath },
+        )
+        environment.put(
+            "ROLE_TRACER_BFF_JAR",
+            roleTracerJar.get().elements.map { it.single().asFile.absolutePath },
+        )
+        environment.put("ROLE_TRACER_WEB_DIST", distribution.map { it.asFile.absolutePath })
+    }
+
+tasks.register("roleTracer") {
+    group = "verification"
+    description = "Run the live role directory browser smoke test."
+    dependsOn(shellSmoke)
 }
