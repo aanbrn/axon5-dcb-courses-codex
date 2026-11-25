@@ -4,18 +4,18 @@ milestone: v1.0
 milestone_name: Axon 5 DCB Courses
 current_phase: 02
 current_phase_name: Build and UI Foundations
-current_plan: 7
+current_plan: 8
 status: executing
-stopped_at: Phase 02 wave 4 awaiting UI npm package disposition
-last_updated: "2026-11-25T14:27:22.519Z"
+stopped_at: Completed 02-06-PLAN.md
+last_updated: "2026-11-25T14:47:20.934Z"
 last_activity: 2026-11-25
 last_activity_desc: Completed per-tab demo roles and directory recovery
-state_head: f001e257593a812edf3543eb37c3c758b9fbbfb6
+state_head: b3f56b2b6833ab014ada8bdb29367977fdd50f4d
 progress:
   total_phases: 8
   completed_phases: 1
   total_plans: 16
-  completed_plans: 11
+  completed_plans: 12
   percent: 13
 ---
 
@@ -31,7 +31,7 @@ See [PROJECT.md](PROJECT.md), initialized 2026-11-24.
 ## Current Position
 
 Phase: 02 (Build and UI Foundations)
-Current Plan: 7
+Current Plan: 8
 Total Plans in Phase: 11
 Status: Ready to execute
 Last activity: 2026-11-25 -- Completed per-tab demo roles and directory recovery
@@ -58,6 +58,7 @@ Progress: [█░░░░░░░░░] 13%
 | Phase 02 P03 | 16m40s | 2 tasks | 6 files |
 | Phase 02 P05 | 13m55s | 2 tasks | 9 files |
 | Phase 02 P04 | 25m16s | 3 tasks | 16 files |
+| Phase 02 P06 | 15m50s | 2 tasks | 15 files |
 
 ## Accumulated Context
 
@@ -93,6 +94,8 @@ Progress: [█░░░░░░░░░] 13%
 - [Phase 02]: Accept the explicitly approved Eleventy 3.1.8 identity after managed npm ci, Gradle, and canonical Markdown rendering qualify the exact lock.
 - [Phase 02]: Fail the build for invalid launch configuration. Allow the local Vite origin and explicitly configured HTTPS deployment origins.
 - [Phase 02]: Serve the verified documentation tree through the managed Node runtime with an explicit IPv4 loopback bind.
+- [Phase 02]: Generate only the official radix-nova primitives and use the project-owned clsx and tailwind-merge helper.
+- [Phase 02]: Measure native selected text against the control content width and display the complete value when it clips.
 
 ### Pending Todos
 
@@ -105,6 +108,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-25T14:27:22.444Z
-Stopped at: Phase 02 wave 4 awaiting UI npm package disposition
-Resume file: .planning/phases/02-build-and-ui-foundations/02-06-PLAN.md
+Last session: 2026-11-25T14:47:20.861Z
+Stopped at: Completed 02-06-PLAN.md
+Resume file: None

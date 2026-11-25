@@ -2,9 +2,9 @@
 schema_version: 1
 open_count: 0
 waived_count: 0
-fixed_count: 2
-total_count: 2
-last_updated: 2026-11-25T14:25:28.526Z
+fixed_count: 5
+total_count: 5
+last_updated: 2026-11-25T14:47:31.909Z
 ---
 
 # Broken Windows Ledger
@@ -17,6 +17,9 @@ last_updated: 2026-11-25T14:25:28.526Z
 |----|-------|------|------|------|-------------|--------|--------|-------------|-------------|
 | 1 | 02 | deviation | bff/src/main/kotlin/courses/bff/BffApplication.kt |  | Documented existing public declarations and formatted the BFF build script. | fixed |  | 2026-11-25T13:53:55.917Z | 2026-11-25T13:54:21.858Z |
 | 2 | 02 | deviation | docs-site/serve.mjs |  | Enforce the loopback boundary and keep configuration-specific preview addresses as text. | fixed |  | 2026-11-25T14:25:28.440Z | 2026-11-25T14:25:28.526Z |
+| 3 | 02 | deviation | web/vite.config.ts |  | Initialize the Tailwind theme and Vite plugin in the tracer. | fixed |  | 2026-11-25T14:47:31.520Z | 2026-11-25T14:47:31.597Z |
+| 4 | 02 | deviation | web/src/app/theme.css |  | Apply the focus outline immediately. | fixed |  | 2026-11-25T14:47:31.673Z | 2026-11-25T14:47:31.752Z |
+| 5 | 02 | deviation | web/test/generated-client.test.ts |  | Disable dependency discovery for test-only Vite loaders. | fixed |  | 2026-11-25T14:47:31.828Z | 2026-11-25T14:47:31.909Z |
 
 ````json
 [
@@ -44,6 +47,45 @@ last_updated: 2026-11-25T14:25:28.526Z
     "reason": "",
     "recorded_at": "2026-11-25T14:25:28.440Z",
     "resolved_at": "2026-11-25T14:25:28.526Z",
+    "milestone": "v1.0"
+  },
+  {
+    "id": 3,
+    "kind": "deviation",
+    "phase": "02",
+    "file": "web/vite.config.ts",
+    "line": null,
+    "description": "Initialize the Tailwind theme and Vite plugin in the tracer.",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-11-25T14:47:31.520Z",
+    "resolved_at": "2026-11-25T14:47:31.597Z",
+    "milestone": "v1.0"
+  },
+  {
+    "id": 4,
+    "kind": "deviation",
+    "phase": "02",
+    "file": "web/src/app/theme.css",
+    "line": null,
+    "description": "Apply the focus outline immediately.",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-11-25T14:47:31.673Z",
+    "resolved_at": "2026-11-25T14:47:31.752Z",
+    "milestone": "v1.0"
+  },
+  {
+    "id": 5,
+    "kind": "deviation",
+    "phase": "02",
+    "file": "web/test/generated-client.test.ts",
+    "line": null,
+    "description": "Disable dependency discovery for test-only Vite loaders.",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-11-25T14:47:31.828Z",
+    "resolved_at": "2026-11-25T14:47:31.909Z",
     "milestone": "v1.0"
   }
 ]
