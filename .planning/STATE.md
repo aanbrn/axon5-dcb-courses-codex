@@ -4,18 +4,18 @@ milestone: v1.0
 milestone_name: Axon 5 DCB Courses
 current_phase: 02
 current_phase_name: Build and UI Foundations
-current_plan: 4
+current_plan: 5
 status: executing
-stopped_at: Completed 02-10-PLAN.md
-last_updated: "2026-11-25T13:16:20.335Z"
+stopped_at: Completed 02-03-PLAN.md
+last_updated: "2026-11-25T13:36:33.413Z"
 last_activity: 2026-11-25
-last_activity_desc: Completed the live role directory tracer
-state_head: 11ad528b8895bedb57bf9c3b3d868cb284edf82c
+last_activity_desc: Completed per-tab demo roles and directory recovery
+state_head: ef34bb27381a0e8a79114cb39d20d9198c0e3a62
 progress:
   total_phases: 8
   completed_phases: 1
   total_plans: 16
-  completed_plans: 8
+  completed_plans: 9
   percent: 13
 ---
 
@@ -31,10 +31,10 @@ See [PROJECT.md](PROJECT.md), initialized 2026-11-24.
 ## Current Position
 
 Phase: 02 (Build and UI Foundations)
-Current Plan: 4
+Current Plan: 5
 Total Plans in Phase: 11
 Status: Ready to execute
-Last activity: 2026-11-25 -- Completed the live role directory tracer
+Last activity: 2026-11-25 -- Completed per-tab demo roles and directory recovery
 
 Progress: [█░░░░░░░░░] 13%
 
@@ -55,6 +55,7 @@ Progress: [█░░░░░░░░░] 13%
 | Phase 02 P01 | 12m20s | 2 tasks | 15 files |
 | Phase 02 P02 | 18m54s | 3 tasks | 10 files |
 | Phase 02 P10 | 12m14s | 2 tasks | 5 files |
+| Phase 02 P03 | 16m40s | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,9 @@ Progress: [█░░░░░░░░░] 13%
 - [Phase 02]: Load the Kotlin plugins in the root classpath and aggregate the BFF and web lifecycles using task providers.
 - [Phase 02]: Use the managed Node test runner with the existing Vite module loader and preserve the approved npm inputs.
 - [Phase 02]: Reject Fetch redirects so the documented status is checked at the original operation URL.
+- [Phase 02]: Keep role selection in tab-local storage and reconcile the whole stored identifier after directory validation.
+- [Phase 02]: Run browser component checks using the pinned Playwright and Vite dependencies in the opt-in smoke task.
+- [Phase 02]: Capture retry focus when the button leaves the DOM and restore it after the selector is enabled.
 
 ### Pending Todos
 
@@ -94,6 +98,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-25T13:16:20.266Z
-Stopped at: Completed 02-10-PLAN.md
+Last session: 2026-11-25T13:36:12.703Z
+Stopped at: Completed 02-03-PLAN.md
 Resume file: None
