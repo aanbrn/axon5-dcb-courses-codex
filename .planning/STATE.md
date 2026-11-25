@@ -4,18 +4,18 @@ milestone: v1.0
 milestone_name: Axon 5 DCB Courses
 current_phase: 02
 current_phase_name: Build and UI Foundations
-current_plan: 3
+current_plan: 4
 status: executing
-stopped_at: Completed 02-02-PLAN.md
-last_updated: "2026-11-25T13:00:59.920Z"
+stopped_at: Completed 02-10-PLAN.md
+last_updated: "2026-11-25T13:16:20.335Z"
 last_activity: 2026-11-25
 last_activity_desc: Completed the live role directory tracer
-state_head: f971d0a2852d77d2838d400eb833a8566a7e08b3
+state_head: 11ad528b8895bedb57bf9c3b3d868cb284edf82c
 progress:
   total_phases: 8
   completed_phases: 1
   total_plans: 16
-  completed_plans: 7
+  completed_plans: 8
   percent: 13
 ---
 
@@ -31,7 +31,7 @@ See [PROJECT.md](PROJECT.md), initialized 2026-11-24.
 ## Current Position
 
 Phase: 02 (Build and UI Foundations)
-Current Plan: 3
+Current Plan: 4
 Total Plans in Phase: 11
 Status: Ready to execute
 Last activity: 2026-11-25 -- Completed the live role directory tracer
@@ -54,6 +54,7 @@ Progress: [█░░░░░░░░░] 13%
 | Phase 01 P05 | 47min | 2 tasks | 6 files |
 | Phase 02 P01 | 12m20s | 2 tasks | 15 files |
 | Phase 02 P02 | 18m54s | 3 tasks | 10 files |
+| Phase 02 P10 | 12m14s | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -78,6 +79,9 @@ Progress: [█░░░░░░░░░] 13%
 - [Phase 02]: Disable implicit npm lifecycle scripts and provision the pinned Chromium through an explicit task.
 - [Phase 02]: Use the root Gradle catalog and .java-version in the reusable JVM convention.
 - [Phase 02]: Restrict NetworkNT to the BFF component suite and allow schema references only within the packaged contract.
+- [Phase 02]: Load the Kotlin plugins in the root classpath and aggregate the BFF and web lifecycles using task providers.
+- [Phase 02]: Use the managed Node test runner with the existing Vite module loader and preserve the approved npm inputs.
+- [Phase 02]: Reject Fetch redirects so the documented status is checked at the original operation URL.
 
 ### Pending Todos
 
@@ -90,6 +94,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-25T13:00:59.853Z
-Stopped at: Completed 02-02-PLAN.md
+Last session: 2026-11-25T13:16:20.266Z
+Stopped at: Completed 02-10-PLAN.md
 Resume file: None
