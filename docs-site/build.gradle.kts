@@ -45,9 +45,9 @@ val reportPath = "feasibility/phase-01.md"
 val canonicalReport = content.file(reportPath)
 val staged = layout.buildDirectory.dir("staged")
 val stageDocs = tasks.register<Sync>("stageDocs") {
-    from(content) { include(reportPath, "quick-start.md") }
+    from(content) { include(reportPath, "quick-start.md", "maintainer-guide.md") }
     from(layout.projectDirectory.dir("src")) {
-        include("index.11ty.js", "_includes/page.11ty.js", "feasibility/phase-01.11tydata.json")
+        include("index.11ty.js", "_includes/page.11ty.js", "feasibility/phase-01.11tydata.json", "site.css")
     }
     into(staged)
     doLast {
@@ -73,14 +73,13 @@ fun NodeTask.useDocsDependencies() {
     environment.put("DOCS_BASE", docsBase)
     environment.put("DOCS_APP_URL", docsAppUrl)
     environment.put("DOCS_TRUSTED_APP_ORIGINS", docsTrustedAppOrigins)
+    environment.put("DOCS_INPUT", staged.map { it.asFile.absolutePath })
 }
 
 fun NodeTask.renderDocs(destination: Provider<Directory>, vararg flags: String) {
     useDocsDependencies()
     script = cli
-    args = staged.zip(destination) { input, output ->
-        listOf("--input=${input.asFile}", "--output=${output.asFile}") + flags
-    }
+    args = destination.map { listOf("--output=${it.asFile}") + flags }
 }
 
 val distribution = layout.buildDirectory.dir("site")

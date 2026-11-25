@@ -1,10 +1,11 @@
+import { join } from "node:path";
 import { HtmlBasePlugin } from "@11ty/eleventy";
 
 const localAppOrigin = "http://127.0.0.1:5173";
 
 function parseAppUrl(value) {
   try {
-    if (!/^https?:\/\//.test(value) || /[\s\\\p{Cc}]/u.test(value)) throw new Error();
+    if (!/^https?:\/\/[^/?#]+/.test(value) || /[\s\\\p{Cc}]/u.test(value)) throw new Error();
     const url = new URL(value);
     if (url.username || url.password) throw new Error();
     return url;
@@ -32,6 +33,7 @@ function launchAction() {
 }
 
 export default function (eleventyConfig) {
+  const input = process.env.DOCS_INPUT ?? "build/staged";
   const pathPrefix = process.env.DOCS_BASE ?? "/";
   if (!/^\/(?:[A-Za-z0-9_-]+\/)*$/.test(pathPrefix)) {
     throw new Error("docsBase must be a slash-delimited deployment path, such as /courses/.");
@@ -40,21 +42,40 @@ export default function (eleventyConfig) {
   eleventyConfig.addPlugin(HtmlBasePlugin);
   eleventyConfig.addGlobalData("launch", launchAction());
   eleventyConfig.setServerOptions({ host: "127.0.0.1", showAllHosts: false, liveReload: false });
+  eleventyConfig.addPassthroughCopy({ [join(input, "site.css")]: "site.css" });
 
   const slugify = eleventyConfig.getFilter("slugify");
   eleventyConfig.amendLibrary("md", (markdown) => {
-    markdown.core.ruler.push("heading_anchors", ({ tokens }) => {
+    markdown.core.ruler.push("article_accessibility", ({ tokens }) => {
       const used = new Set(["main-content"]);
+      let section = "";
       for (const [index, token] of tokens.entries()) {
-        if (token.type !== "heading_open") continue;
-        const slug = slugify(tokens[index + 1].content) || "section";
-        let id = slug;
-        for (let number = 2; used.has(id); number++) id = `${slug}-${number}`;
-        token.attrSet("id", id);
-        used.add(id);
+        if (token.type === "heading_open") {
+          section = tokens[index + 1].content;
+          const slug = slugify(section) || "section";
+          let id = slug;
+          for (let number = 2; used.has(id); number++) id = `${slug}-${number}`;
+          token.attrSet("id", id);
+          used.add(id);
+        }
+        if (token.type === "table_open" || token.type === "fence") token.meta = { section };
       }
     });
+
+    function scrollRegion(token, kind) {
+      const section = token.meta.section;
+      const label = markdown.utils.escapeHtml(section ? `${kind} — ${section}` : kind);
+      return `<div class="scroll-region" role="region" aria-label="${label}" tabindex="0">`;
+    }
+
+    const renderFence = markdown.renderer.rules.fence;
+    markdown.renderer.rules.fence = (tokens, index, ...args) =>
+      `${scrollRegion(tokens[index], "Code sample")}${renderFence(tokens, index, ...args)}</div>\n`;
+    markdown.renderer.rules.table_open = (tokens, index, options, _env, renderer) =>
+      scrollRegion(tokens[index], "Data table") + renderer.renderToken(tokens, index, options);
+    markdown.renderer.rules.table_close = (tokens, index, options, _env, renderer) =>
+      renderer.renderToken(tokens, index, options) + "</div>\n";
   });
 
-  return { pathPrefix, templateFormats: ["11ty.js", "md"], markdownTemplateEngine: false };
+  return { dir: { input }, pathPrefix, templateFormats: ["11ty.js", "md"], markdownTemplateEngine: false };
 }

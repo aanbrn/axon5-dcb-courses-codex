@@ -1,6 +1,8 @@
 const navigation = [
   ["/", "Home"],
+  ["/quick-start/", "Quick start"],
   ["/feasibility/phase-01/", "Feasibility report"],
+  ["/maintainer-guide/", "Maintainer guide"],
 ];
 
 export function escapeHtml(value) {
@@ -18,6 +20,7 @@ export default function ({ title, page, content }) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${escapeHtml(title)} | Axon 5 DCB Courses</title>
+  <link rel="stylesheet" href="/site.css">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
