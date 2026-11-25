@@ -1,10 +1,15 @@
+import { fileURLToPath } from "node:url";
+import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, loadEnv } from "vite";
 
 export default defineConfig(({ command, mode }) => {
-  if (command === "build") {
-    return { plugins: [react()], build: { outDir: "build/dist" } };
-  }
+  const config = {
+    plugins: [react(), tailwindcss()],
+    resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
+    build: { outDir: "build/dist" },
+  };
+  if (command === "build") return config;
 
   const env = loadEnv(mode, process.cwd(), "VITE_");
   const bff = new URL(env.VITE_BFF_ORIGIN ?? "http://127.0.0.1:8080");
@@ -14,8 +19,7 @@ export default defineConfig(({ command, mode }) => {
   }
 
   return {
-    plugins: [react()],
-    build: { outDir: "build/dist" },
+    ...config,
     server: {
       host: "127.0.0.1",
       strictPort: true,

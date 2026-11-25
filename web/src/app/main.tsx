@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { HomePage } from "../pages/home/HomePage";
+import "./theme.css";
 
 const docsBase = new URL(
   import.meta.env.VITE_DOCS_BASE || "http://127.0.0.1:8081/",

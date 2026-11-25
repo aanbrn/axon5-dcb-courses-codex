@@ -1,4 +1,5 @@
 import { useCallback, useLayoutEffect, useRef } from "react";
+import { Alert, AlertDescription, Button, NativeSelect, NativeSelectOption } from "@/shared/ui";
 import { useDemoRoles } from "./useDemoRoles";
 
 const loadingMessage = "Loading demo roles…";
@@ -41,7 +42,7 @@ export function HomePage({ docsBase }: { docsBase: URL }) {
         </nav>
         <div>
           <label htmlFor="demo-role">Demo role</label>
-          <select
+          <NativeSelect
             id="demo-role"
             ref={selector}
             disabled={!ready}
@@ -50,14 +51,16 @@ export function HomePage({ docsBase }: { docsBase: URL }) {
           >
             {ready ? (
               state.roles.map(({ id, label }) => (
-                <option key={id} value={id}>
+                <NativeSelectOption key={id} value={id}>
                   {label}
-                </option>
+                </NativeSelectOption>
               ))
             ) : (
-              <option value="">{failed || retrying ? "Roles unavailable" : loadingMessage}</option>
+              <NativeSelectOption value="">
+                {failed || retrying ? "Roles unavailable" : loadingMessage}
+              </NativeSelectOption>
             )}
-          </select>
+          </NativeSelect>
           <p role="status">{statusMessage}</p>
           {ready && state.roles.length === 1 && (
             <div>
@@ -67,10 +70,20 @@ export function HomePage({ docsBase }: { docsBase: URL }) {
           )}
           {(failed || retrying) && (
             <div>
-              {failed && <p role="alert">Could not load demo roles. Try again to switch roles.</p>}
-              <button type="button" ref={trackRetryFocus} aria-disabled={retrying} onClick={retry}>
+              {failed && (
+                <Alert variant="destructive">
+                  <AlertDescription>Could not load demo roles. Try again to switch roles.</AlertDescription>
+                </Alert>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                ref={trackRetryFocus}
+                aria-disabled={retrying}
+                onClick={retry}
+              >
                 Retry loading roles
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -78,7 +91,9 @@ export function HomePage({ docsBase }: { docsBase: URL }) {
       <main id="main" tabIndex={-1}>
         <h1>Axon 5 DCB Courses</h1>
         <p>Explore how Axon 5 uses Dynamic Consistency Boundaries to enforce course enrollment rules.</p>
-        <a href={new URL("feasibility/phase-01/", docsBase).href}>Read feasibility report</a>
+        <Button asChild>
+          <a href={new URL("feasibility/phase-01/", docsBase).href}>Read feasibility report</a>
+        </Button>
       </main>
     </>
   );
