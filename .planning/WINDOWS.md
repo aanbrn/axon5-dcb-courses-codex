@@ -2,9 +2,9 @@
 schema_version: 1
 open_count: 0
 waived_count: 0
-fixed_count: 10
-total_count: 10
-last_updated: 2026-11-25T15:36:00.649Z
+fixed_count: 11
+total_count: 11
+last_updated: 2026-11-25T16:26:24.012Z
 ---
 
 # Broken Windows Ledger
@@ -25,6 +25,7 @@ last_updated: 2026-11-25T15:36:00.649Z
 | 8 | 02 | deviation | web/vitest.config.ts |  | Allow the proof to read the installed dependency directory. | fixed |  | 2026-11-25T15:10:02.692Z | 2026-11-25T15:10:02.759Z |
 | 9 | 02 | deviation | build.gradle.kts |  | Regenerated stale Gradle Kotlin DSL accessors. | fixed |  | 2026-11-25T15:36:00.432Z | 2026-11-25T15:36:00.506Z |
 | 10 | 02 | deviation | tools/style/policy.json |  | Selected explicit Ruff lint rules. | fixed |  | 2026-11-25T15:36:00.575Z | 2026-11-25T15:36:00.649Z |
+| 11 | 02 | deviation | build.gradle.kts |  | Preserve the installed pre-commit hook after clean build | fixed |  | 2026-11-25T16:26:02.804Z | 2026-11-25T16:26:24.012Z |
 
 ````json
 [
@@ -156,6 +157,19 @@ last_updated: 2026-11-25T15:36:00.649Z
     "reason": "",
     "recorded_at": "2026-11-25T15:36:00.575Z",
     "resolved_at": "2026-11-25T15:36:00.649Z",
+    "milestone": "v1.0"
+  },
+  {
+    "id": 11,
+    "kind": "deviation",
+    "phase": "02",
+    "file": "build.gradle.kts",
+    "line": null,
+    "description": "Preserve the installed pre-commit hook after clean build",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-11-25T16:26:02.804Z",
+    "resolved_at": "2026-11-25T16:26:24.012Z",
     "milestone": "v1.0"
   }
 ]
