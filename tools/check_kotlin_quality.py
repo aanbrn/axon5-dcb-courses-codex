@@ -81,6 +81,11 @@ class KotlinQualityTest(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0, result.stdout)
 
     def test_format_comments(self):
+        comma_source = source_dir(self.root, "bff") / "Kdoc,CommentsWitness.kt"
+        comma_source.write_text(
+            "package courses.bff\n\n/** Returns a value. */\nfun commaWitness(): Int = 1\n",
+            encoding="utf-8",
+        )
         clean_tasks = (
             ":bff:ktfmtCheck",
             ":bff:detektComments",
@@ -95,7 +100,10 @@ class KotlinQualityTest(unittest.TestCase):
 
         specimen = self.root / "probe/kdoc/Specimen.kt"
         candidate = source_dir(self.root, "bff") / "KdocFormatWitness.kt"
-        original = specimen.read_bytes()
+        prefix, words, details, suffix = kdoc_sections(specimen.read_bytes())
+        original = (
+            prefix + b"/**\n * " + words + b"\n *\n" + details + b"\n */" + suffix
+        )
         candidate.write_bytes(original)
         bad_format = gradle(self.root, ":bff:ktfmtCheck")
         self.require_gradle_failure(bad_format, ":bff:ktfmtCheck")
@@ -144,12 +152,20 @@ class KotlinQualityTest(unittest.TestCase):
         self.assertEqual(cli.returncode, 2, cli.stdout)
         self.assert_comment_findings(cli.stdout, sources)
 
+        comma_source.write_text(
+            comma_source.read_text(encoding="utf-8").replace(
+                "Returns a value.", "Returns a value"
+            ),
+            encoding="utf-8",
+        )
         bad_comments = gradle(
             self.root, ":bff:detektComments", ":fixtures:detektComments", "--continue"
         )
         self.require_gradle_failure(bad_comments, ":bff:detektComments")
         self.require_gradle_failure(bad_comments, ":fixtures:detektComments")
         self.assert_comment_findings(bad_comments.stdout, sources)
+        self.assert_comment_findings(bad_comments.stdout, [comma_source])
+        self.assertNotIn("Kdoc_CommentsWitness.kt", bad_comments.stdout)
         self.assertIn("non-zero exit value 2", bad_comments.stdout)
 
         invalid_config = self.root / "config/detekt/invalid.yml"
@@ -166,6 +182,7 @@ class KotlinQualityTest(unittest.TestCase):
         script.write_text(sources[script], encoding="utf-8")
         production.unlink()
         fixture.unlink()
+        comma_source.unlink()
         invalid_config.unlink()
         self.require_success(gradle(self.root, *clean_tasks))
 

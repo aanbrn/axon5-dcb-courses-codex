@@ -1,10 +1,65 @@
 import groovy.json.JsonOutput
+import java.io.ByteArrayOutputStream
+import java.nio.file.Files
+import javax.inject.Inject
 import org.gradle.api.artifacts.VersionCatalogsExtension
+import org.gradle.process.ExecOperations
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 
 plugins {
     id("courses.jvm")
     id("org.jetbrains.dokka")
+}
+
+abstract class DetektCommentsTask : DefaultTask() {
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val sources: ConfigurableFileCollection
+
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val rules: RegularFileProperty
+
+    @get:Classpath abstract val toolClasspath: ConfigurableFileCollection
+
+    @get:Input abstract val analyzerMain: Property<String>
+
+    @get:Nested abstract val launcher: Property<JavaLauncher>
+
+    @get:Inject protected abstract val execOperations: ExecOperations
+
+    @TaskAction
+    fun checkComments() {
+        val scratch = Files.createTempDirectory(temporaryDir.toPath(), "detekt-").toFile()
+        try {
+            val copies =
+                sources.files.sorted().mapIndexed { index, source ->
+                    val copy = scratch.resolve("$index/${source.name.replace(',', '_')}")
+                    source.copyTo(copy)
+                    copy.canonicalPath to source.absolutePath
+                }
+            val output = ByteArrayOutputStream()
+            val result = execOperations.javaexec {
+                executable = launcher.get().executablePath.asFile.absolutePath
+                classpath(toolClasspath)
+                mainClass.set(analyzerMain)
+                workingDir(scratch)
+                // detekt splits --input on commas, including commas in absolute checkout paths.
+                args("--config", rules.get().asFile.absolutePath, "--input", ".")
+                standardOutput = output
+                errorOutput = output
+                isIgnoreExitValue = true
+            }
+            val diagnostics =
+                copies.fold(output.toString(Charsets.UTF_8)) { message, (copy, source) ->
+                    message.replace(copy, source)
+                }
+            if (diagnostics.isNotBlank()) logger.lifecycle(diagnostics.trimEnd())
+            result.assertNormalExitValue()
+        } finally {
+            scratch.deleteRecursively()
+        }
+    }
 }
 
 val catalog = extensions.getByType<VersionCatalogsExtension>().named("libs")
@@ -61,24 +116,15 @@ val ktfmtCheck =
     }
 
 val detektComments =
-    tasks.register<JavaExec>("detektComments") {
+    tasks.register<DetektCommentsTask>("detektComments") {
         group = "verification"
         description = "Check KDoc with the repository's detekt comments rules."
-        javaLauncher = toolLauncher
-        classpath(detektCommentsTool)
-        mainClass = detektMain
-        args(detektOptions)
-        inputs.file(commentsConfig).withPathSensitivity(PathSensitivity.RELATIVE)
-        inputs.files(kotlinFiles).withPathSensitivity(PathSensitivity.RELATIVE)
-        argumentProviders.add(
-            CommandLineArgumentProvider {
-                listOf(
-                    "--input",
-                    kotlinFiles.files.map(File::getAbsolutePath).sorted().joinToString(","),
-                )
-            },
-        )
-        onlyIf { !kotlinFiles.isEmpty }
+        launcher = toolLauncher
+        toolClasspath.from(detektCommentsTool)
+        analyzerMain = detektMain
+        rules = commentsConfig
+        sources.from(kotlinFiles)
+        onlyIf { !sources.isEmpty }
     }
 
 tasks.register("kotlinQualityRuntime") {
