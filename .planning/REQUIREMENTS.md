@@ -9,11 +9,11 @@
 ### Build Foundation
 
 - [x] **FND-01** Reproduce a Kotlin and Spring Boot compatibility probe that verifies the Axon 5 APIs, wiring, tagged conflict detection, and cross-process message routing in a DCB-enabled Axon Server context before pinning the version matrix. Record the official references, exact tested artifacts and image terms, bootstrap steps, and selected ARM64 and AMD64 image digests.
-- [ ] **FND-02** Build and check the toolchain with one authoritative version owner per ecosystem, pinned independent CLIs in mise, an inventory, and a `doctor` check. Keep `.java-version` at the Temurin feature version and record the actual build separately.
+- [x] **FND-02** Build and check the toolchain with one authoritative version owner per ecosystem, pinned independent CLIs in mise, an inventory, and a `doctor` check. Keep `.java-version` at the Temurin feature version and record the actual build separately.
 - [ ] **FND-03** Exchange type-prefixed UUIDv7 TypeIDs between Kotlin and TypeScript and round-trip them through native `uuid` storage.
 - [ ] **FND-04** Build project images through Paketo Cloud Native Buildpacks, using `bootBuildImage` for JVM services and the Web Servers buildpack for the frontend. Package the static assets built by Gradle using npm and `package-lock.json`.
 - [ ] **FND-05** Run Gradle JVM Test Suites with shared Java Test Fixtures, JUnit 6, and compatible Kotest assertions and property tests. JUnit supplies the runner.
-- [ ] **FND-06** Build the frontend and documentation site from Gradle Node subprojects. On a clean `./gradlew build`, generate the frontend client from the BFF OpenAPI contract before building the frontend.
+- [x] **FND-06** Build the frontend and documentation site from Gradle Node subprojects. On a clean `./gradlew build`, generate the frontend client from the BFF OpenAPI contract before building the frontend.
 
 ### Domain and Consistency
 
@@ -35,13 +35,13 @@
 - [ ] **CQRS-01** The command service decides using relevant tagged event history. The query service builds dedicated projections from committed events and can rebuild the read models.
 - [ ] **CQRS-02** The BFF reads course and student state through QueryBus and serves live initial results and subsequent updates through subscription queries.
 - [ ] **CQRS-03** The command, query/projection, automation, and REST BFF services run as separately deployable roles. Axon Server is the DCB event store and interservice command and query router.
-- [ ] **CQRS-04** The BFF exposes an OpenAPI contract covering the browser’s commands, reads, and live view entry points.
+- [x] **CQRS-04** The BFF exposes an OpenAPI contract covering the browser’s commands, reads, and live view entry points.
 
 ### Frontend and Teaching UI
 
 - [ ] **UI-01** A React and TypeScript UI uses Feature-Sliced Design with Steiger checks. A dedicated UI foundation defines reusable components and view patterns in Storybook.
 - [ ] **UI-02** Each business feature has a UI-SPEC and a browser slice that exposes the operation, shows its outcome, and keeps related views live through subscription queries.
-- [ ] **UI-03** A reader can switch between an admin and individual demo students.
+- [x] **UI-03** A reader can switch between an admin and individual demo students.
 - [ ] **UI-04** A reader can use a dedicated teaching UI to browse and filter tagged events.
 - [ ] **UI-05** A reader can inspect a selected command attempt and see the criteria and actual historical events that formed its decision boundary.
 - [ ] **UI-06** A reader can run a concurrent last-seat demonstration and see both attempt outcomes and the committed capacity invariant.
@@ -111,11 +111,11 @@
 | Requirement | Phase | Status |
 | --- | --- | --- |
 | FND-01 | Phase 1 | Complete |
-| FND-02 | Phase 2 | Pending |
+| FND-02 | Phase 2 | Complete |
 | FND-03 | Phase 3 | Pending |
 | FND-04 | Phase 5 | Pending |
 | FND-05 | Phase 2 | Pending |
-| FND-06 | Phase 2 | Pending |
+| FND-06 | Phase 2 | Complete |
 | DCB-01 | Phase 3 | Pending |
 | DCB-02 | Phase 4 | Pending |
 | DCB-03 | Phase 4 | Pending |
@@ -131,10 +131,10 @@
 | CQRS-01 | Phase 3 | Pending |
 | CQRS-02 | Phase 3 | Pending |
 | CQRS-03 | Phase 5 | Pending |
-| CQRS-04 | Phase 2 | Pending |
+| CQRS-04 | Phase 2 | Complete |
 | UI-01 | Phase 2 | Pending |
 | UI-02 | Phase 5 | Pending |
-| UI-03 | Phase 2 | Pending |
+| UI-03 | Phase 2 | Complete |
 | UI-04 | Phase 6 | Pending |
 | UI-05 | Phase 6 | Pending |
 | UI-06 | Phase 6 | Pending |
