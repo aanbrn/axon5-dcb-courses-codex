@@ -39,7 +39,7 @@
 
 ### Frontend and Teaching UI
 
-- [ ] **UI-01** A React and TypeScript UI uses Feature-Sliced Design with Steiger checks. A dedicated UI foundation defines reusable components and view patterns in Storybook.
+- [x] **UI-01** A React and TypeScript UI uses Feature-Sliced Design with Steiger checks. A dedicated UI foundation defines reusable components and view patterns in Storybook.
 - [ ] **UI-02** Each business feature has a UI-SPEC and a browser slice that exposes the operation, shows its outcome, and keeps related views live through subscription queries.
 - [x] **UI-03** A reader can switch between an admin and individual demo students.
 - [ ] **UI-04** A reader can use a dedicated teaching UI to browse and filter tagged events.
@@ -132,7 +132,7 @@
 | CQRS-02 | Phase 3 | Pending |
 | CQRS-03 | Phase 5 | Pending |
 | CQRS-04 | Phase 2 | Pending |
-| UI-01 | Phase 2 | Pending |
+| UI-01 | Phase 2 | Complete |
 | UI-02 | Phase 5 | Pending |
 | UI-03 | Phase 2 | Complete |
 | UI-04 | Phase 6 | Pending |

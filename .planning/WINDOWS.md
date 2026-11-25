@@ -2,9 +2,9 @@
 schema_version: 1
 open_count: 0
 waived_count: 0
-fixed_count: 5
-total_count: 5
-last_updated: 2026-11-25T14:47:31.909Z
+fixed_count: 8
+total_count: 8
+last_updated: 2026-11-25T15:10:02.759Z
 ---
 
 # Broken Windows Ledger
@@ -20,6 +20,9 @@ last_updated: 2026-11-25T14:47:31.909Z
 | 3 | 02 | deviation | web/vite.config.ts |  | Initialize the Tailwind theme and Vite plugin in the tracer. | fixed |  | 2026-11-25T14:47:31.520Z | 2026-11-25T14:47:31.597Z |
 | 4 | 02 | deviation | web/src/app/theme.css |  | Apply the focus outline immediately. | fixed |  | 2026-11-25T14:47:31.673Z | 2026-11-25T14:47:31.752Z |
 | 5 | 02 | deviation | web/test/generated-client.test.ts |  | Disable dependency discovery for test-only Vite loaders. | fixed |  | 2026-11-25T14:47:31.828Z | 2026-11-25T14:47:31.909Z |
+| 6 | 02 | deviation | web/src/pages/home/index.ts |  | Add the required authored FSD segments and public APIs. | fixed |  | 2026-11-25T15:09:51.334Z | 2026-11-25T15:10:02.483Z |
+| 7 | 02 | deviation | web/package.json |  | Satisfy the Steiger toolchain peer in its own dependency graph. | fixed |  | 2026-11-25T15:10:02.551Z | 2026-11-25T15:10:02.620Z |
+| 8 | 02 | deviation | web/vitest.config.ts |  | Allow the proof to read the installed dependency directory. | fixed |  | 2026-11-25T15:10:02.692Z | 2026-11-25T15:10:02.759Z |
 
 ````json
 [
@@ -86,6 +89,45 @@ last_updated: 2026-11-25T14:47:31.909Z
     "reason": "",
     "recorded_at": "2026-11-25T14:47:31.828Z",
     "resolved_at": "2026-11-25T14:47:31.909Z",
+    "milestone": "v1.0"
+  },
+  {
+    "id": 6,
+    "kind": "deviation",
+    "phase": "02",
+    "file": "web/src/pages/home/index.ts",
+    "line": null,
+    "description": "Add the required authored FSD segments and public APIs.",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-11-25T15:09:51.334Z",
+    "resolved_at": "2026-11-25T15:10:02.483Z",
+    "milestone": "v1.0"
+  },
+  {
+    "id": 7,
+    "kind": "deviation",
+    "phase": "02",
+    "file": "web/package.json",
+    "line": null,
+    "description": "Satisfy the Steiger toolchain peer in its own dependency graph.",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-11-25T15:10:02.551Z",
+    "resolved_at": "2026-11-25T15:10:02.620Z",
+    "milestone": "v1.0"
+  },
+  {
+    "id": 8,
+    "kind": "deviation",
+    "phase": "02",
+    "file": "web/vitest.config.ts",
+    "line": null,
+    "description": "Allow the proof to read the installed dependency directory.",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-11-25T15:10:02.692Z",
+    "resolved_at": "2026-11-25T15:10:02.759Z",
     "milestone": "v1.0"
   }
 ]
