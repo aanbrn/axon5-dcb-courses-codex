@@ -2,8 +2,10 @@ import com.github.gradle.node.NodeExtension
 import com.github.gradle.node.npm.task.NpmInstallTask
 import com.github.gradle.node.variant.VariantComputer
 import com.github.gradle.node.variant.computeNodeExec
+import com.github.gradle.node.variant.computeNpmScriptFile
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
+import java.io.ByteArrayInputStream
 
 plugins {
     base
@@ -117,4 +119,68 @@ tasks.register<Exec>("installGitHooks") {
     description = "Opt in to the repository pre-commit hook in this local Git repository."
     dependsOn(styleRuntime)
     commandLine("git", "config", "--local", "core.hooksPath", ".githooks")
+}
+
+val bff = project(":bff")
+val web = project(":web")
+val docs = project(":docs-site")
+val runningGradle = gradle.gradleVersion
+val doctorScript = layout.projectDirectory.file("tools/doctor.py").asFile
+
+fun doctorManagedTools(extension: NodeExtension): List<String> {
+    val nodeDir = extension.resolvedNodeDir
+    val platform = extension.resolvedPlatform
+    val nodeBin = variants.computeNodeBinDir(nodeDir, platform)
+    val npmDir = variants.computeNpmDir(extension, nodeDir)
+    return listOf(
+        computeNodeExec(extension, nodeBin).get(),
+        computeNpmScriptFile(npmDir, "npm", platform.get().isWindows()).get(),
+    )
+}
+
+tasks.register<Exec>("doctor") {
+    group = "verification"
+    description = "Report the observed toolchain and any repairs needed for each workflow."
+    notCompatibleWithConfigurationCache("Observes the local toolchains and managed executables.")
+    commandLine("python3", doctorScript, "--gradle-input")
+    doFirst {
+        val worker = runCatching {
+            val spec = bff.extensions.getByType<JavaPluginExtension>().toolchain
+            val toolchains = bff.extensions.getByType<JavaToolchainService>()
+            toolchains.launcherFor(spec).get().executablePath.asFile.absolutePath
+        }
+            .getOrNull()
+        val npm =
+            mapOf("tools/style" to rootProject, "web" to web, "docs-site" to docs)
+                .mapValues { (_, project) ->
+                    runCatching {
+                            doctorManagedTools(project.extensions.getByType<NodeExtension>())
+                        }
+                        .getOrDefault(emptyList())
+                }
+                .toMutableMap()
+        // The TypeID consumer runs the standalone probe/web build with a different package
+        // directory.
+        val probe = layout.projectDirectory.dir("probe/web")
+        val probeTools = runCatching {
+            val manifest = JsonSlurper().parse(probe.file("package.json").asFile) as Map<*, *>
+            val version = (manifest["packageManager"] as String).removePrefix("npm@")
+            val platform = nodeExtension.resolvedPlatform.get()
+            val nodeDir =
+                probe.dir(".gradle/nodejs/node-v$selectedNode-${platform.name}-${platform.arch}")
+            val npmDir = probe.dir(".gradle/npm/npm-v$version")
+            val nodeBin =
+                variants.computeNodeBinDir(provider { nodeDir }, nodeExtension.resolvedPlatform)
+            listOf(
+                computeNodeExec(nodeExtension, nodeBin).get(),
+                computeNpmScriptFile(provider { npmDir }, "npm", platform.isWindows()).get(),
+            )
+        }
+            .getOrDefault(emptyList())
+        npm["probe/web"] = probeTools
+        npm["probe/typeid"] = probeTools
+        val data =
+            JsonOutput.toJson(mapOf("gradle" to runningGradle, "worker" to worker, "npm" to npm))
+        standardInput = ByteArrayInputStream(data.toByteArray(Charsets.UTF_8))
+    }
 }
