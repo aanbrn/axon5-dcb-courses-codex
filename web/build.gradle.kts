@@ -237,3 +237,36 @@ tasks.register("roleTracer") {
     description = "Run the live role directory browser smoke test."
     dependsOn(shellSmoke)
 }
+
+val docsSite = project(":docs-site").layout
+val stagedDocs = docsSite.buildDirectory.dir("staged")
+
+tasks.register<NodeTask>("siteSmoke") {
+    group = "verification"
+    description = "Exercise the live BFF, shell, and both docs launch modes in Chromium."
+    dependsOn(provisionBrowser, generateClient, ":docs-site:npmInstall", ":docs-site:stageDocs")
+    useWebDependencies(
+        roleTracerJar,
+        source,
+        generated,
+        stagedDocs,
+        "test/site-smoke.mjs",
+        "vite.config.ts",
+        listOf(
+                "package.json",
+                "package-lock.json",
+                "eleventy.config.mjs",
+                "verify-site.mjs",
+                "serve.mjs",
+            )
+            .map(docsSite.projectDirectory::file),
+    )
+    options = listOf("--test", "--test-reporter=tap")
+    script = layout.projectDirectory.file("test/site-smoke.mjs")
+    environment.put("SITE_SMOKE_JAVA", javaLauncher.map { it.executablePath.asFile.absolutePath })
+    environment.put(
+        "SITE_SMOKE_BFF_JAR",
+        roleTracerJar.get().elements.map { it.single().asFile.absolutePath },
+    )
+    environment.put("SITE_SMOKE_STAGED_DOCS", stagedDocs.map { it.asFile.absolutePath })
+}
