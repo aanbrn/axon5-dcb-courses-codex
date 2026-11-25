@@ -20,13 +20,16 @@ DETEKT = "config/detekt/comments.yml"
 
 
 class Checkout:
-    def __init__(self, root):
+    def __init__(self, root, *, clone=False):
         self.root = root
         self.env = dict(
             os.environ, GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1"
         )
         self.env.pop("GIT_INDEX_FILE", None)
-        self.git("init", "-q", "--initial-branch=fixture")
+        if clone:
+            self.git("clone", "-q", "--no-hardlinks", str(PROJECT), ".")
+        else:
+            self.git("init", "-q", "--initial-branch=fixture")
         self.git("config", "user.name", "Repository Style Fixture")
         self.git("config", "user.email", "style-fixture@example.test")
         self.git("config", "core.fileMode", "true")
@@ -36,8 +39,9 @@ class Checkout:
             if source.is_file():
                 target = self.write(path, source.read_bytes())
                 target.chmod(source.stat().st_mode)
-        self.git("add", "--", POLICY, DETEKT, "mise.toml")
-        self.git("commit", "-qm", "Baseline policy")
+        if not clone:
+            self.git("add", "--", POLICY, DETEKT, "mise.toml")
+            self.git("commit", "-qm", "Baseline policy")
         self.git("config", "--local", "core.hooksPath", ".githooks")
 
     def git(self, *args, expected=0, extra_env=None):
@@ -61,6 +65,9 @@ class Checkout:
     def hook(self, expected=0):
         return self.run([str(self.root / HOOK)], expected=expected)
 
+    def tracked(self, mode="--check", expected=0):
+        return self.run([sys.executable, DRIVER, mode], expected=expected)
+
     def write(self, path, data):
         target = self.root / path
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -75,9 +82,9 @@ class Checkout:
     def show(self, path, revision="HEAD"):
         return self.git("show", f"{revision}:{path}").stdout
 
-    def set_prettier(self, program):
+    def set_tool(self, tool, program):
         runtime = json.loads((PROJECT / RUNTIME).read_bytes())
-        runtime["prettier"] = [sys.executable, "-c", program, *runtime["prettier"]]
+        runtime[tool] = [sys.executable, "-c", program, *runtime[tool]]
         self.write(RUNTIME, json.dumps(runtime).encode())
 
 
@@ -204,7 +211,7 @@ class HookTest(unittest.TestCase):
             ),
         ):
             with self.subTest(diagnostic=diagnostic):
-                repo.set_prettier(program)
+                repo.set_tool("prettier", program)
                 repo.stage("z.md", b"#  Staged heading\n")
                 repo.write("z.md", b"# local heading with text\n")
                 self.assert_aborted(diagnostic)
@@ -267,13 +274,14 @@ class HookTest(unittest.TestCase):
         repo = self.repo
         ready = repo.root / "formatter-ready"
         resume = repo.root / "formatter-resume"
-        repo.set_prettier(
+        repo.set_tool(
+            "prettier",
             f"import os, pathlib, sys, time; pathlib.Path({str(ready)!r}).touch()\n"
             f"for attempt in range(100):\n"
             f"    if pathlib.Path({str(resume)!r}).is_file(): break\n"
             "    time.sleep(0.05)\n"
             "else: sys.exit(71)\n"
-            "os.execv(sys.argv[1], sys.argv[1:])\n"
+            "os.execv(sys.argv[1], sys.argv[1:])\n",
         )
         path = "picked.md"
         current = repo.stage(path, b"#  Selected\n")
@@ -306,5 +314,120 @@ class HookTest(unittest.TestCase):
         self.assertEqual(current.read_bytes(), b"#  Selected\n")
 
 
+class FullTreeTest(unittest.TestCase):
+    def fixture(self, *, clone=False):
+        temporary = tempfile.TemporaryDirectory(prefix="repository-style-test-")
+        self.addCleanup(temporary.cleanup)
+        return Checkout(Path(temporary.name).resolve(), clone=clone)
+
+    def test_staged_prettier_policy_and_tracked_config_use_their_own_bytes(self):
+        repo = self.fixture()
+        config = repo.show(POLICY)
+        staged = config.replace(
+            b'"endOfLine": "lf"', b'"endOfLine": "lf",\n    "singleQuote": true'
+        )
+        working = staged.replace(b'"singleQuote": true', b'"singleQuote": false')
+        self.assertNotEqual(staged, config)
+        candidate = repo.stage(POLICY, staged)
+        repo.write(POLICY, working)
+        js = repo.stage("equivalent snapshot.js", b'const example = "value";\n')
+        repo.git("commit", "-qm", "Use staged formatting options")
+        self.assertEqual(
+            repo.show("equivalent snapshot.js"), b"const example = 'value';\n"
+        )
+        self.assertEqual(candidate.read_bytes(), working)
+        diagnostic = repo.tracked(expected=1)
+        self.assertIn(
+            b'"equivalent snapshot.js" [prettier] needs formatting', diagnostic.stdout
+        )
+        self.assertEqual(js.read_bytes(), repo.show("equivalent snapshot.js"))
+        repo.write(POLICY, repo.show(POLICY))
+        repo.tracked()
+
+    def test_detekt_reads_candidate_config_and_lints_after_formatting(self):
+        repo = self.fixture()
+        lint_input = b"/** Explains the example. */\nfun example(): Int = 1\n"
+        repo.set_tool(
+            "detekt",
+            "import os, pathlib, sys\n"
+            "paths = sys.argv[sys.argv.index('--input') + 1].split(',')\n"
+            f"if pathlib.Path(paths[0]).read_bytes() != {lint_input!r}:\n"
+            "    sys.exit('detekt received unformatted bytes')\n"
+            "os.execv(sys.argv[1], sys.argv[1:])\n",
+        )
+        repo.stage(
+            "Example.kt", b"/** Explains the example. */\nfun example( ):Int=1\n"
+        )
+        repo.git("commit", "-qm", "Format Kotlin before running actual detekt")
+        self.assertEqual(repo.show("Example.kt"), lint_input)
+        repo.tracked()
+        shutil.copyfile(PROJECT / RUNTIME, repo.root / RUNTIME)
+
+        bad = b"/** A sentence without punctuation */\nfun issue(): Int = 1\n"
+        path = "Bad KDoc.kt"
+        witness = repo.stage(path, bad)
+        config = repo.show(DETEKT)
+        disabled = config.replace(
+            b"EndOfSentenceFormat:\n    active: true",
+            b"EndOfSentenceFormat:\n    active: false",
+        )
+        self.assertNotEqual(disabled, config)
+        repo.write(DETEKT, disabled)
+        self.assertIn(b"EndOfSentenceFormat", repo.hook(expected=1).stderr)
+        self.assertEqual(repo.show(path, ""), bad)
+        self.assertEqual(witness.read_bytes(), bad)
+        repo.write(DETEKT, config)
+        full = repo.tracked(expected=1)
+        self.assertIn(b"EndOfSentenceFormat", full.stderr)
+        self.assertEqual(witness.read_bytes(), bad)
+
+    def test_full_normalized_clone_and_fsd_negative_controls(self):
+        repo = self.fixture(clone=True)
+        tracked = repo.git("ls-files", "-z").stdout.split(b"\0")[:-1]
+        original = repo.git("rev-parse", "HEAD").stdout
+        # An unborn branch treats every tracked file as a staged addition.
+        repo.git("symbolic-ref", "HEAD", "refs/heads/normalized-style-fixture")
+        repo.hook()
+        repo.git(
+            "-c",
+            f"core.hooksPath={os.devnull}",
+            "commit",
+            "-qm",
+            "Normalize disposable clone",
+        )
+        self.assertNotEqual(repo.git("rev-parse", "HEAD").stdout, original)
+        self.assertEqual(repo.git("ls-files", "-z").stdout.split(b"\0")[:-1], tracked)
+        inventory = repo.tracked("--inventory").stdout.decode().splitlines()
+        self.assertEqual(
+            {os.fsencode(json.loads(line.split("\t")[0])) for line in inventory},
+            set(tracked),
+        )
+        self.assertTrue(all(len(line.split("\t")) == 3 for line in inventory))
+        repo.tracked()
+
+        path = "web/src/shared/lib/utils.ts"
+        clean = repo.show(path)
+        target = repo.write(path, clean.rstrip(b"\n") + b'\n\nimport "@/pages/home";\n')
+        bad = target.read_bytes()
+        tracked_failure = repo.tracked(expected=1)
+        self.assertIn(b"fsd/forbidden-imports", tracked_failure.stderr)
+        self.assertEqual(target.read_bytes(), bad)
+        repo.git("add", "--", path)
+        self.assertIn(b"fsd/forbidden-imports", repo.hook(expected=1).stderr)
+        self.assertEqual(repo.show(path, ""), bad)
+
+        dirty = clean + b"\n\n"
+        repo.stage(path, dirty)
+        tracked_failure = repo.tracked(expected=1)
+        self.assertIn(
+            b'"web/src/shared/lib/utils.ts" [prettier] needs formatting',
+            tracked_failure.stdout,
+        )
+        self.assertEqual(target.read_bytes(), dirty)
+
+
 if __name__ == "__main__":
-    unittest.main(verbosity=2)
+    full_tree = "--full-tree" in sys.argv
+    if full_tree:
+        sys.argv.remove("--full-tree")
+    unittest.main(defaultTest="FullTreeTest" if full_tree else "HookTest", verbosity=2)
