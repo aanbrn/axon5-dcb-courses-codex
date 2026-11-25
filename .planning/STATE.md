@@ -4,18 +4,18 @@ milestone: v1.0
 milestone_name: Axon 5 DCB Courses
 current_phase: 02
 current_phase_name: Build and UI Foundations
-current_plan: 5
+current_plan: 6
 status: executing
-stopped_at: Completed 02-03-PLAN.md
-last_updated: "2026-11-25T13:36:33.413Z"
+stopped_at: Completed 02-05-PLAN.md
+last_updated: "2026-11-25T13:54:21.671Z"
 last_activity: 2026-11-25
 last_activity_desc: Completed per-tab demo roles and directory recovery
-state_head: ef34bb27381a0e8a79114cb39d20d9198c0e3a62
+state_head: 74f6753b42099bf33fbb64ab22de4efb5e382037
 progress:
   total_phases: 8
   completed_phases: 1
   total_plans: 16
-  completed_plans: 9
+  completed_plans: 10
   percent: 13
 ---
 
@@ -31,7 +31,7 @@ See [PROJECT.md](PROJECT.md), initialized 2026-11-24.
 ## Current Position
 
 Phase: 02 (Build and UI Foundations)
-Current Plan: 5
+Current Plan: 6
 Total Plans in Phase: 11
 Status: Ready to execute
 Last activity: 2026-11-25 -- Completed per-tab demo roles and directory recovery
@@ -56,6 +56,7 @@ Progress: [█░░░░░░░░░] 13%
 | Phase 02 P02 | 18m54s | 3 tasks | 10 files |
 | Phase 02 P10 | 12m14s | 2 tasks | 5 files |
 | Phase 02 P03 | 16m40s | 2 tasks | 6 files |
+| Phase 02 P05 | 13m55s | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -86,6 +87,8 @@ Progress: [█░░░░░░░░░] 13%
 - [Phase 02]: Keep role selection in tab-local storage and reconcile the whole stored identifier after directory validation.
 - [Phase 02]: Run browser component checks using the pinned Playwright and Vite dependencies in the opt-in smoke task.
 - [Phase 02]: Capture retry focus when the button leaves the DOM and restore it after the selector is enabled.
+- [Phase 02]: Share Kotlin formatting and comments commands through the JVM convention and scope the Guava JRE floor to ktfmtTool.
+- [Phase 02]: Publish BFF main and public fixture helpers from testFixtures with reportUndocumented and failOnWarning enabled.
 
 ### Pending Todos
 
@@ -98,6 +101,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-25T13:36:12.703Z
-Stopped at: Completed 02-03-PLAN.md
+Last session: 2026-11-25T13:54:21.604Z
+Stopped at: Completed 02-05-PLAN.md
 Resume file: None
