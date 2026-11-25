@@ -49,7 +49,7 @@ Build, browser, architecture, and CI checks grow alongside the features they exe
 
 ### Phase 2: Build and UI Foundations
 
-**Goal:** Turn the verified inputs into shared build and test conventions and deliver the browser shell and generated-client path for feature slices.
+**Goal:** As a maintainer, I want to build and test the demo shell and generated BFF client through shared conventions, so that I can verify later feature slices from a clean checkout.
 **Mode:** mvp
 **Depends on:** Phase 1
 **Requirements:** FND-02, FND-05, FND-06, CQRS-04, UI-01, UI-03, QA-07, QA-08, DOC-06
@@ -62,7 +62,33 @@ Build, browser, architecture, and CI checks grow alongside the features they exe
 4. A maintainer can run `doctor`, audit authoritative version owners, and run JUnit 6 and Kotest through Gradle JVM Test Suites with shared Java Test Fixtures. The documented dependency maintenance process links recovered or reproduced evidence and keeps advisory inputs and results private.
 5. The pre-commit hook and CI use the same repository formatting and style checks. Representative Kotlin and KDoc pass ktfmt and detekt, and a Dokka warning fails the build.
 
-**Plans:** TBD
+**Plans:** 0/11 plans executed
+**Wave 1**
+- [ ] 02-01-PLAN.md
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 02-02-PLAN.md
+- [ ] 02-10-PLAN.md
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 02-03-PLAN.md
+- [ ] 02-04-PLAN.md
+- [ ] 02-05-PLAN.md
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [ ] 02-06-PLAN.md
+
+**Wave 5** *(blocked on Wave 4 completion)*
+- [ ] 02-11-PLAN.md
+
+**Wave 6** *(blocked on Wave 5 completion)*
+- [ ] 02-07-PLAN.md
+
+**Wave 7** *(blocked on Wave 6 completion)*
+- [ ] 02-08-PLAN.md
+
+**Wave 8** *(blocked on Wave 7 completion)*
+- [ ] 02-09-PLAN.md
 
 ### Phase 3: Core Enrollment and Live Views
 
@@ -168,7 +194,7 @@ Build, browser, architecture, and CI checks grow alongside the features they exe
 | Phase | Plans Complete | Status | Completed |
 | --- | --- | --- | --- |
 | 1. Axon Server and Toolchain Feasibility | 5/5 | Complete    | 2026-11-25 |
-| 2. Build and UI Foundations | 0/TBD | Not started | - |
+| 2. Build and UI Foundations | 0/11 | Planned     | - |
 | 3. Core Enrollment and Live Views | 0/TBD | Not started | - |
 | 4. Course Names and Atomic Transfers | 0/TBD | Not started | - |
 | 5. Scheduling and Waitlist Automation | 0/TBD | Not started | - |
