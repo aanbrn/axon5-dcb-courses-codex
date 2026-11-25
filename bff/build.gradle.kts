@@ -23,14 +23,24 @@ testing.suites.named<JvmTestSuite>("test") {
     }
 }
 
+val openApiSource = layout.projectDirectory.file("src/main/resources/static/openapi.json")
+
 val componentTest = testing.suites.register<JvmTestSuite>("componentTest") {
     dependencies {
         implementation(project())
         implementation(testFixtures(project(":fixtures")))
         implementation(platform(libs.spring.boot.bom))
         implementation(libs.jackson.databind)
+        implementation(libs.networknt.validator)
         implementation("org.springframework.boot:spring-boot-test")
         implementation("org.springframework:spring-test")
+    }
+
+    targets.configureEach {
+        testTask.configure {
+            inputs.file(openApiSource).withPathSensitivity(PathSensitivity.RELATIVE)
+            systemProperty("courses.openapi.source", openApiSource.asFile.absolutePath)
+        }
     }
 }
 
@@ -89,6 +99,6 @@ val openApiElements = configurations.consumable("openApiElements")
 val bootExecutableElements = configurations.consumable("bootExecutableElements")
 
 artifacts {
-    add(openApiElements.name, layout.projectDirectory.file("src/main/resources/static/openapi.json"))
+    add(openApiElements.name, openApiSource)
     add(bootExecutableElements.name, tasks.named<BootJar>("bootJar"))
 }
