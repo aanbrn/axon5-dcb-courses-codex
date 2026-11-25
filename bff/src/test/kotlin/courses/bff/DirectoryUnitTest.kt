@@ -30,4 +30,27 @@ class DirectoryUnitTest {
         checks shouldBe iterations
         println("DIRECTORY_PROPERTY seed=$seed checks=$checks")
     }
+
+    @OptIn(ExperimentalKotest::class)
+    @Test
+    fun `directory identifiers are unique for each sample size`() = runBlocking {
+        val seed = 20261126L
+        val iterations = 32
+        val config = PropTestConfig(seed = seed, iterations = iterations)
+        val sizes = mutableSetOf<Int>()
+        var checks = 0
+
+        checkAll(config, Arb.int(0..2)) { count ->
+            val directory = DemoDirectoryController().listDemoRoles()
+            directory.students.size shouldBe count
+            val ids = (listOf(directory.administrator) + directory.students).map { it.id }
+            ids.distinct() shouldBe ids
+            sizes += count
+            checks += 1
+        }
+
+        sizes shouldBe setOf(0, 1, 2)
+        checks shouldBe iterations
+        println("DIRECTORY_FIXTURE_PROPERTY seed=$seed checks=$checks sizes=${sizes.sorted()}")
+    }
 }
