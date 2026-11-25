@@ -43,6 +43,8 @@ mise exec ruff taplo -- python3 tools/doctor.py
 
 Run `./gradlew installGitHooks` to opt in to the staged-content hook. Run the full tracked-file check with `mise exec ruff taplo -- ./gradlew styleCheck`. Both entry points use the checked-in [style policy](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/tools/style/policy.json).
 
+The hook formats staged content and leaves your working files untouched. After a commit that applies formatting, use `git diff -- <path>` to review the unstaged changes. To copy the committed formatting back, use `git restore --patch --worktree -- <path>` and select only hunks that contain formatting you want to keep. If a hunk also contains local edits, carry the formatting over in your editor.
+
 ## Pull request build
 
 The `build-and-style` job runs on GitHub's Ubuntu 24.04 x64 runner with read access to repository contents. It validates the Gradle wrapper before running it. The workflow pins each action to the publisher's full commit SHA. [Build workflow](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/.github/workflows/build.yml)

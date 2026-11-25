@@ -107,7 +107,7 @@ class HookTest(unittest.TestCase):
         repo.git("commit", "-qm", "Format staged executable")
         self.assertEqual(repo.show(path), b"first changed\nsecond\nthird\n")
         self.assertEqual(
-            tracked.read_bytes(), b"first changed\nsecond unstaged   \nthird\n"
+            tracked.read_bytes(), b"first changed   \nsecond unstaged   \nthird\n"
         )
         self.assertTrue(
             repo.git("ls-tree", "HEAD", "--", path).stdout.startswith(b"100755 ")
@@ -131,7 +131,7 @@ class HookTest(unittest.TestCase):
             self.assertEqual(repo.show(path), b"staged first\nsecond\nthird\n")
         self.assertEqual(
             (repo.root / disjoint).read_bytes(),
-            b"staged first\nsecond\nlocal third  \n",
+            b"staged first  \nsecond\nlocal third  \n",
         )
         self.assertEqual(overlapping.read_bytes(), overlap_before)
 
@@ -155,7 +155,8 @@ class HookTest(unittest.TestCase):
         self.assertEqual(target.read_bytes(), worktree)
         repo.git("commit", "-qm", "Rename and delete")
         self.assertEqual(repo.show(path), b"# Changed\n\n- item\n")
-        self.assertEqual(worktree, repo.show(path))
+        self.assertEqual(worktree, b"#  Changed\n\n-   item\n")
+        self.assertEqual(target.read_bytes(), worktree)
         self.assertEqual(
             repo.git("ls-tree", "HEAD", "--", "origin.txt", "delete.txt").stdout, b""
         )
@@ -173,7 +174,7 @@ class HookTest(unittest.TestCase):
         repo.git("update-ref", "-d", "HEAD")
         repo.git("commit", "-qm", "Alternate-index initial commit", extra_env=env)
         self.assertEqual(repo.show(path), b"alternate staged\n")
-        self.assertEqual(target.read_bytes(), b"alternate staged\n")
+        self.assertEqual(target.read_bytes(), b"alternate staged   \n")
         self.assertEqual(self.index.read_bytes(), primary_index)
 
     def assert_aborted(self, diagnostic):
@@ -313,6 +314,30 @@ class HookTest(unittest.TestCase):
         self.assertEqual(repo.show(path, ""), b"#  Selected\n")
         self.assertEqual(current.read_bytes(), b"#  Selected\n")
 
+    def test_editor_save_at_index_publication_is_preserved(self):
+        repo = self.repo
+        path = "editor.txt"
+        repo.stage(path, b"first\nsecond\n")
+        repo.git("commit", "-qm", "Baseline editor file")
+        target = repo.stage(path, b"first staged   \nsecond\n")
+        editor_save = b"first staged   \nsecond saved by editor\n"
+        driver = repo.root / DRIVER
+        source = driver.read_text(encoding="utf-8")
+        before, entrypoint = source.split('\nif __name__ == "__main__":\n')
+        driver.write_text(
+            before + "\n_publish_index = publish_index\n"
+            "def publish_index(index, original, candidate):\n"
+            "    _publish_index(index, original, candidate)\n"
+            f"    Path({path!r}).write_bytes({editor_save!r})\n"
+            + '\nif __name__ == "__main__":\n'
+            + entrypoint,
+            encoding="utf-8",
+        )
+        result = repo.git("commit", "-qm", "Publish staged formatting")
+        self.assertIn(b"Worktree files preserved", result.stderr)
+        self.assertEqual(repo.show(path), b"first staged\nsecond\n")
+        self.assertEqual(target.read_bytes(), editor_save)
+
 
 class FullTreeTest(unittest.TestCase):
     def fixture(self, *, clone=False):
@@ -340,7 +365,7 @@ class FullTreeTest(unittest.TestCase):
         self.assertIn(
             b'"equivalent snapshot.js" [prettier] needs formatting', diagnostic.stdout
         )
-        self.assertEqual(js.read_bytes(), repo.show("equivalent snapshot.js"))
+        self.assertEqual(js.read_bytes(), b'const example = "value";\n')
         repo.write(POLICY, repo.show(POLICY))
         repo.tracked()
 
@@ -360,6 +385,7 @@ class FullTreeTest(unittest.TestCase):
         )
         repo.git("commit", "-qm", "Format Kotlin before running actual detekt")
         self.assertEqual(repo.show("Example.kt"), lint_input)
+        repo.write("Example.kt", lint_input)
         repo.tracked()
         shutil.copyfile(PROJECT / RUNTIME, repo.root / RUNTIME)
 
@@ -396,6 +422,7 @@ class FullTreeTest(unittest.TestCase):
             "Normalize disposable clone",
         )
         self.assertNotEqual(repo.git("rev-parse", "HEAD").stdout, original)
+        repo.git("restore", "--worktree", "--", ".")
         self.assertEqual(repo.git("ls-files", "-z").stdout.split(b"\0")[:-1], tracked)
         inventory = repo.tracked("--inventory").stdout.decode().splitlines()
         self.assertEqual(
