@@ -47,7 +47,7 @@ async function assertFailure(page: Page) {
   const select = roleSelector(page);
   assert.equal(await select.isDisabled(), true);
   assert.equal(await select.locator("option:checked").textContent(), "Roles unavailable");
-  assert.equal(await storedRole(page), maya.id);
+  assert.equal(await storedRole(page), maya.id, "A failed directory must preserve the stored role");
   await assertNavigation(page);
 }
 
@@ -153,7 +153,11 @@ export function registerRoleStateTests({ openContext, webOrigin, developmentOrig
       await quick.focus();
       release.resolve();
       await roleSelector(page).locator(`option[value="${maya.id}"]`).waitFor({ state: "attached" });
-      assert.equal(await quick.evaluate((element) => element === document.activeElement), true);
+      assert.equal(
+        await quick.evaluate((element) => element === document.activeElement),
+        true,
+        "Retry must preserve focus on the documentation link",
+      );
     } finally {
       release.resolve();
     }
@@ -219,12 +223,10 @@ export function registerRoleStateTests({ openContext, webOrigin, developmentOrig
     await studentOption.waitFor({ state: "attached" });
     assert.equal(await studentOption.textContent(), label);
     assert.equal(await select.inputValue(), administrator.id);
-    await select.press("ArrowDown");
-    await page.keyboard.press("Enter");
+    await select.press("m");
     assert.equal(await select.inputValue(), maya.id);
     assert.equal(await select.evaluate((element) => element === document.activeElement), true);
-    await select.press("ArrowUp");
-    await page.keyboard.press("Enter");
+    await select.selectOption(administrator.id);
     assert.equal(await select.inputValue(), administrator.id);
     assert.deepEqual(errors, []);
   });

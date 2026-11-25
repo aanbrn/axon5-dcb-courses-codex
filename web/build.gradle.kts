@@ -162,7 +162,16 @@ val shellSmoke =
         group = "verification"
         description = "Verify the built browser shell and live role directory in Chromium."
         dependsOn(provisionBrowser, webBuild)
-        useWebDependencies(roleTracerJar, distribution, "test/role-tracer.mjs")
+        useWebDependencies(
+            roleTracerJar,
+            distribution,
+            source,
+            generated,
+            "test/role-tracer.mjs",
+            "test/role-states.test.tsx",
+            "tsconfig.json",
+            "vite.config.ts",
+        )
         options = listOf("--test", "--test-reporter=tap")
         script = layout.projectDirectory.file("test/role-tracer.mjs")
         environment.put(

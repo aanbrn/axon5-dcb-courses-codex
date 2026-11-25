@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { loadDemoRoles, type DemoRoleDirectory } from "../../shared/api/demoRoles";
 
 const roleStorageKey = "courses.demo.role";
@@ -6,8 +6,7 @@ const roleStorageKey = "courses.demo.role";
 type DemoRole = DemoRoleDirectory["administrator"] | DemoRoleDirectory["students"][number];
 
 type RoleState =
-  | { status: "loading" }
-  | { status: "failed" }
+  | { status: "initial" | "loading" | "failed" | "retrying" }
   | {
       status: "ready";
       roles: DemoRole[];
@@ -32,13 +31,18 @@ function storeRole(id: string) {
 }
 
 export function useDemoRoles() {
-  const [state, setState] = useState<RoleState>({ status: "loading" });
+  const [state, setState] = useState<RoleState>({ status: "initial" });
+  const activeRequest = useRef<AbortController | null>(null);
 
-  useEffect(() => {
+  const requestDirectory = useCallback((status: "loading" | "retrying") => {
+    if (activeRequest.current) return;
     const request = new AbortController();
+    activeRequest.current = request;
+    setState({ status });
+
     loadDemoRoles(request.signal)
       .then(({ administrator, students }) => {
-        if (request.signal.aborted) return;
+        if (activeRequest.current !== request) return;
         const roles = [administrator, ...students];
         const saved = readStoredRole();
         const restored = roles.find(({ id }) => id === saved);
@@ -52,10 +56,24 @@ export function useDemoRoles() {
         });
       })
       .catch(() => {
-        if (!request.signal.aborted) setState({ status: "failed" });
+        if (activeRequest.current === request) setState({ status: "failed" });
+      })
+      .finally(() => {
+        if (activeRequest.current === request) activeRequest.current = null;
       });
-    return () => request.abort();
   }, []);
+
+  useEffect(() => {
+    requestDirectory("loading");
+    return () => {
+      activeRequest.current?.abort();
+      activeRequest.current = null;
+    };
+  }, [requestDirectory]);
+
+  function retry() {
+    if (state.status === "failed") requestDirectory("retrying");
+  }
 
   function selectRole(id: string) {
     if (state.status !== "ready" || !state.roles.some((role) => role.id === id)) return;
@@ -63,5 +81,5 @@ export function useDemoRoles() {
     setState({ ...state, selectedId: id, fellBack: false });
   }
 
-  return { state, selectRole };
+  return { state, selectRole, retry };
 }
