@@ -15,3 +15,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "axon5-dcb-courses"
 include(":probe", ":bff", ":web")
+if (file("fixtures").isDirectory) {
+    include(":fixtures")
+}

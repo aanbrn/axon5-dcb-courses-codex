@@ -1,5 +1,6 @@
 package courses.bff
 
+import courses.fixtures.DirectoryFixtures
 import io.kotest.common.ExperimentalKotest
 import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
@@ -41,9 +42,9 @@ class DirectoryUnitTest {
         var checks = 0
 
         checkAll(config, Arb.int(0..2)) { count ->
-            val directory = DemoDirectoryController().listDemoRoles()
+            val directory = DirectoryFixtures.defaultDirectory.withStudentCount(count)
             directory.students.size shouldBe count
-            val ids = (listOf(directory.administrator) + directory.students).map { it.id }
+            val ids = directory.roles.map { it.id }
             ids.distinct() shouldBe ids
             sizes += count
             checks += 1
