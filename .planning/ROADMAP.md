@@ -1,6 +1,6 @@
 # Axon 5 DCB Courses Roadmap
 
-## Overview
+## v1.0 — Axon 5 DCB Courses
 
 The v1.0 milestone starts with a reproducible Axon Server DCB proof, followed by the shared build and UI foundation. It then ships complete enrollment, transfer, scheduling, and waitlist workflows through the browser. The final phases turn the verified behavior into a teaching demo and publish the operating and release evidence.
 
@@ -8,7 +8,7 @@ Build, browser, architecture, and CI checks grow alongside the features they exe
 
 ## Phases
 
-- [ ] **Phase 1: Axon Server and Toolchain Feasibility** - Run the DCB compatibility probe and record the evidence for stack selection.
+- [x] **Phase 1: Axon Server and Toolchain Feasibility** - Run the DCB compatibility probe and record the evidence for stack selection. (completed 2026-11-25)
 - [ ] **Phase 2: Build and UI Foundations** - Set up the shared build, test conventions, and browser shell with a generated OpenAPI client.
 - [ ] **Phase 3: Core Enrollment and Live Views** - Ship a complete course and student enrollment workflow with live updates and contention tests.
 - [ ] **Phase 4: Course Names and Atomic Transfers** - Teach cross-entity decisions through unique names, capacity changes, and transfers.
@@ -21,17 +21,31 @@ Build, browser, architecture, and CI checks grow alongside the features they exe
 
 ### Phase 1: Axon Server and Toolchain Feasibility
 
-**Goal:** Select a compatible stack by running a minimal repeatable DCB probe and targeted toolchain checks.
+**Goal:** As a maintainer, I want to select a compatible stack by running a repeatable DCB probe and targeted toolchain checks, so that readers can reproduce the stack selection.
 **Mode:** mvp
 **Depends on:** None
 **Requirements:** FND-01
 **Success Criteria**:
 
-1. Using a minimal Spring Boot probe, a maintainer starts a clean DCB context without Platform credentials and observes a multi-tag write, a rejected overlapping append, and a cross-process command, query, and subscription update.
+1. Using a minimal Spring Boot probe on ARM64, a maintainer starts a clean DCB context without vendor registration, manual license acquisition, or Platform credentials and observes a multi-tag write, a rejected overlapping append, and a cross-process command, query, and subscription update.
 2. The probe report records the exact artifacts, applicable image and connector terms, bootstrap steps, selected ARM64 and AMD64 digests, observed Temurin build, and relevant findings from the earlier dependency reviews. The version matrix starts from current stable and applicable LTS releases, and cites the verification evidence and any blocker that required an older release.
-3. Small independent samples record TypeID interoperability between Kotlin and TypeScript, Kotlin 2.4 with JUnit 6 and Kotest, ktfmt behavior on representative KDoc, and the selected pnpm-to-Paketo frontend path. Each check records a reproducible result or a concrete blocker before the affected tooling is adopted.
+3. Small independent samples record TypeID interoperability between Kotlin and TypeScript, Kotlin 2.4 with JUnit 6 and Kotest, ktfmt behavior on representative KDoc, and the frontend path from a Gradle-driven npm build to packaging static assets with Paketo. Each check records a reproducible result or a concrete blocker before the affected tooling is adopted.
 
-**Plans:** TBD
+**Plans:** 5/5 plans complete
+**Wave 1**
+- [x] 01-01-PLAN.md
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [x] 01-02-PLAN.md
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [x] 01-03-PLAN.md
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [x] 01-04-PLAN.md
+
+**Wave 5** *(blocked on Wave 4 completion)*
+- [x] 01-05-PLAN.md
 
 ### Phase 2: Build and UI Foundations
 
@@ -96,7 +110,7 @@ Build, browser, architecture, and CI checks grow alongside the features they exe
 2. A student can join a full course’s waiting list. When a seat opens, the automation service requests promotion and the command service rechecks eligibility and capacity. Duplicate delivery or a competing enrollment cannot overbook the course.
 3. A maintainer can run and component-test all four service roles independently with Axon Server routing. Browser views show queue and promotion outcomes through subscription updates.
 4. Every business operation through this phase has a UI-SPEC and a browser slice that shows the outcome and updates related views.
-5. Using the verified buildpack path, a maintainer builds and starts all application role images with `bootBuildImage` and the pnpm frontend with Paketo Web Servers. The integration suite covers automation restart and delivery against Axon Server and the database.
+5. Using the verified buildpack path, a maintainer builds and starts all application role images with `bootBuildImage` and packages the Gradle-built frontend assets with Paketo Web Servers. The integration suite covers automation restart and delivery against Axon Server and the database.
 
 **Plans:** TBD
 
@@ -125,9 +139,9 @@ Build, browser, architecture, and CI checks grow alongside the features they exe
 **Requirements:** CI-01, CI-02, CI-03, CI-04, CI-05, CI-06, QA-06, OPS-01, OPS-03
 **Success Criteria**:
 
-1. A reader launches the complete demo and its observability stack from a fresh checkout through one Docker Compose setup without Platform credentials.
+1. A reader launches the complete demo and its observability stack from a fresh checkout through one Docker Compose setup without vendor registration, manual license acquisition, or Platform credentials. The quick start documents any applicable runtime limit.
 2. The optional AxonIQ Platform path is documented and configurable independently. When the author supplies credentials securely, record a successful account connection without exposing credentials.
-3. A hosted PR run produces build, test, coverage, analysis, dependency and image scan, and secret scan results. It uses the existing JVM and frontend buildpack image tasks. Update automation targets the established version owners.
+3. A hosted PR run produces build, test, coverage, analysis, dependency and image scan, and secret scan results. It uses the existing JVM and frontend buildpack image tasks. A GitHub Actions AMD64 runner provides the first AMD64 runtime evidence for the DCB proof. Update automation targets the established version owners.
 4. The remote demonstrates required PRs and checks, linear history, squash-only merges, and zero required approvals. The release-please workflow owns release creation and tags, with GSD tag creation disabled.
 5. A maintainer can trace a marked workaround to its upstream record, and CI reports missing links.
 
@@ -153,7 +167,7 @@ Build, browser, architecture, and CI checks grow alongside the features they exe
 
 | Phase | Plans Complete | Status | Completed |
 | --- | --- | --- | --- |
-| 1. Axon Server and Toolchain Feasibility | 0/TBD | Not started | - |
+| 1. Axon Server and Toolchain Feasibility | 5/5 | Complete    | 2026-11-25 |
 | 2. Build and UI Foundations | 0/TBD | Not started | - |
 | 3. Core Enrollment and Live Views | 0/TBD | Not started | - |
 | 4. Course Names and Atomic Transfers | 0/TBD | Not started | - |

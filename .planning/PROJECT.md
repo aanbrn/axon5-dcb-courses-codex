@@ -95,6 +95,7 @@ None yet. Validate through shipped and verified work.
 - Separate command, query/projection, automation, and REST BFF services by responsibility.
 - Use React and TypeScript with Feature-Sliced Design (FSD), checked by Steiger.
 - Use Gradle JVM Test Suites and Java Test Fixtures to organize test levels and reuse test helpers.
+- Name Kotlin test methods with short English phrases in backticks that describe the expected behavior.
 - Auto-format and style-check all repository artifacts through a local pre-commit hook and in CI.
 - Use one Docker Compose setup for the full local system.
 - Hold code, tests, documentation, CI, and observability to reference-quality standards.
@@ -121,7 +122,8 @@ None yet. Validate through shipped and verified work.
 | Pin CLI tools with mise and maintain a tooling inventory and `doctor` check | Reproduce the environment beyond Gradle | Pending implementation |
 | Use vetted third-party and project-owned skills locally in OpenCode | Treat skills as reviewed code and verify OpenCode compatibility before adoption | Pending selection and implementation |
 | Use the Gradle Node plugin for frontend and docs-site subprojects | Make the BFF OpenAPI contract, generated client, and frontend an explicit build graph under `./gradlew build` | Pending implementation |
-| Build all images with Cloud Native Buildpacks (Paketo), using `bootBuildImage` for JVM apps and the Web Servers buildpack for the frontend, with no Dockerfiles | Share a build approach, SBOM support, base rebase, and JVM memory tuning | Verify the pnpm path in Phase 1 |
+| Build all images with Cloud Native Buildpacks (Paketo), using `bootBuildImage` for JVM apps and the Web Servers buildpack for the frontend, with no Dockerfiles | Share a build approach, SBOM support, base rebase, and JVM memory tuning | Verify Gradle-driven npm builds and packaging of static assets in Phase 1 |
+| Use npm and `package-lock.json` for the frontend and docs site. Consider pnpm for specific tooling needs. | Use a reproducible install with one project build path | Selected for Phase 1 verification |
 | Use JUnit 6 as the runner with Kotest assertions and property testing | Align with Spring Boot 4, Testcontainers, Gradle Test Suites, and idiomatic Kotlin tests | Verify Kotlin 2.4 and Kotest compatibility in Phase 1 |
 | Use Gradle JVM Test Suites and Java Test Fixtures | Separate test levels without duplicating shared helpers | Pending implementation |
 | Enforce frontend FSD with Steiger | Make frontend boundaries as explicit as backend ones | Pending implementation |
@@ -132,7 +134,7 @@ None yet. Validate through shipped and verified work.
 
 Start with the latest stable release in the applicable major line. For components with an applicable LTS track, start with the current LTS line and its latest stable release. Verify compatibility before pinning or updating versions. Select or return to an older release only when a concrete blocker is documented with evidence.
 
-Use the Gradle wrapper for Gradle, the Gradle catalog for Gradle inputs including images, `.java-version` for the Temurin JDK feature version, `mise.toml` for independent CLIs, `.nvmrc` for Node.js, `packageManager` and the lockfile for pnpm/npm, and SHA pins for GitHub Actions. Keep `.java-version` feature-only and record full observed JDK patch/build versions as evidence.
+Use the Gradle wrapper for Gradle, the Gradle catalog for Gradle inputs including images, `.java-version` for the Temurin JDK feature version, `mise.toml` for independent CLIs, `.nvmrc` for Node.js, `packageManager` and the npm lockfile for the frontend and docs site, and SHA pins for GitHub Actions. Keep `.java-version` feature-only and record full observed JDK patch/build versions as evidence.
 
 For a hold, record the affected scope, owner, confirmed blocker and supporting evidence, dated review or expiry (normally within seven days), and the exact retry or removal trigger. Record any renewal explicitly. Triage security notices, including upstream advisories, immediately. Expedite a verified fix in the narrow affected graph and escalate unfixed high risk or incomplete verification immediately.
 
@@ -148,7 +150,7 @@ A complete no-match result applies only to the checked inventories and feed. Cov
 
 The supplied records are dated **2026-11-24** and name the build maintainer as the owner for reviews by **2026-12-01**. Reconcile them against the selected graphs and runtime evidence in this checkout.
 
-- **Guava scoped constraint.** Recheck sooner on relevant upstream or BOM changes. Remove the constraint only if upstream independently selects a compatible release unaffected by `GHSA-xxph-c9ww-hj94` / `CVE-2026-102554` in all consuming graphs and the graph comparisons, applicable tests, and private scan pass without it. [Advisory cited in the brief](https://osv.dev/vulnerability/GHSA-xxph-c9ww-hj94)
+- **Guava scoped constraints.** On 2026-11-25, the Phase 1 probe replaced `33.6.0-android` in its gRPC graph with `33.8.0-android` and `33.5.0-jre` in its ktfmt graph with `33.8.0-jre`. Both catalog-backed constraints apply only to their consuming dependency scopes. The build maintainer reviews them by 2026-12-01 or sooner on relevant upstream or BOM changes. Remove each constraint only if upstream independently selects a compatible release unaffected by `GHSA-xxph-c9ww-hj94` / `CVE-2026-102554` in all graphs it affects and the graph comparisons, applicable tests, and private scan pass without it. [Guava advisory](https://github.com/advisories/GHSA-xxph-c9ww-hj94)
 - **Explicit pgJDBC version.** Recheck whenever Spring Boot changes. Remove the explicit version only if the BOM independently supplies `42.7.15` or a verified newer fix in the consuming graphs and the role, worker, and runtime checks pass.
 - **Axon Server and PostgreSQL images.** Recheck sooner on relevant security or terms changes. Before updating the catalog, review the replacement immutable index, the selected ARM64 and AMD64 child digests, the exact applicable terms, and a fresh local runtime result.
 

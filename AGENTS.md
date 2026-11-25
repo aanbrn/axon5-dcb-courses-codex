@@ -15,6 +15,7 @@ A reference implementation of students subscribing to courses, built on Axon Fra
 - Separate command, query/projection, automation, and REST BFF services by responsibility.
 - Use React and TypeScript with Feature-Sliced Design (FSD), checked by Steiger.
 - Use Gradle JVM Test Suites and Java Test Fixtures to organize test levels and reuse test helpers.
+- Name Kotlin test methods with short English phrases in backticks that describe the expected behavior.
 - Auto-format and style-check all repository artifacts through a local pre-commit hook and in CI.
 - Use one Docker Compose setup for the full local system.
 - Hold code, tests, documentation, CI, and observability to reference-quality standards.
@@ -36,7 +37,7 @@ A reference implementation of students subscribing to courses, built on Axon Fra
 | TypeID | Use type-prefixed UUIDv7 IDs in contracts and native UUID storage. | Compare Kotlin and TypeScript test vectors in Phase 1. Prove the application UUID round trip in Phase 3. |
 | Web build | Use the Gradle Node plugin for React/TypeScript and the docs site. Make OpenAPI generation, client generation, and frontend build explicit task inputs and outputs. | Regenerate the client from a clean build in Phase 2. |
 | JVM images | Use Spring Boot `bootBuildImage` with a Paketo builder. | Build and run the application role images in Phase 5. |
-| Frontend image | Use Paketo Web Servers. Its docs describe serving already built assets and building from frontend sources. | Probe the selected pnpm packaging path in Phase 1 and use it for the application image in Phase 5. |
+| Frontend image | Use Gradle and `npm ci` to build static assets. Package those assets with Paketo Web Servers. | Probe the packaging and serving path in Phase 1 and use it for the application image in Phase 5. |
 | Documentation checks | Use ktfmt for Kotlin/KDoc, detekt `comments` rules, and Dokka warnings as errors. | Check ktfmt against a representative KDoc sample in Phase 1. Exercise the shared style and documentation checks in Phase 2. |
 ## Tooling for Delivery
 
