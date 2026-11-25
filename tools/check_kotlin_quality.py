@@ -100,10 +100,7 @@ class KotlinQualityTest(unittest.TestCase):
 
         specimen = self.root / "probe/kdoc/Specimen.kt"
         candidate = source_dir(self.root, "bff") / "KdocFormatWitness.kt"
-        prefix, words, details, suffix = kdoc_sections(specimen.read_bytes())
-        original = (
-            prefix + b"/**\n * " + words + b"\n *\n" + details + b"\n */" + suffix
-        )
+        original = specimen.read_bytes()
         candidate.write_bytes(original)
         bad_format = gradle(self.root, ":bff:ktfmtCheck")
         self.require_gradle_failure(bad_format, ":bff:ktfmtCheck")

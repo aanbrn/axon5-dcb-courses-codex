@@ -53,7 +53,13 @@
     {
       "id": "kotlin",
       "paths": ["*.kt", "*.kts"],
+      "except": ["probe/kdoc/Specimen.kt"],
       "reason": "ktfmt owns Kotlin, KDoc and Gradle Kotlin DSL. detekt checks comments."
+    },
+    {
+      "id": "text",
+      "paths": ["probe/kdoc/Specimen.kt"],
+      "reason": "The feasibility probe formats a copy of this deliberately unwrapped KDoc fixture. Check the tracked fixture as plain text."
     },
     {
       "id": "python",
