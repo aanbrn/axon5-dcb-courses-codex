@@ -27,6 +27,10 @@ val componentTest = testing.suites.register<JvmTestSuite>("componentTest") {
     dependencies {
         implementation(project())
         implementation(testFixtures(project(":fixtures")))
+        implementation(platform(libs.spring.boot.bom))
+        implementation(libs.jackson.databind)
+        implementation("org.springframework.boot:spring-boot-test")
+        implementation("org.springframework:spring-test")
     }
 }
 
