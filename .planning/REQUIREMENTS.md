@@ -111,11 +111,11 @@
 | Requirement | Phase | Status |
 | --- | --- | --- |
 | FND-01 | Phase 1 | Complete |
-| FND-02 | Phase 2 | Gaps Found |
+| FND-02 | Phase 2 | Pending |
 | FND-03 | Phase 3 | Pending |
 | FND-04 | Phase 5 | Pending |
 | FND-05 | Phase 2 | Complete |
-| FND-06 | Phase 2 | Gaps Found |
+| FND-06 | Phase 2 | Pending |
 | DCB-01 | Phase 3 | Pending |
 | DCB-02 | Phase 4 | Pending |
 | DCB-03 | Phase 4 | Pending |
@@ -131,7 +131,7 @@
 | CQRS-01 | Phase 3 | Pending |
 | CQRS-02 | Phase 3 | Pending |
 | CQRS-03 | Phase 5 | Pending |
-| CQRS-04 | Phase 2 | Gaps Found |
+| CQRS-04 | Phase 2 | Pending |
 | UI-01 | Phase 2 | Pending |
 | UI-02 | Phase 5 | Pending |
 | UI-03 | Phase 2 | Complete |
