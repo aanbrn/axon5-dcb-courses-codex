@@ -4,18 +4,18 @@ milestone: v1.0
 milestone_name: Axon 5 DCB Courses
 current_phase: 02
 current_phase_name: Build and UI Foundations
-current_plan: 6
+current_plan: 7
 status: executing
-stopped_at: Phase 02 wave 3 awaiting npm package disposition for plan 02-04
-last_updated: "2026-11-25T13:55:58.325Z"
+stopped_at: Completed 02-04-PLAN.md
+last_updated: "2026-11-25T14:25:28.266Z"
 last_activity: 2026-11-25
 last_activity_desc: Completed per-tab demo roles and directory recovery
-state_head: 23b65ba25b63ba1fc33fafd05108bdff4100f074
+state_head: 9a081b7fca13fae4111cc69a513f549507d40d48
 progress:
   total_phases: 8
   completed_phases: 1
   total_plans: 16
-  completed_plans: 10
+  completed_plans: 11
   percent: 13
 ---
 
@@ -31,7 +31,7 @@ See [PROJECT.md](PROJECT.md), initialized 2026-11-24.
 ## Current Position
 
 Phase: 02 (Build and UI Foundations)
-Current Plan: 6
+Current Plan: 7
 Total Plans in Phase: 11
 Status: Ready to execute
 Last activity: 2026-11-25 -- Completed per-tab demo roles and directory recovery
@@ -57,6 +57,7 @@ Progress: [█░░░░░░░░░] 13%
 | Phase 02 P10 | 12m14s | 2 tasks | 5 files |
 | Phase 02 P03 | 16m40s | 2 tasks | 6 files |
 | Phase 02 P05 | 13m55s | 2 tasks | 9 files |
+| Phase 02 P04 | 25m16s | 3 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -89,6 +90,9 @@ Progress: [█░░░░░░░░░] 13%
 - [Phase 02]: Capture retry focus when the button leaves the DOM and restore it after the selector is enabled.
 - [Phase 02]: Share Kotlin formatting and comments commands through the JVM convention and scope the Guava JRE floor to ktfmtTool.
 - [Phase 02]: Publish BFF main and public fixture helpers from testFixtures with reportUndocumented and failOnWarning enabled.
+- [Phase 02]: Accept the explicitly approved Eleventy 3.1.8 identity after managed npm ci, Gradle, and canonical Markdown rendering qualify the exact lock.
+- [Phase 02]: Fail the build for invalid launch configuration. Allow the local Vite origin and explicitly configured HTTPS deployment origins.
+- [Phase 02]: Serve the verified documentation tree through the managed Node runtime with an explicit IPv4 loopback bind.
 
 ### Pending Todos
 
@@ -101,6 +105,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-25T13:55:58.251Z
-Stopped at: Phase 02 wave 3 awaiting npm package disposition for plan 02-04
-Resume file: .planning/phases/02-build-and-ui-foundations/02-04-PLAN.md
+Last session: 2026-11-25T14:25:28.194Z
+Stopped at: Completed 02-04-PLAN.md
+Resume file: None

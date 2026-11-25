@@ -2,9 +2,9 @@
 schema_version: 1
 open_count: 0
 waived_count: 0
-fixed_count: 1
-total_count: 1
-last_updated: 2026-11-25T13:54:21.858Z
+fixed_count: 2
+total_count: 2
+last_updated: 2026-11-25T14:25:28.526Z
 ---
 
 # Broken Windows Ledger
@@ -16,6 +16,7 @@ last_updated: 2026-11-25T13:54:21.858Z
 | id | phase | kind | file | line | description | status | reason | recorded_at | resolved_at |
 |----|-------|------|------|------|-------------|--------|--------|-------------|-------------|
 | 1 | 02 | deviation | bff/src/main/kotlin/courses/bff/BffApplication.kt |  | Documented existing public declarations and formatted the BFF build script. | fixed |  | 2026-11-25T13:53:55.917Z | 2026-11-25T13:54:21.858Z |
+| 2 | 02 | deviation | docs-site/serve.mjs |  | Enforce the loopback boundary and keep configuration-specific preview addresses as text. | fixed |  | 2026-11-25T14:25:28.440Z | 2026-11-25T14:25:28.526Z |
 
 ````json
 [
@@ -30,6 +31,19 @@ last_updated: 2026-11-25T13:54:21.858Z
     "reason": "",
     "recorded_at": "2026-11-25T13:53:55.917Z",
     "resolved_at": "2026-11-25T13:54:21.858Z",
+    "milestone": "v1.0"
+  },
+  {
+    "id": 2,
+    "kind": "deviation",
+    "phase": "02",
+    "file": "docs-site/serve.mjs",
+    "line": null,
+    "description": "Enforce the loopback boundary and keep configuration-specific preview addresses as text.",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-11-25T14:25:28.440Z",
+    "resolved_at": "2026-11-25T14:25:28.526Z",
     "milestone": "v1.0"
   }
 ]
