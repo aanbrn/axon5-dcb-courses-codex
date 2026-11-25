@@ -77,12 +77,21 @@ python3 tools/test_phase2_build.py
 
 ```sh
 ./gradlew :docs-site:docsBuild
-./gradlew :docs-site:serve -PdocsBase=/courses/
 ```
 
 Gradle stages the public sources and renders the static site into `docs-site/build/site`. The optional `docsBase` is a deployment path with a leading and trailing slash. With `/courses/`, mount the output there. The local preview prints `http://127.0.0.1:8081/courses/` when it is ready.
 
+To try the prefixed site with the live demo, run these commands in separate terminals. Both the app's documentation links and the site's **Open demo** action use the URLs below.
+
+```sh
+./gradlew :bff:bootRun --args='--server.address=127.0.0.1'
+VITE_DOCS_BASE=http://127.0.0.1:8081/courses/ ./gradlew :web:dev
+./gradlew :docs-site:serve -PdocsBase=/courses/ -PdocsAppUrl=http://127.0.0.1:5173/
+```
+
 For hosted deployments, provide an HTTPS `docsAppUrl` and include its origin in the comma-separated `docsTrustedAppOrigins` build setting. The local Vite origin `http://127.0.0.1:5173` is already allowed. Invalid values fail the build.
+
+Set `VITE_DOCS_BASE` when building the hosted web app with `./gradlew :web:webBuild`. Use the published documentation URL with its full deployment prefix, for example `https://docs.example.com/courses/`.
 
 ## Feasibility probe
 
