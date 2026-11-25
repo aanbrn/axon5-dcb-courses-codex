@@ -111,3 +111,10 @@ tasks.register<Exec>("styleCheck") {
     dependsOn(styleRuntime)
     commandLine("python3", styleDriver, "--check", "--runtime", styleCommands.get().asFile)
 }
+
+tasks.register<Exec>("installGitHooks") {
+    group = "build setup"
+    description = "Opt in to the repository pre-commit hook in this local Git repository."
+    dependsOn(styleRuntime)
+    commandLine("git", "config", "--local", "core.hooksPath", ".githooks")
+}

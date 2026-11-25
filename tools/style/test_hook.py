@@ -2,6 +2,7 @@
 
 import json
 import os
+import shutil
 import stat
 import subprocess
 import sys
@@ -172,6 +173,7 @@ class HookTest(unittest.TestCase):
         repo = self.repo
         before = self.index.read_bytes()
         head = repo.git("rev-parse", "HEAD").stdout
+        staged = repo.git("ls-files", "--stage", "-z").stdout
         changed = repo.git("diff", "--cached", "--name-only", "-z").stdout.split(b"\0")[
             :-1
         ]
@@ -179,10 +181,12 @@ class HookTest(unittest.TestCase):
             os.fsdecode(path): (repo.root / os.fsdecode(path)).read_bytes()
             for path in changed
         }
+        self.assertIn(diagnostic, repo.hook(expected=1).stderr)
+        self.assertEqual(self.index.read_bytes(), before)
         result = repo.git("commit", "-qm", "Rejected candidate", expected=1)
         self.assertIn(diagnostic, result.stderr)
         self.assertEqual(repo.git("rev-parse", "HEAD").stdout, head)
-        self.assertEqual(self.index.read_bytes(), before)
+        self.assertEqual(repo.git("ls-files", "--stage", "-z").stdout, staged)
         for path, data in worktree.items():
             self.assertEqual((repo.root / path).read_bytes(), data)
 
@@ -221,6 +225,43 @@ class HookTest(unittest.TestCase):
         self.assertIn(b"index is locked", result.stderr)
         self.assertEqual(lock.read_bytes(), b"competing writer")
         self.assertEqual(self.index.read_bytes(), before)
+
+    def test_linked_worktree_uses_its_own_index(self):
+        repo = self.repo
+        main_index = self.index.read_bytes()
+        linked = repo.root / "linked checkout"
+        repo.git("worktree", "add", "-qb", "linked", str(linked))
+        for path in (RUNTIME, DRIVER, HOOK):
+            target = linked / path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(repo.root / path, target)
+        path = "linked.txt"
+        (linked / path).write_bytes(b"linked staged   \n")
+        command = ["git", "-C", str(linked)]
+        repo.run([*command, "add", "--", path])
+        repo.run([*command, "commit", "-qm", "Format linked checkout"])
+        self.assertEqual(
+            repo.run([*command, "show", f"HEAD:{path}"]).stdout, b"linked staged\n"
+        )
+        self.assertEqual(self.index.read_bytes(), main_index)
+
+    def test_unmerged_index_keeps_all_stages(self):
+        repo = self.repo
+        path = "conflict.txt"
+        repo.stage(path, b"base\n")
+        repo.git("commit", "-qm", "Base conflict")
+        repo.git("branch", "other")
+        repo.stage(path, b"first side\n")
+        repo.git("commit", "-qm", "First side")
+        repo.git("switch", "-q", "other")
+        repo.stage(path, b"second side\n")
+        repo.git("commit", "-qm", "Second side")
+        repo.git("merge", "--no-edit", "fixture", expected=1)
+        before = self.index.read_bytes()
+        current = (repo.root / path).read_bytes()
+        self.assertIn(b"Unmerged index entry", repo.hook(expected=1).stderr)
+        self.assertEqual(self.index.read_bytes(), before)
+        self.assertEqual((repo.root / path).read_bytes(), current)
 
     def test_competing_index_writer_keeps_its_update(self):
         repo = self.repo

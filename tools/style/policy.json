@@ -3,6 +3,11 @@
     "embeddedLanguageFormatting": "off",
     "endOfLine": "lf"
   },
+  "ruff": {
+    "select": "E4,E7,E9,F",
+    "perFileIgnores": "probe/verify_evidence.py:E402",
+    "reason": "The Phase 01 verifier disables bytecode output before importing its sibling."
+  },
   "wrapper": {
     "gradlew": {
       "mode": "100755",

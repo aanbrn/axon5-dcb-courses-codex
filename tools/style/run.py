@@ -14,6 +14,7 @@ import tempfile
 import tomllib
 from contextlib import redirect_stdout
 from dataclasses import dataclass
+from difflib import SequenceMatcher
 from fnmatch import fnmatchcase
 from pathlib import Path
 
@@ -273,6 +274,8 @@ class Policy:
                 "check",
                 "--isolated",
                 "--no-cache",
+                f"--select={self.rules['ruff']['select']}",
+                f"--per-file-ignores={self.rules['ruff']['perFileIgnores']}",
                 "--stdin-filename",
                 f"./{path}",
                 "-",
@@ -456,6 +459,176 @@ def inspect(root, runtime, *, staged=False, inventory=False):
         return int(bool(changed or failures))
 
 
+def read_version(path):
+    with path.open("rb") as stream:
+        data = stream.read()
+        info = os.fstat(stream.fileno())
+    return data, (
+        info.st_dev,
+        info.st_ino,
+        info.st_mode,
+        info.st_mtime_ns,
+        info.st_ctime_ns,
+    )
+
+
+def publish_index(index, original, candidate):
+    lock = index.with_name(index.name + ".lock")
+    try:
+        stream = lock.open("xb")
+    except FileExistsError as error:
+        raise StyleError(
+            f"Git index is locked at {lock}. Retry after the writer finishes."
+        ) from error
+    published = False
+    with stream:
+        lock_info = os.fstat(stream.fileno())
+        try:
+            if not index.is_file() or read_version(index) != original:
+                raise StyleError(
+                    "Git index changed during style checks. Retry the commit."
+                )
+            if candidate is not None:
+                os.fchmod(stream.fileno(), stat.S_IMODE(original[1][2]))
+                stream.write(candidate.read_bytes())
+                stream.flush()
+                os.fsync(stream.fileno())
+                lock.replace(index)
+                published = True
+        finally:
+            if not published and lock.exists():
+                current = lock.lstat()
+                if (current.st_dev, current.st_ino) == (
+                    lock_info.st_dev,
+                    lock_info.st_ino,
+                ):
+                    lock.unlink()
+
+
+def update_candidate(root, candidate, entries, changes):
+    records = []
+    for path, delta in changes.items():
+        oid = git(root, "hash-object", "-w", "--stdin", data=delta.after).strip()
+        records.append(
+            entries[path].mode.encode() + b" " + oid + b"\t" + os.fsencode(path) + b"\0"
+        )
+    git(
+        root,
+        "-c",
+        "core.splitIndex=false",
+        "-c",
+        "core.fsmonitor=false",
+        "update-index",
+        "-z",
+        "--index-info",
+        data=b"".join(records),
+        index=candidate,
+    )
+
+
+def line_edits(before, after):
+    matcher = SequenceMatcher(
+        a=before, b=after.splitlines(keepends=True), autojunk=False
+    )
+    return [
+        (start, end, tuple(matcher.b[left:right]))
+        for change, start, end, left, right in matcher.get_opcodes()
+        if change != "equal"
+    ]
+
+
+def merge_worktree(delta, local):
+    if local == delta.before:
+        return delta.after
+    before = delta.before.splitlines(keepends=True)
+    formatting = line_edits(before, delta.after)
+    unstaged = line_edits(before, local)
+    for a_start, a_end, a_lines in formatting:
+        for b_start, b_end, b_lines in unstaged:
+            if (a_start, a_end, a_lines) == (b_start, b_end, b_lines):
+                continue
+            # Insertion at the start of another edit is ambiguous. Adjacent
+            # replacements still merge, even when Git would group their hunks.
+            if a_start == b_start or max(a_start, b_start) < min(a_end, b_end):
+                return None
+            if a_start == a_end and b_start < a_start < b_end:
+                return None
+            if b_start == b_end and a_start < b_start < a_end:
+                return None
+    merged = []
+    previous = 0
+    for start, end, lines in sorted(set(formatting + unstaged)):
+        merged.extend(before[previous:start])
+        merged.extend(lines)
+        previous = end
+    merged.extend(before[previous:])
+    return b"".join(merged)
+
+
+def reconcile_worktree(root, path, delta):
+    target = regular_file(root, path)
+    if target.stat().st_nlink != 1:
+        return False
+    current = read_version(target)
+    merged = merge_worktree(delta, current[0])
+    if merged is None:
+        return False
+    if merged == current[0]:
+        return True
+    with tempfile.NamedTemporaryFile(
+        dir=target.parent, prefix=".style-", delete=False
+    ) as temp:
+        replacement = Path(temp.name)
+        try:
+            os.fchmod(temp.fileno(), stat.S_IMODE(current[1][2]))
+            temp.write(merged)
+            temp.flush()
+            regular_file(root, path)
+            if read_version(target) != current:
+                return False
+            replacement.replace(target)
+        finally:
+            replacement.unlink(missing_ok=True)
+    return True
+
+
+def format_staged(root, runtime):
+    index_path = git(root, "rev-parse", "--path-format=absolute", "--git-path", "index")
+    index = Path(os.fsdecode(index_path.removesuffix(b"\n")))
+    if not index.exists():
+        return 0
+    original = read_version(index)
+    with tempfile.TemporaryDirectory(prefix="repository-style-candidate-") as temporary:
+        scratch = Path(temporary).resolve()
+        candidate = scratch / "index"
+        candidate.write_bytes(original[0])
+        entries = index_entries(root, candidate)
+        selected = staged_paths(root, candidate)
+        if not selected:
+            return 0
+        snapshot = scratch / "tree"
+        materialize(root, snapshot, entries, staged=True)
+        policy = Policy(snapshot, runtime, scratch)
+        changed, failures = evaluate(policy, entries, selected, scratch)
+        if failures:
+            for failure in failures:
+                print(failure, file=sys.stderr)
+            return 1
+        if changed:
+            update_candidate(root, candidate, entries, changed)
+        publish_index(index, original, candidate if changed else None)
+
+    for path, delta in changed.items():
+        try:
+            preserved = not reconcile_worktree(root, path, delta)
+        except (StyleError, OSError):
+            preserved = True
+        print(f"{json.dumps(path)} [{delta.rule}] formatted staged content")
+        if preserved:
+            print(f"{json.dumps(path)} worktree bytes preserved", file=sys.stderr)
+    return 0
+
+
 def self_test(root, runtime):
     fixtures = {
         "One.kt": b"/** Keeps the Kotlin documentation. */\nfun one( ): Int=1\n",
@@ -530,7 +703,9 @@ def main():
         )
         if args.self_test:
             return self_test(root, runtime)
-        return inspect(root, runtime, staged=args.staged, inventory=args.inventory)
+        if args.staged:
+            return format_staged(root, runtime)
+        return inspect(root, runtime, inventory=args.inventory)
     except (
         StyleError,
         OSError,
