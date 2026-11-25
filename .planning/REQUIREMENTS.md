@@ -9,7 +9,7 @@
 ### Build Foundation
 
 - [x] **FND-01** Reproduce a Kotlin and Spring Boot compatibility probe that verifies the Axon 5 APIs, wiring, tagged conflict detection, and cross-process message routing in a DCB-enabled Axon Server context before pinning the version matrix. Record the official references, exact tested artifacts and image terms, bootstrap steps, and selected ARM64 and AMD64 image digests.
-- [ ] **FND-02** Build and check the toolchain with one authoritative version owner per ecosystem, pinned independent CLIs in mise, an inventory, and a `doctor` check. Keep `.java-version` at the Temurin feature version and record the actual build separately.
+- [x] **FND-02** Build and check the toolchain with one authoritative version owner per ecosystem, pinned independent CLIs in mise, an inventory, and a `doctor` check. Keep `.java-version` at the Temurin feature version and record the actual build separately.
 - [ ] **FND-03** Exchange type-prefixed UUIDv7 TypeIDs between Kotlin and TypeScript and round-trip them through native `uuid` storage.
 - [ ] **FND-04** Build project images through Paketo Cloud Native Buildpacks, using `bootBuildImage` for JVM services and the Web Servers buildpack for the frontend. Package the static assets built by Gradle using npm and `package-lock.json`.
 - [x] **FND-05** Run Gradle JVM Test Suites with shared Java Test Fixtures, JUnit 6, and compatible Kotest assertions and property tests. JUnit supplies the runner.
@@ -80,7 +80,7 @@
 - [ ] **DOC-03** Diagrams and snippets explain the project’s DCB decisions and compare the same scenarios with Axon 4 aggregates, including trade-offs.
 - [ ] **DOC-04** The repository retains `.planning/` history and publishes how AI-assisted development was used, including lessons learned.
 - [ ] **DOC-05** Third-party and project-owned skills used locally are vetted and their compatibility with OpenCode is documented.
-- [ ] **DOC-06** Document the dependency maintenance and private advisory procedure from the project brief, reconcile the cited review records against this checkout’s evidence, and keep private inputs and results outside the repository.
+- [x] **DOC-06** Document the dependency maintenance and private advisory procedure from the project brief, reconcile the cited review records against this checkout’s evidence, and keep private inputs and results outside the repository.
 
 ## User Stories
 
@@ -111,7 +111,7 @@
 | Requirement | Phase | Status |
 | --- | --- | --- |
 | FND-01 | Phase 1 | Complete |
-| FND-02 | Phase 2 | Pending |
+| FND-02 | Phase 2 | Complete |
 | FND-03 | Phase 3 | Pending |
 | FND-04 | Phase 5 | Pending |
 | FND-05 | Phase 2 | Complete |
@@ -161,6 +161,6 @@
 | DOC-03 | Phase 8 | Pending |
 | DOC-04 | Phase 8 | Pending |
 | DOC-05 | Phase 8 | Pending |
-| DOC-06 | Phase 2 | Pending |
+| DOC-06 | Phase 2 | Complete |
 
 All 52 v1 requirements map to one phase each.
