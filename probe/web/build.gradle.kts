@@ -74,7 +74,9 @@ val nodeVersion = tasks.register<NodeTask>("verifyNodeVersion") {
     val output = ByteArrayOutputStream()
     execOverrides { standardOutput = output }
     doLast {
-        check(output.toString(Charsets.UTF_8).trim() == "v$selectedNode") { "Unexpected Node version: $output" }
+        val actual = output.toString(Charsets.UTF_8).trim()
+        println("PROBE_TOOL node $actual")
+        check(actual == "v$selectedNode") { "Unexpected Node version: $actual" }
     }
 }
 val npmVersion = tasks.register<NpmTask>("verifyNpmVersion") {
@@ -82,7 +84,9 @@ val npmVersion = tasks.register<NpmTask>("verifyNpmVersion") {
     val output = ByteArrayOutputStream()
     execOverrides { standardOutput = output }
     doLast {
-        check(output.toString(Charsets.UTF_8).trim() == selectedNpm) { "Unexpected npm version: $output" }
+        val actual = output.toString(Charsets.UTF_8).trim()
+        println("PROBE_TOOL npm $actual")
+        check(actual == selectedNpm) { "Unexpected npm version: $actual" }
     }
 }
 
@@ -270,6 +274,7 @@ class NativePackaging(
 
     fun prepare(packVersion: String): Map<String, Any> {
         val actualPack = boundedCommand(work, "Pack version", 10, "pack", "--version")
+        println("PROBE_TOOL pack $actualPack")
         check(actualPack.substringBefore('+') == packVersion) { "Pack $packVersion is required, found $actualPack" }
         val daemon = docker("Docker platform", "info", "--format", "{{.OSType}}/{{.Architecture}}")
         check(daemon in setOf(platform, "linux/aarch64") && System.getProperty("os.arch") in setOf("arm64", "aarch64")) {

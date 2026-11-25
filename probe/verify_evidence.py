@@ -391,7 +391,7 @@ def classify_stage(store, stage, core, command, upstream):
             require(attempt["exitCode"] != 0, f"{stage}: even though the command exited zero, the claimed result was absent")
             signature = attempt["signature"]
             retry = "Restore the dependency identified in the retained diagnostic and rerun this exact command."
-            if secondary.ENVIRONMENT_ERROR.search(signature):
+            if secondary.environmental_failure(signature, attempt["launchError"]):
                 store.classify(stage, core, argparse.Namespace(
                     prerequisite=None, status="Unverified", cause=signature, reason=None, retry=retry,
                 ))

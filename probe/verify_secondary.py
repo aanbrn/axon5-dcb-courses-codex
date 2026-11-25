@@ -50,13 +50,21 @@ GROUPS = {
     "kdoc": ("kdoc",),
 }
 ARCHITECTURES = {"arm64", "aarch64"}
+NODE_STAGES = {"frontend-fixture", "frontend-assets", "frontend-image", "typeid-exchange"}
+TOOL_VERSION = r"v?\d+\.\d+\.\d+(?:[-+][\w.+-]+)?"
 ENVIRONMENT_ERROR = re.compile(
-    r"command not found|no such file or directory|not connected|network is unreachable|"
+    r"command not found|network is unreachable|"
     r"temporary failure in name resolution|could not resolve host|connection refused|"
+    r"UnknownHostException|name or service not known|nodename nor servname provided|"
     r"certificate verify failed|no space left on device|connection timed? ?out", re.I
 )
 PERMISSION_ERROR = re.compile(r"operation not permitted|permission denied|approval (?:denied|required)", re.I)
 CORE_FAILURE = re.compile(r"> Task :probe:(?:compileKotlin|compileJava|integrationTest|test) FAILED")
+GENERIC_FAILURE = re.compile(
+    r"^(?:Task .+ FAILED|FAILURE: Build failed.*|BUILD FAILED.*|Execution failed for task .*|"
+    r"A problem occurred .+|There were failing tests.*|Process .+ finished with non-zero exit value .+|"
+    r"\d+ tests? (?:completed|failed).*)$", re.I
+)
 DEFAULT_DIR = "probe/build/reports/feasibility"
 
 
@@ -107,7 +115,10 @@ def utc_now():
 
 
 def instant(value):
-    result = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    # Java Instant can report nine fractional digits. Python 3.9 parses three or six.
+    normalized = re.sub(r"\.(\d{1,9})(?=Z$|[+-]\d{2}:\d{2}$)",
+                        lambda match: "." + match[1][:6].ljust(6, "0"), value)
+    result = datetime.fromisoformat(normalized.replace("Z", "+00:00"))
     require(result.utcoffset() == timezone.utc.utcoffset(result), "Evidence timestamp must be UTC")
     return result
 
@@ -350,7 +361,7 @@ class Store:
         directory = Path(tempfile.mkdtemp(prefix=f"{stage}-", dir=directory))
         diagnostic = directory / "output.txt"
         diagnostic.write_text(clean, encoding="utf-8")
-        environment = current_tools(stage, core, self.root)
+        tools = {"python": sys.version.split()[0], "core": core["coreTuple"], **stage_tools(stage, clean)}
         require(self.stage_metadata(stage, core)["inputSha256"] == record["inputSha256"], "Secondary inputs changed during execution")
         artifacts = observations.get("artifacts", [])
         snapshots = {}
@@ -362,7 +373,7 @@ class Store:
                     shutil.copyfile(source, snapshot)
                     snapshots[name] = {"path": snapshot.relative_to(self.directory).as_posix(), "sha256": file_sha(snapshot)}
         attempt = {
-            "argv": argv, "startedAt": start, "finishedAt": finish, "toolVersions": environment,
+            "argv": argv, "startedAt": start, "finishedAt": finish, "toolVersions": tools,
             "exitCode": code, "launchError": launch_error, "diagnostic": diagnostic.relative_to(self.directory).as_posix(),
             "diagnosticSha256": file_sha(diagnostic), "signature": label, "artifacts": snapshots,
         }
@@ -371,6 +382,7 @@ class Store:
         if code == 0:
             try:
                 validate_observations(stage, observations, {name: data["sha256"] for name, data in snapshots.items()})
+                self.check_stage_tools(stage, observations, tools)
             except (ValueError, KeyError, TypeError):
                 pass
             else:
@@ -394,6 +406,10 @@ class Store:
             diagnostic = inside(self.directory, attempt["diagnostic"])
             require(file_sha(diagnostic) == attempt["diagnosticSha256"], "Secondary diagnostic was changed")
             diagnostic_text = diagnostic.read_text()
+            versions = attempt["toolVersions"]
+            require(nonempty(versions.get("python")) and versions.get("core") == core["coreTuple"]
+                    and {name: value for name, value in versions.items() if name not in ("python", "core")}
+                    == stage_tools(stage, diagnostic_text), "Secondary tool versions differ from captured output")
             signature = diagnostic_signature(diagnostic_text, attempt["launchError"]) if code != 0 else ""
             require(attempt["signature"] == signature, "Secondary failure signature changed")
             for artifact in attempt["artifacts"].values():
@@ -420,6 +436,7 @@ class Store:
             observed = decode_observations(diagnostic_text, stage)
             require(observed == record["observations"], "Recorded observations differ from captured output")
             validate_observations(stage, observed, {name: data["sha256"] for name, data in latest["artifacts"].items()})
+            self.check_stage_tools(stage, observed, latest["toolVersions"])
             self.check_pass_artifacts(stage, observed, latest["artifacts"])
         else:
             require(not PERMISSION_ERROR.search(diagnostic_text) and latest["exitCode"] != 0,
@@ -432,8 +449,22 @@ class Store:
                 comparable = [attempt for attempt in attempts if all(attempt[key] == latest[key] for key in keys)]
                 require(len({attempt["startedAt"] for attempt in comparable}) >= 2, "Blocked needs two independent matching failures")
             else:
-                require(nonempty(record.get("cause")) and ENVIRONMENT_ERROR.search(latest["signature"]),
+                require(nonempty(record.get("cause")) and environmental_failure(latest["signature"], latest["launchError"]),
                         "Unverified requires a captured environmental cause")
+
+    def check_stage_tools(self, stage, observed, tools):
+        if stage in NODE_STAGES:
+            node = "v" + (self.root / ".nvmrc").read_text().strip()
+            npm = read_json(self.root / "probe/web/package.json")["packageManager"].removeprefix("npm@")
+            require(tools.get("node") == node and tools.get("npm") == npm,
+                    "The measured Node and npm executables differ from the version owners")
+            if stage in ("frontend-assets", "typeid-exchange"):
+                require(observed["nodeVersion"] == node and observed["npmVersion"] == npm,
+                        "The secondary observation disagrees with the measured Node and npm executables")
+        if stage == "frontend-image":
+            owner = re.search(r'(?m)^pack = "([0-9.]+)"$', (self.root / "mise.toml").read_text())
+            require(owner and tools.get("pack", "").partition("+")[0] == owner[1],
+                    "The measured Pack executable differs from mise.toml")
 
     def check_pass_artifacts(self, stage, observed, artifacts):
         hashes = {item["sha256"] for item in artifacts.values()}
@@ -530,24 +561,32 @@ def diagnostic_signature(text, launch_error):
     if launch_error:
         return f"Launch error: {launch_error}"
     lines = [line.strip() for line in text.splitlines() if line.strip()]
-    for pattern in (ENVIRONMENT_ERROR, re.compile(r"\berror\b|exception|failed", re.I)):
-        for line in lines:
-            if pattern.search(line):
-                line = re.sub(r"\b[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\b", "<id>", line)
-                return line[:400]
-    return ""
+    causes = []
+    if "* What went wrong:" in lines:
+        for line in lines[lines.index("* What went wrong:") + 1:]:
+            if line.startswith("* "):
+                break
+            causes.append(line.lstrip("> "))
+    explicit = re.compile(r"\berror(?:\[[^]]+\])?:|\w(?:Error|Exception):|^Caused by:|^Process timed out$", re.I)
+    causes = [line for line in causes if line and not GENERIC_FAILURE.fullmatch(line)]
+    if not causes:
+        causes = [line for line in lines if not GENERIC_FAILURE.fullmatch(line)
+                  and (ENVIRONMENT_ERROR.search(line) or explicit.search(line))][:1]
+    normalized = re.sub(r"\b[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\b", "<id>", " | ".join(causes))
+    return normalized if len(normalized) <= 400 else f"{normalized[:320]} [SHA-256 {sha(normalized.encode())}]"
 
 
-def current_tools(stage, core, root):
-    versions = {"python": sys.version.split()[0], "core": core["coreTuple"]}
-    tools = ("node", "npm", "pack") if stage.startswith("frontend") else ("node", "npm") if stage == "typeid-exchange" else ()
-    for tool in tools:
-        if shutil.which(tool):
-            result, stdout, _ = capture([tool, "--version"], root, os.environ.copy(), 5)
-            if result == 0:
-                version = re.search(r"\bv?\d+\.\d+\.\d+(?:[-+][\w.-]+)?", stdout)
-                if version:
-                    versions[tool] = version.group()
+def environmental_failure(signature, launch_error):
+    return launch_error == "No such file or directory" or bool(ENVIRONMENT_ERROR.search(signature))
+
+
+def stage_tools(stage, text):
+    expected = ("node", "npm", "pack") if stage == "frontend-image" else ("node", "npm") if stage in NODE_STAGES else ()
+    versions = {}
+    for tool, version in re.findall(rf"(?m)^\s*PROBE_TOOL (node|npm|pack) ({TOOL_VERSION})[ \t]*$", text):
+        if tool in expected:
+            require(tool not in versions or versions[tool] == version, f"Conflicting {tool} versions in one stage")
+            versions[tool] = version
     return versions
 
 
@@ -588,6 +627,8 @@ def validate_observations(stage, observed, artifacts):
         require(all(re.fullmatch(r"v?\d+\.\d+\.\d+", observed[key]) for key in ("nodeVersion", "npmVersion"))
                 and valid_sha(observed["stagedSha256"]) and valid_sha(observed["lockfileSha256"])
                 and observed["stagedTreeValidated"] is True, "Gradle assets lack tool, lockfile or staged-tree observations")
+        require(artifacts.get("frontend-assets.html") == observed["stagedSha256"],
+                "Staged HTML does not match its captured SHA-256")
     elif stage == "frontend-image":
         responses = observed["responses"]
         require(observed["architecture"] in ARCHITECTURES and len(responses) == 2
@@ -713,6 +754,9 @@ def fixture_core(directory, feature, image_pin):
 
 
 def self_test():
+    for fraction, micros in (("", 0), (".123", 123000), (".123456", 123456), (".123456789", 123456)):
+        require(instant(f"2026-01-01T00:00:00{fraction}Z").microsecond == micros,
+                "The verifier must accept Java Instant precision on Python 3.9")
     with tempfile.TemporaryDirectory(prefix="probe-evidence-check-") as path:
         root = Path(path).resolve()
         evidence = root / "evidence"
@@ -747,12 +791,19 @@ def self_test():
         for _, files in STAGES.values():
             for name in files:
                 fixture_file(name, "selected fixture input\n")
+        fixture_file(".nvmrc", "26.13.1\n")
+        fixture_file("probe/web/package.json", '{"packageManager":"npm@12.2.3"}\n')
         fixture_file("gradlew", """#!/bin/sh
 case "$2:$EVIDENCE_TEST_RESULT" in
   :probe:integrationTest:*) echo 'Required tuple failed'; exit 42 ;;
   *:pass) cat evidence/observed.txt ;;
   *:blocked) echo 'error: selected tooling fixture failed'; exit 7 ;;
   *:unverified) echo 'error: could not resolve host'; exit 8 ;;
+  *:missing-fixture) echo 'error: specimen.kt: No such file or directory'; exit 8 ;;
+  *:first-cause|*:second-cause)
+    printf '> Task %s FAILED\n\n* What went wrong:\nExecution failed for task %s.\n> %s\n' \
+      "$2" "$2" "$EVIDENCE_TEST_RESULT"
+    exit 7 ;;
 esac
 """).chmod(0o700)
 
@@ -779,6 +830,12 @@ esac
         run("kotest", "blocked")
         invoke("classify", "kotest", "Blocked", "--reason", "Fixture failed", "--retry", "Re-run with the corrected tool")
         invoke("check", "kotest")
+        run("kotest", "first-cause")
+        run("kotest", "second-cause")
+        invoke("classify", "kotest", "Blocked", "--reason", "Fixture failed", "--retry", "Re-run the same task",
+               expected=1, message="two independent matching failures")
+        run("kotest", "blocked")
+        invoke("classify", "kotest", "Blocked", "--reason", "Fixture failed", "--retry", "Re-run with the corrected tool")
         run("typeid-jvm", "unverified")
         invoke("classify", "typeid-jvm", "Unverified", "--cause", "Registry DNS unavailable", "--retry", "Retry once DNS works")
         invoke("check", "typeid-jvm")
@@ -786,6 +843,9 @@ esac
                "--pending-command", "./gradlew --console=plain :probe:typeIdProbe --rerun-tasks",
                "--reason", "Kotlin-origin exchange cannot be generated", "--retry", "Retry once DNS works")
         invoke("check", "typeid-exchange")
+        run("typeid-jvm", "missing-fixture")
+        invoke("classify", "typeid-jvm", "Unverified", "--cause", "Missing input", "--retry", "Restore the file",
+               expected=1, message="captured environmental cause")
         record = read_json(store.stage_path("typeid-exchange"))
         write_json(store.stage_path("typeid-exchange"), {**record, "prerequisiteStage": "typeid-exchange"})
         invoke("check", "typeid-exchange", expected=1, message="prerequisite")
@@ -796,6 +856,25 @@ esac
         snapshot = record["attempts"][-1]["artifacts"]["formatted.kt"]["path"]
         fixture_file(f"evidence/{snapshot}", "tampered\n")
         invoke("check", "kdoc", expected=1, message="supporting artifact was changed")
+
+        html = fixture_file("evidence/frontend-assets.html", "<p>fixture</p>\n")
+        observed = {"stage": "frontend-assets", "artifacts": [html.name], "nodeVersion": "v26.13.1",
+                    "npmVersion": "12.2.3", "stagedTreeValidated": True, "stagedSha256": "0" * 64,
+                    "lockfileSha256": file_sha(root / "probe/web/package-lock.json")}
+        fixture_file("evidence/observed.txt", "PROBE_TOOL node v26.13.1\nPROBE_TOOL npm 12.2.3\n"
+                     "PROBE_SECONDARY " + json.dumps(observed) + "\n")
+        run("frontend-assets", "pass")
+        invoke("classify", "frontend-assets", "Pass", expected=1, message="Staged HTML")
+        observed["stagedSha256"] = file_sha(html)
+        fixture_file("evidence/observed.txt", "PROBE_TOOL node v26.13.1\nPROBE_TOOL npm 12.2.3\n"
+                     "PROBE_SECONDARY " + json.dumps(observed) + "\n")
+        run("frontend-assets", "pass")
+        invoke("check", "frontend-assets")
+        record = read_json(store.stage_path("frontend-assets"))
+        record["attempts"][-1]["toolVersions"]["node"] = "v24.20.0"
+        write_json(store.stage_path("frontend-assets"), record)
+        invoke("check", "frontend-assets", expected=1, message="tool versions differ")
+
         fixture_file("probe/kdoc/Specimen.kt", "changed input\n")
         invoke("check", "kdoc", expected=1, message="evidence is stale")
         (proof / "integration-junit.xml").write_text("<testsuite failures='1'/>")

@@ -45,7 +45,11 @@ function build() {
 }
 
 function verifyFixture() {
+  console.log(`PROBE_TOOL node ${process.version}`);
   assert.equal(process.version, nodeVersion, 'Wrong Node executable');
+  const actualNpm = execFileSync('npm', ['--version'], { cwd: project, encoding: 'utf8' }).trim();
+  console.log(`PROBE_TOOL npm ${actualNpm}`);
+  assert.equal(actualNpm, npmVersion, 'Wrong npm executable');
   const initialLock = readFileSync(lockfile);
   const markers = [defaultMarker, `${defaultMarker}-changed`];
   const stage = 'frontend-fixture';
