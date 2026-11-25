@@ -1,9 +1,8 @@
 # Phase 02 — UI Review
 
-**Audited:** 2026-11-25  
-**Baseline:** Approved [Phase 02 UI design contract](02-UI-SPEC.md)  
-**Screenshots:** No new captures. No server answered on the default audit ports. Plan 02-06 records prior visual inspection of the 1280px shell and the 320px shell with a 200% CSS root font size.  
-**Interaction captures:** Off. Interaction assessment uses the source and previously recorded Chromium and Storybook runs.
+**Audited** on 2026-11-25 against the approved [Phase 02 UI design contract](02-UI-SPEC.md).
+
+Plan 02-06 records prior visual inspection of the 1280px shell and the 320px shell with a 200% CSS root font size. The audit used the source and prior Chromium and Storybook results.
 
 ## Pillar Scores
 
