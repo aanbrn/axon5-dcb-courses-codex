@@ -1,9 +1,9 @@
 ---
 phase: "02"
 slug: build-and-ui-foundations
-status: draft
+status: validated
 nyquist_compliant: false
-wave_0_complete: false
+wave_0_complete: true
 created: "2026-11-25"
 ---
 
@@ -28,33 +28,33 @@ created: "2026-11-25"
 
 ## Per-Task Verification Map
 
-Execution results stay pending until the named command runs against its implementation. Paths, commands and task names below are planned artifacts. Registry metadata and static checks alone cannot close human or hosted gates.
+Each automated status reflects an observed result against its implementation. Registry metadata and static checks alone cannot close human or hosted gates.
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 02-01-01 | 02-01 | 1 | FND-02 | T-02-SC | Recheck registry evidence before the first install | Registry + conditional checkpoint | `bash -ec 'packages=(orval zod react react-dom typescript vite @vitejs/plugin-react @types/react @types/react-dom storybook @storybook/react-vite @storybook/addon-a11y @storybook/addon-vitest vitest @vitest/browser-playwright playwright @playwright/test steiger @feature-sliced/steiger-plugin shadcn tailwindcss @tailwindcss/vite lucide-react @fontsource-variable/geist @fontsource-variable/geist-mono radix-ui tw-animate-css class-variance-authority clsx tailwind-merge @11ty/eleventy prettier git-format-staged); for pkg in "${packages[@]}"; do if ! npm view "$pkg" name version repository.url time engines peerDependencies scripts.preinstall scripts.install scripts.postinstall --json; then printf "%s\n" "METADATA_UNAVAILABLE $pkg" >&2; fi; done; node .codex/gsd-core/bin/gsd-tools.cjs query package-legitimacy.check --ecosystem npm "${packages[@]}"'` | Existing GSD CLI / npm | Pending |
-| 02-01-02 | 02-01 | 1 | FND-06 CQRS-04 UI-03 | T-02-01 | Open the running React page and select a role from the first BFF response | Build/browser | `env DOCKER_HOST=tcp://127.0.0.1:1 ./gradlew --console=plain :web:provisionBrowser :web:roleTracer` | Planned | Pending |
-| 02-02-01 | 02-02 | 2 | FND-05 | T-02-03 | Run a seeded Jupiter property under the shared JVM convention | JVM | `./gradlew --console=plain :bff:bootJar :bff:test --tests 'courses.bff.DirectoryUnitTest'` | Planned | Pending |
-| 02-02-02 | 02-02 | 2 | FND-05 | T-02-03 | Share Kotlin helpers between two Jupiter suites | JVM | `./gradlew --console=plain :bff:test :bff:verifyFixtureIsolation` | Planned | Pending |
-| 02-02-03 | 02-02 | 2 | CQRS-04 FND-05 QA-07 | T-02-03 T-02-04 | Compare loopback responses with the published OpenAPI document | JVM | `env DOCKER_HOST=tcp://127.0.0.1:1 ./gradlew --console=plain :bff:test :bff:componentTest :bff:verifyFixtureIsolation` | Planned | Pending |
-| 02-10-01 | 02-10 | 2 | FND-06 | T-02-02 | Build the generated application without starting infrastructure | Build/contract | `python3 web/test/client-graph.py --clean` | Planned | Pending |
-| 02-10-02 | 02-10 | 2 | FND-06 CQRS-04 | T-02-02 T-02-18 | Detect invalidation and malformed generated-client responses | Build/contract | `./gradlew --console=plain :web:verifyClientGraph :web:webCheck` | Planned | Pending |
-| 02-03-01 | 02-03 | 3 | UI-03 | T-02-05 | Select a returned role, reload it and open a fresh tab | Browser/component | `./gradlew --console=plain :web:provisionBrowser :web:shellSmoke` | Planned | Pending |
-| 02-03-02 | 02-03 | 3 | UI-03 UI-01 CQRS-04 | T-02-05 T-02-06 | Keep navigation and focus usable through failure and retry | Browser/component | `./gradlew --console=plain :web:provisionBrowser :web:webCheck :web:shellSmoke` | Planned | Pending |
-| 02-04-01 | 02-04 | 3 | FND-06 DOC-06 | T-02-07 T-02-08 | Open the canonical Phase 1 report through a Gradle-built docs home | Static site | `./gradlew --console=plain :docs-site:docsBuild` | Planned | Pending |
-| 02-04-02 | 02-04 | 3 | DOC-06 UI-01 | T-02-07 T-02-08 | Publish the quick start, guide route and corrected feasibility handoff | Static site | `./gradlew --console=plain :docs-site:docsBuild -PdocsBase=/courses/` | Planned | Pending |
-| 02-04-03 | 02-04 | 3 | FND-06 DOC-06 UI-01 | T-02-07 T-02-08 | Test launch modes, allowlisting and relative links | Static site | `./gradlew --console=plain :docs-site:check` | Planned | Pending |
-| 02-05-01 | 02-05 | 3 | QA-07 QA-08 | T-02-09 | Format public KDoc and fail verification on a real comments violation | JVM quality | `./gradlew --console=plain :bff:ktfmtCheck :bff:detektComments` | Planned | Pending |
-| 02-05-02 | 02-05 | 3 | QA-07 | T-02-09 | Make an actual Dokka warning fail and preserve the good publication | JVM quality | `python3 tools/check_kotlin_quality.py format-comments && python3 tools/check_kotlin_quality.py publication && ./gradlew --console=plain :bff:dokkaGeneratePublicationHtml` | Planned | Pending |
-| 02-06-01 | 02-06 | 4 | UI-01 UI-03 | T-02-10 T-02-SC | Use the approved shared primitives on the real page | Browser/component | `./gradlew --console=plain :web:provisionBrowser :web:shellSmoke` | Planned | Pending |
-| 02-06-02 | 02-06 | 4 | UI-01 | T-02-10 | Apply the responsive light theme and prepare the browser toolchain | Browser/component | `./gradlew --console=plain :web:provisionBrowser :web:webCheck :web:shellSmoke` | Planned | Pending |
-| 02-11-01 | 02-11 | 5 | UI-01 UI-03 | T-02-11 | Render production stories and exercise them in Chromium | Browser/FSD | `./gradlew --console=plain :web:provisionBrowser :web:buildStorybook :web:storyTest` | Planned | Pending |
-| 02-11-02 | 02-11 | 5 | UI-01 | T-02-11 | Prove accessibility and slice-boundary checks reject controlled violations | Browser/FSD | `./gradlew --console=plain :web:provisionBrowser :web:webCheck :web:foundationProof` | Planned | Pending |
-| 02-07-01 | 02-07 | 6 | QA-08 QA-07 | T-02-12 | Check and format the same file with the same owned rules | Disposable Git | `python3 tools/style/run.py --self-test` | Planned | Pending |
-| 02-07-02 | 02-07 | 6 | QA-08 FND-02 | T-02-12 T-02-13 | Commit only formatted staged bytes and protect unstaged work | Disposable Git | `python3 tools/style/test_hook.py` | Planned | Pending |
-| 02-07-03 | 02-07 | 6 | QA-08 | T-02-12 T-02-13 | Verify repository-wide parity and baseline existing tracked artifacts | Disposable Git | `python3 tools/style/test_hook.py --full-tree` | Planned | Pending |
-| 02-08-01 | 02-08 | 7 | FND-02 DOC-06 | T-02-14 | Diagnose a regular build in the presence of missing optional tools | CLI/evidence | `python3 tools/doctor.py --self-test && env DOCKER_HOST=tcp://127.0.0.1:1 ./gradlew --console=plain doctor` | Planned | Pending |
-| 02-08-02 | 02-08 | 7 | DOC-06 FND-02 | T-02-14 T-02-15 | Reproduce the cited public records and document the private procedure | CLI/evidence | `python3 tools/verify_dependency_evidence.py && ./gradlew --console=plain :docs-site:check` | Planned | Pending |
+| 02-01-01 | 02-01 | 1 | FND-02 | T-02-SC | Recheck registry evidence before the first install | Registry + conditional checkpoint | `bash -ec 'packages=(orval zod react react-dom typescript vite @vitejs/plugin-react @types/react @types/react-dom storybook @storybook/react-vite @storybook/addon-a11y @storybook/addon-vitest vitest @vitest/browser-playwright playwright @playwright/test steiger @feature-sliced/steiger-plugin shadcn tailwindcss @tailwindcss/vite lucide-react @fontsource-variable/geist @fontsource-variable/geist-mono radix-ui tw-animate-css class-variance-authority clsx tailwind-merge @11ty/eleventy prettier git-format-staged); for pkg in "${packages[@]}"; do if ! npm view "$pkg" name version repository.url time engines peerDependencies scripts.preinstall scripts.install scripts.postinstall --json; then printf "%s\n" "METADATA_UNAVAILABLE $pkg" >&2; fi; done; node .codex/gsd-core/bin/gsd-tools.cjs query package-legitimacy.check --ecosystem npm "${packages[@]}"'` | Existing GSD CLI / npm | Verified with recorded approval |
+| 02-01-02 | 02-01 | 1 | FND-06 CQRS-04 UI-03 | T-02-01 | Open the running React page and select a role from the first BFF response | Build/browser | `env DOCKER_HOST=tcp://127.0.0.1:1 ./gradlew --console=plain :web:provisionBrowser :web:roleTracer` | Present | Local pass |
+| 02-02-01 | 02-02 | 2 | FND-05 | T-02-03 | Run a seeded Jupiter property under the shared JVM convention | JVM | `./gradlew --console=plain :bff:bootJar :bff:test --tests 'courses.bff.DirectoryUnitTest'` | Present | Local pass |
+| 02-02-02 | 02-02 | 2 | FND-05 | T-02-03 | Share Kotlin helpers between two Jupiter suites | JVM | `./gradlew --console=plain :bff:test :bff:verifyFixtureIsolation` | Present | Local pass |
+| 02-02-03 | 02-02 | 2 | CQRS-04 FND-05 QA-07 | T-02-03 T-02-04 | Compare loopback responses with the published OpenAPI document | JVM | `env DOCKER_HOST=tcp://127.0.0.1:1 ./gradlew --console=plain :bff:test :bff:componentTest :bff:verifyFixtureIsolation` | Present | Local pass |
+| 02-10-01 | 02-10 | 2 | FND-06 | T-02-02 | Build the generated application without starting infrastructure | Build/contract | `python3 web/test/client-graph.py --clean` | Present | Local pass |
+| 02-10-02 | 02-10 | 2 | FND-06 CQRS-04 | T-02-02 T-02-18 | Detect invalidation and malformed generated-client responses | Build/contract | `./gradlew --console=plain :web:verifyClientGraph :web:webCheck` | Present | Local pass |
+| 02-03-01 | 02-03 | 3 | UI-03 | T-02-05 | Select a returned role, reload it and open a fresh tab | Browser/component | `./gradlew --console=plain :web:provisionBrowser :web:shellSmoke` | Present | Local pass |
+| 02-03-02 | 02-03 | 3 | UI-03 UI-01 CQRS-04 | T-02-05 T-02-06 | Keep navigation and focus usable through failure and retry | Browser/component | `./gradlew --console=plain :web:provisionBrowser :web:webCheck :web:shellSmoke` | Present | Local pass |
+| 02-04-01 | 02-04 | 3 | FND-06 DOC-06 | T-02-07 T-02-08 | Open the canonical Phase 1 report through a Gradle-built docs home | Static site | `./gradlew --console=plain :docs-site:docsBuild` | Present | Local pass |
+| 02-04-02 | 02-04 | 3 | DOC-06 UI-01 | T-02-07 T-02-08 | Publish the quick start, guide route and corrected feasibility handoff | Static site | `./gradlew --console=plain :docs-site:docsBuild -PdocsBase=/courses/` | Present | Local pass |
+| 02-04-03 | 02-04 | 3 | FND-06 DOC-06 UI-01 | T-02-07 T-02-08 | Test launch modes, allowlisting and relative links | Static site | `./gradlew --console=plain :docs-site:check` | Present | Local pass |
+| 02-05-01 | 02-05 | 3 | QA-07 QA-08 | T-02-09 | Format public KDoc and fail verification on a real comments violation | JVM quality | `./gradlew --console=plain :bff:ktfmtCheck :bff:detektComments` | Present | Local pass |
+| 02-05-02 | 02-05 | 3 | QA-07 | T-02-09 | Make an actual Dokka warning fail and preserve the good publication | JVM quality | `python3 tools/check_kotlin_quality.py format-comments && python3 tools/check_kotlin_quality.py publication && ./gradlew --console=plain :bff:dokkaGeneratePublicationHtml` | Present | Local pass |
+| 02-06-01 | 02-06 | 4 | UI-01 UI-03 | T-02-10 T-02-SC | Use the approved shared primitives on the real page | Browser/component | `./gradlew --console=plain :web:provisionBrowser :web:shellSmoke` | Present | Local pass |
+| 02-06-02 | 02-06 | 4 | UI-01 | T-02-10 | Apply the responsive light theme and prepare the browser toolchain | Browser/component | `./gradlew --console=plain :web:provisionBrowser :web:webCheck :web:shellSmoke` | Present | Local pass |
+| 02-11-01 | 02-11 | 5 | UI-01 UI-03 | T-02-11 | Render production stories and exercise them in Chromium | Browser/FSD | `./gradlew --console=plain :web:provisionBrowser :web:buildStorybook :web:storyTest` | Present | Local pass |
+| 02-11-02 | 02-11 | 5 | UI-01 | T-02-11 | Prove accessibility and slice-boundary checks reject controlled violations | Browser/FSD | `./gradlew --console=plain :web:provisionBrowser :web:webCheck :web:foundationProof` | Present | Local pass |
+| 02-07-01 | 02-07 | 6 | QA-08 QA-07 | T-02-12 | Check and format the same file with the same owned rules | Disposable Git | `python3 tools/style/run.py --self-test` | Present | Local pass |
+| 02-07-02 | 02-07 | 6 | QA-08 FND-02 | T-02-12 T-02-13 | Commit only formatted staged bytes and protect unstaged work | Disposable Git | `python3 tools/style/test_hook.py` | Present | Local pass |
+| 02-07-03 | 02-07 | 6 | QA-08 | T-02-12 T-02-13 | Verify repository-wide parity and baseline existing tracked artifacts | Disposable Git | `python3 tools/style/test_hook.py --full-tree` | Present | Local pass |
+| 02-08-01 | 02-08 | 7 | FND-02 DOC-06 | T-02-14 | Diagnose a regular build in the presence of missing optional tools | CLI/evidence | `python3 tools/doctor.py --self-test && env DOCKER_HOST=tcp://127.0.0.1:1 ./gradlew --console=plain doctor` | Present | Local pass |
+| 02-08-02 | 02-08 | 7 | DOC-06 FND-02 | T-02-14 T-02-15 | Reproduce the cited public records and document the private procedure | CLI/evidence | `python3 tools/verify_dependency_evidence.py && ./gradlew --console=plain :docs-site:check` | Present | Local pass |
 | 02-09-01 | 02-09 | 8 | FND-06 CQRS-04 UI-01 UI-03 | T-02-16 | Open both sites and exercise the complete local launch guide | Integration/CI | `python3 tools/test_phase2_build.py && ./gradlew --console=plain :web:provisionBrowser :web:siteSmoke` | Present | Local pass |
 | 02-09-02 | 02-09 | 8 | FND-02 FND-06 QA-07 QA-08 DOC-06 | T-02-16 T-02-17 | Bring the tracked tree under the shared formatter and pin the PR workflow | Integration/CI | `python3 tools/check_pr_workflow.py && mise exec ruff taplo -- ./gradlew --console=plain styleCheck && env DOCKER_HOST=tcp://127.0.0.1:1 ./gradlew --console=plain clean build --no-build-cache` | Present | Local pass, hosted pending |
 
@@ -95,9 +95,9 @@ The fallback prohibitions in the owner plans use the descriptor-less `projectPro
 
 ## Wave 0 Requirements
 
-- [ ] Runnable BFF and browser tracer with a contract, generated client, and positive and negative response checks.
-- [ ] Gradle-owned Node/npm execution, browser tests that provision their runtime explicitly, and JVM test suite and fixture conventions.
-- [ ] Reproducible docs inputs and style checks, with disposable Git and negative quality-gate fixtures.
+- [x] Runnable BFF and browser tracer with a contract, generated client, and positive and negative response checks.
+- [x] Gradle-owned Node/npm execution, browser tests that provision their runtime explicitly, and JVM test suite and fixture conventions.
+- [x] Reproducible docs inputs and style checks, with disposable Git and negative quality-gate fixtures.
 
 ## Manual-Only Verifications
 
@@ -109,10 +109,28 @@ The fallback prohibitions in the owner plans use the descriptor-less `projectPro
 
 ## Validation Sign-Off
 
-- [ ] Every task has an automated check or a Wave 0 dependency.
-- [ ] Every requirement has a mapped command or scoped manual check.
-- [ ] Each deliberate negative check fails for the expected reason.
-- [ ] Commands finish without watch mode and their feedback latency is recorded.
+- [x] Every task has an automated check or a Wave 0 dependency.
+- [x] Every requirement has a mapped command or scoped manual check.
+- [x] Each deliberate negative check fails for the expected reason.
+- [x] Commands finish without watch mode and their feedback latency is recorded.
 - [ ] Actual verification supports `nyquist_compliant: true`.
 
-**Approval** pending execution evidence.
+The plan summaries record the local results for all 25 tasks. The package preflight row records registry evidence and its disposition. The hosted PR run and native accessibility acceptance remain separate verification steps.
+
+**Approval** pending hosted and manual evidence.
+
+## Validation Audit 2026-11-25
+
+| Metric | Count |
+|---|---|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
+
+## Review Regression
+
+The final clean-build harness reran all three checks with a refused Docker endpoint. The two BFF unit tests, four BFF component tests, and Phase 01 contract test passed. A warm repeat preserved outputs and all five lockfiles. Deleting the generated client reproduced identical bytes. The live quick start, injected opt-in task guard, and post-clean Git hook passed. The hook committed formatted Kotlin and TypeScript and preserved the original working bytes.
+
+Separate Chromium runs passed 18 shell cases, the full BFF and prefixed documentation journey, and 13 Storybook stories with axe. Chromium loaded both documented local fonts through `/courses/`. The docs tests checked 14 assertions and the nine-file public output was checked during the clean build.
+
+The Phase 01 regression passed the contract unit test, the 32-check Kotest property, the TypeID vector suites and two-way exchange, the frontend asset producer, and the two-pass KDoc proof. The KDoc proof initially failed because the shared formatter had normalized its input. Restoring the original fixture bytes and assigning that single fixture a plain-text check restored the proof. `styleCheck`, the formatter and detekt controls, Dokka publication, and all required `doctor` rows passed. The Docker-backed integration and Pack image stages were outside this rerun because the Docker daemon was unavailable. Their original Phase 01 evidence and hosted handoff remain in the feasibility record.
