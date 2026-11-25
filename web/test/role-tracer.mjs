@@ -2,12 +2,14 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { createServer } from "node:net";
-import { test } from "node:test";
+import { after, before, test } from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 
 const directoryPath = "/api/demo-roles";
+const roleStorageKey = "courses.demo.role";
+const fallbackMessage = "Your previous demo student is unavailable. You’re now using Administrator.";
 const loopback = "127.0.0.1";
 const vite = fileURLToPath(new URL("../node_modules/vite/bin/vite.js", import.meta.url));
 
@@ -103,40 +105,112 @@ async function traceRoles(page, webOrigin, bffOrigin) {
     "The live directory must supply the three demo personas",
   );
   assert.equal(await selector.inputValue(), directory.administrator.id);
-  const alex = directory.students.find(({ label }) => label === "Alex Rivera");
-  await selector.selectOption({ label: alex.label });
-  assert.equal(await selector.inputValue(), alex.id);
-  assert.equal(await selector.locator("option:checked").textContent(), alex.label);
+  return directory;
 }
 
-test("selects a role from the first live BFF response", async () => {
+let browser;
+let bff;
+let bffOrigin;
+let web;
+let webOrigin;
+
+before(async () => {
   const { ROLE_TRACER_JAVA, ROLE_TRACER_BFF_JAR, ROLE_TRACER_WEB_DIST } = process.env;
   const bffPort = await loopbackPort();
-  const bffOrigin = `http://${loopback}:${bffPort}`;
-  const bff = startService(ROLE_TRACER_JAVA, [
+  bffOrigin = `http://${loopback}:${bffPort}`;
+  bff = startService(ROLE_TRACER_JAVA, [
     "-jar", ROLE_TRACER_BFF_JAR, `--server.address=${loopback}`, `--server.port=${bffPort}`,
   ]);
-  let web;
-  try {
-    await awaitReady(bff, new URL("/openapi.json", bffOrigin));
-    const webPort = await loopbackPort();
-    const webOrigin = `http://${loopback}:${webPort}`;
-    web = startService(process.execPath, [
-      vite, "preview", "--host", loopback, "--port", String(webPort), "--strictPort",
-      "--outDir", ROLE_TRACER_WEB_DIST,
-    ], { ...process.env, VITE_BFF_ORIGIN: bffOrigin });
-    await awaitReady(web, new URL(webOrigin));
-    if (process.env.ROLE_TRACER_STOP_BFF === "1") await bff.stop();
-
-    const browser = await chromium.launch({ timeout: 10_000 });
-    try {
-      const page = await browser.newPage();
-      await traceRoles(page, webOrigin, bffOrigin);
-      console.log(`Chromium ${browser.version()} selected Alex Rivera from the live BFF.`);
-    } finally {
-      await browser.close();
-    }
-  } finally {
-    await Promise.all([web?.stop(), bff.stop()]);
-  }
+  await awaitReady(bff, new URL("/openapi.json", bffOrigin));
+  const webPort = await loopbackPort();
+  webOrigin = `http://${loopback}:${webPort}`;
+  web = startService(process.execPath, [
+    vite, "preview", "--host", loopback, "--port", String(webPort), "--strictPort",
+    "--outDir", ROLE_TRACER_WEB_DIST,
+  ], { ...process.env, VITE_BFF_ORIGIN: bffOrigin });
+  await awaitReady(web, new URL(webOrigin));
+  if (process.env.ROLE_TRACER_STOP_BFF === "1") await bff.stop();
+  browser = await chromium.launch({ timeout: 10_000 });
 });
+
+after(async () => {
+  await Promise.all([browser?.close(), web?.stop(), bff?.stop()]);
+});
+
+async function openContext(t) {
+  const context = await browser.newContext();
+  context.setDefaultTimeout(5_000);
+  t.after(() => context.close());
+  return context;
+}
+
+async function readStoredRole(page) {
+  return page.evaluate((key) => sessionStorage.getItem(key), roleStorageKey);
+}
+
+async function readySelector(page, label) {
+  const selector = page.getByLabel("Demo role", { exact: true });
+  await selector.locator("option").filter({ hasText: label }).waitFor({ state: "attached" });
+  return selector;
+}
+
+test("retains independent live BFF selections across same-context tab reloads", async (t) => {
+  const context = await openContext(t);
+  const first = await context.newPage();
+  const { administrator, students: [maya, alex] } = await traceRoles(first, webOrigin, bffOrigin);
+  const firstSelector = await readySelector(first, maya.label);
+  await firstSelector.selectOption(maya.id);
+  assert.equal(await firstSelector.inputValue(), maya.id);
+  await first.reload();
+  await readySelector(first, maya.label);
+  assert.equal(await firstSelector.inputValue(), maya.id, "The first tab must restore Maya");
+
+  const second = await context.newPage();
+  await second.goto(webOrigin);
+  assert.equal(await second.evaluate(() => window.opener), null);
+  const secondSelector = await readySelector(second, alex.label);
+  assert.equal(await secondSelector.inputValue(), administrator.id, "An independent tab starts as Administrator");
+  await secondSelector.selectOption(alex.id);
+  assert.equal(await secondSelector.inputValue(), alex.id);
+  await Promise.all([first.reload(), second.reload()]);
+  await Promise.all([readySelector(first, maya.label), readySelector(second, alex.label)]);
+  assert.equal(await firstSelector.inputValue(), maya.id, "Alex must not overwrite Maya in the first tab");
+  assert.equal(await secondSelector.inputValue(), alex.id);
+  assert.equal(await readStoredRole(first), maya.id);
+  assert.equal(await readStoredRole(second), alex.id);
+  console.log(`Chromium ${browser.version()} restored distinct Maya and Alex selections from the live BFF.`);
+});
+
+for (const [name, stored, students] of [
+  ["a removed student in an administrator-only directory", "student_removed", []],
+  ["a differently cased student ID", "Student_Maya", [
+    { id: "student_maya", label: "Maya Chen", kind: "student" },
+  ]],
+]) {
+  test(`reconciles ${name} only after a valid directory loads`, async (t) => {
+    const context = await openContext(t);
+    const page = await context.newPage();
+    const administrator = { id: "admin_exact", label: "Administrator", kind: "administrator" };
+    await page.addInitScript(({ key, value }) => {
+      if (sessionStorage.getItem(key) === null) sessionStorage.setItem(key, value);
+    }, { key: roleStorageKey, value: stored });
+    const release = Promise.withResolvers();
+    await page.route(`**${directoryPath}`, async (route) => {
+      await release.promise;
+      await route.fulfill({ json: { administrator, students } });
+    });
+    try {
+      await Promise.all([page.waitForRequest(`**${directoryPath}`), page.goto(webOrigin)]);
+      assert.equal(await readStoredRole(page), stored, "Loading must preserve the stored ID");
+    } finally {
+      release.resolve();
+    }
+    const selector = await readySelector(page, administrator.label);
+    assert.equal(await selector.inputValue(), administrator.id);
+    assert.equal(await readStoredRole(page), administrator.id, "A valid response must persist the fallback");
+    assert.equal(await page.getByRole("status").filter({ hasText: fallbackMessage }).count(), 1);
+    await page.reload();
+    await readySelector(page, administrator.label);
+    assert.equal(await page.getByText(fallbackMessage, { exact: true }).count(), 0, "The fallback is announced once");
+  });
+}
