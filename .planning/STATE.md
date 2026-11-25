@@ -4,17 +4,17 @@ milestone: v1.0
 milestone_name: Axon 5 DCB Courses
 current_phase: 01
 current_phase_name: Axon Server and Toolchain Feasibility
-status: executing
-stopped_at: Completed 01-04-PLAN.md
-last_updated: "2026-11-24T23:19:38.178Z"
+status: verifying
+stopped_at: Completed 01-05-PLAN.md
+last_updated: "2026-11-25T00:09:41.540Z"
 last_activity: 2026-11-24
 last_activity_desc: Phase 01 execution started
-state_head: 109d6b11a1561683558d3780fdc51765bd252118
+state_head: 64075aaa425e1dc83274ff8e0246fa30d7676987
 progress:
   total_phases: 8
   completed_phases: 0
   total_plans: 5
-  completed_plans: 4
+  completed_plans: 5
   percent: 0
 ---
 
@@ -31,7 +31,7 @@ See [PROJECT.md](PROJECT.md), initialized 2026-11-24.
 
 Phase: 01 (Axon Server and Toolchain Feasibility) — EXECUTING
 Plan: 5 of 5
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-11-24 — Phase 01 execution started
 
 Progress: [░░░░░░░░░░] 0%
@@ -49,6 +49,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P02 | 82min | 3 tasks | 10 files |
 | Phase 01 P03 | 393min | 3 tasks | 9 files |
 | Phase 01 P04 | 21min | 3 tasks | 9 files |
+| Phase 01 P05 | 47min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -66,6 +67,9 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 01]: Package only the validated staged public tree with the digest-pinned Paketo Jammy builder, run image and Web Servers buildpack.
 - [Phase 01]: Measure Kotlin/Jupiter/Kotest, ktfmt, and TypeID from explicit Gradle tasks with isolated JVM and npm dependencies.
 - [Phase 01]: Scope the npm uuid advisory assessment to the temporary TypeID probe. Keep application adoption open and review by 2026-12-02.
+- [Phase 01]: Record a native acceptance tuple with its tested revision, input SHA-256, and manifest SHA-256.
+- [Phase 01]: Constrain Guava in the consuming runtime and formatter graphs with separate scoped, catalog-backed lower bounds.
+- [Phase 01]: Preserve the permanent report and require hosted AMD64 Testcontainers and Playwright coverage before probe retirement.
 
 ### Pending Todos
 
@@ -78,6 +82,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-24T23:19:38.151Z
-Stopped at: Completed 01-04-PLAN.md
-Resume file: .planning/phases/01-axon-server-and-toolchain-feasibility/01-05-PLAN.md
+Last session: 2026-11-25T00:09:41.514Z
+Stopped at: Completed 01-05-PLAN.md
+Resume file: None
