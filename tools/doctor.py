@@ -9,9 +9,12 @@ import re
 import subprocess
 import sys
 import unittest
+from contextlib import redirect_stdout
 from dataclasses import dataclass
+from io import StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 try:
     import tomllib
@@ -222,7 +225,18 @@ def wrapper_checks(gradle, *, bootstrap):
 
 def npm_checks(data, *, bootstrap):
     node_owner = ".nvmrc"
-    version = read_file(node_owner, lambda raw: valid_value(raw.strip(), VERSION))
+    version = read_file(
+        node_owner, lambda raw: valid_value(raw.strip(), r"[0-9]+\.[0-9]+\.[0-9]+")
+    )
+    yield check(
+        REQUIRED,
+        "Node version pin",
+        node_owner,
+        "exact Node release (major.minor.patch)",
+        version or "invalid or missing",
+        bool(version),
+        "Restore a valid .nvmrc with one exact Node release in major.minor.patch form.",
+    )
     for directory, (npm_owner, tier, repair) in NPM_CONSUMERS.items():
         owner = f"{npm_owner}/package.json"
         lock_owner = f"{directory}/package-lock.json"
@@ -684,6 +698,34 @@ class DoctorTests(unittest.TestCase):
         self.assertIn("required | DEFERRED | Running Gradle", result.stdout)
         self.assertIn("required | DEFERRED | BFF worker JVM", result.stdout)
         self.assertIn("required | DEFERRED | Managed Node", result.stdout)
+        self.assertIn("required | PASS | Node version pin | .nvmrc", result.stdout)
+
+    def test_invalid_node_pin_blocks_bootstrap_and_gradle_reports(self):
+        pin = self.directory / ".nvmrc"
+        read = read_file
+
+        def read_with_pin(path, reader):
+            return read(pin if path == ".nvmrc" else path, reader)
+
+        for content in (None, "26", "v26.13.1", "２６.１３.１"):
+            if content is not None:
+                pin.write_text(content + "\n", encoding="utf-8")
+            for managed in (None, self.managed):
+                with (
+                    self.subTest(content=content, bootstrap=managed is None),
+                    patch.dict(os.environ, self.env, clear=True),
+                    patch(f"{__name__}.read_file", side_effect=read_with_pin),
+                    redirect_stdout(StringIO()) as output,
+                ):
+                    self.assertEqual(report(managed), 1)
+                    self.assertIn(
+                        "required | FAIL | Node version pin | .nvmrc", output.getvalue()
+                    )
+                    self.assertIn("Restore a valid .nvmrc", output.getvalue())
+                    if managed is None:
+                        self.assertIn(
+                            "required | DEFERRED | Managed Node", output.getvalue()
+                        )
 
 
 if __name__ == "__main__":
