@@ -123,11 +123,20 @@ val webBuild =
         outputs.dir(distribution)
     }
 
+val fsdCheck =
+    tasks.register<NodeTask>("fsdCheck") {
+        group = "verification"
+        description = "Check the Feature-Sliced Design boundaries in authored web source."
+        useWebDependencies(source, "steiger.config.ts", "tsconfig.json")
+        script = layout.projectDirectory.file("node_modules/steiger/dist/cli.mjs")
+        args = listOf("./src", "--config", "steiger.config.ts")
+    }
+
 val webCheck =
     tasks.register<NodeTask>("webCheck") {
         group = "verification"
-        description = "Typecheck the browser application and test its generated HTTP client."
-        dependsOn(typecheck)
+        description = "Check browser types, Feature-Sliced Design, and the generated HTTP client."
+        dependsOn(typecheck, fsdCheck)
         useWebDependencies(source, generated, "test/generated-client.test.ts", "tsconfig.json")
         options = listOf("--test", "--test-reporter=tap")
         script = layout.projectDirectory.file("test/generated-client.test.ts")
@@ -176,6 +185,23 @@ tasks.register<NodeTask>("storyTest") {
     useWebDependencies(source, generated, ".storybook", "vitest.config.ts", "tsconfig.json")
     script = layout.projectDirectory.file("node_modules/vitest/vitest.mjs")
     args = listOf("run", "--project", "storybook")
+}
+
+tasks.register<NodeTask>("foundationProof") {
+    group = "verification"
+    description = "Prove that Steiger and Chromium accessibility checks detect violations."
+    dependsOn(provisionBrowser, generateClient)
+    useWebDependencies(
+        source,
+        generated,
+        ".storybook",
+        "steiger.config.ts",
+        "tsconfig.json",
+        "vitest.config.ts",
+        "test/foundation-proof.mjs",
+    )
+    options = listOf("--test", "--test-reporter=tap")
+    script = layout.projectDirectory.file("test/foundation-proof.mjs")
 }
 
 val shellSmoke =

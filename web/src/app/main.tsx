@@ -1,6 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { HomePage } from "../pages/home/HomePage";
+import { HomePage } from "@/pages/home";
 import "./theme.css";
 
 const docsBase = new URL(

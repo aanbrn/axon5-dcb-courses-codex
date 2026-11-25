@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { loadDemoRoles, type DemoRoleDirectory } from "../../shared/api/demoRoles";
+import { loadDemoRoles, type DemoRoleDirectory } from "@/shared/api";
 
 const roleStorageKey = "courses.demo.role";
 

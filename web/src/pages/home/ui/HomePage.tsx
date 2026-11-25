@@ -1,7 +1,7 @@
 import { CircleAlertIcon } from "lucide-react";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { Alert, AlertDescription, Button, NativeSelect, NativeSelectOption } from "@/shared/ui";
-import { useDemoRoles } from "./useDemoRoles";
+import { useDemoRoles } from "../model/useDemoRoles";
 
 const loadingMessage = "Loading demo roles…";
 const fallbackMessage = "Your previous demo student is unavailable. You’re now using Administrator.";

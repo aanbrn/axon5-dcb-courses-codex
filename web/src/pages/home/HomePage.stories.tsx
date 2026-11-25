@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, waitFor } from "storybook/test";
-import { HomePage } from "./HomePage";
+import { HomePage } from "./index";
 
 const roleKey = "courses.demo.role";
 const administrator = {

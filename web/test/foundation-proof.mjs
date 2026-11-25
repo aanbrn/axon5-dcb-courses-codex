@@ -36,14 +36,8 @@ function run(workingDir, tool, args) {
 }
 
 test("Steiger accepts authored layers and rejects a shared import from pages", async (t) => {
-  const workingDir = await snapshot(t, []);
-  const configuration = join(web, "steiger.config.ts");
-  try {
-    await cp(configuration, join(workingDir, "steiger.config.ts"));
-  } catch (error) {
-    if (error.code !== "ENOENT") throw error;
-  }
-  const lint = () => run(workingDir, steiger, ["./src", "--reporter", "json"]);
+  const workingDir = await snapshot(t, ["steiger.config.ts"]);
+  const lint = () => run(workingDir, steiger, ["./src", "--config", "steiger.config.ts", "--reporter", "json"]);
   const baseline = lint();
   assert.equal(baseline.status, 0, `Steiger should accept the authored layers:\n${baseline.output}`);
 
