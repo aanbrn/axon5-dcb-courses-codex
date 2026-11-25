@@ -79,6 +79,10 @@ test("Gradle stages only approved sources and preserves the canonical report byt
     "_includes/page.11ty.js",
     "feasibility/phase-01.11tydata.json",
     "feasibility/phase-01.md",
+    "fonts/geist-LICENSE.txt",
+    "fonts/geist-latin-wght-normal.woff2",
+    "fonts/geist-mono-LICENSE.txt",
+    "fonts/geist-mono-latin-wght-normal.woff2",
     "index.11ty.js",
     "maintainer-guide.md",
     "quick-start.md",
@@ -89,6 +93,22 @@ test("Gradle stages only approved sources and preserves the canonical report byt
     readFileSync(canonical),
   );
   verifyPublication(distribution, process.env.DOCS_BASE ?? "/");
+  const css = readFileSync(join(distribution, "site.css"), "utf8");
+  for (const name of ["geist", "geist-mono"]) {
+    const asset = `fonts/${name}-latin-wght-normal.woff2`;
+    assert.ok(
+      css.includes(`./${asset}`),
+      `Missing font declaration for ${name}`,
+    );
+    assert.deepEqual(
+      readFileSync(join(distribution, asset)),
+      readFileSync(join(staged, asset)),
+    );
+    assert.match(
+      readFileSync(join(distribution, `fonts/${name}-LICENSE.txt`), "utf8"),
+      /SIL OPEN FONT LICENSE/i,
+    );
+  }
 });
 
 test("the root site offers the local quick start as its only launch action", (t) => {

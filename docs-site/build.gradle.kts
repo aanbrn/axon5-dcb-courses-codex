@@ -59,15 +59,33 @@ val publicTemplates =
         "feasibility/phase-01.11tydata.json",
         "site.css",
     )
+val publicFonts =
+    listOf("geist", "geist-mono").flatMap { font ->
+        val fontPackage = layout.projectDirectory.dir("node_modules/@fontsource-variable/$font")
+        val asset = "$font-latin-wght-normal.woff2"
+        listOf(
+            asset to fontPackage.file("files/$asset"),
+            "$font-LICENSE.txt" to fontPackage.file("LICENSE"),
+        )
+    }
 val staged = layout.buildDirectory.dir("staged")
 val stageDocs =
     tasks.register<Sync>("stageDocs") {
+        dependsOn(npmInstall)
         from(content) { include(publicArticles) }
         from(templates) { include(publicTemplates) }
+        for ((name, source) in publicFonts) {
+            from(source) {
+                into("fonts")
+                rename { name }
+            }
+        }
         into(staged)
         doFirst {
             val allowedSources =
-                publicArticles.map(content::file) + publicTemplates.map(templates::file)
+                publicArticles.map(content::file) +
+                    publicTemplates.map(templates::file) +
+                    publicFonts.map { it.second }
             val repositoryPath = repository.asFile.toPath()
             val canonicalRepository = repository.asFile.canonicalFile.toPath()
             for (source in allowedSources) {

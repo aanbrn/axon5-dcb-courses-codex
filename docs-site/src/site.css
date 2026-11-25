@@ -1,3 +1,19 @@
+@font-face {
+  font-family: Geist;
+  src: url("./fonts/geist-latin-wght-normal.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("./fonts/geist-mono-latin-wght-normal.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   color-scheme: light;
   --background: #fff;
@@ -81,7 +97,7 @@ h2 {
 }
 
 h3 {
-  font-size: 1.125rem;
+  font-size: 1rem;
 }
 
 main > :is(p, ul, ol) {
@@ -94,11 +110,12 @@ main > :is(p, ul, ol) {
   border-radius: 0.5rem;
   color: var(--background);
   background: var(--primary);
-  font-weight: 600;
+  font-weight: 400;
   text-decoration: none;
 }
 
-.launch-action:hover {
+.launch-action:hover,
+.launch-action:active {
   background: var(--primary-hover);
 }
 

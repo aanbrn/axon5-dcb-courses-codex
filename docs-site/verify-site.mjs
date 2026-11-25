@@ -7,6 +7,10 @@ export const publicFiles = new Set([
   "feasibility/phase-01/index.html",
   "maintainer-guide/index.html",
   "site.css",
+  "fonts/geist-latin-wght-normal.woff2",
+  "fonts/geist-mono-latin-wght-normal.woff2",
+  "fonts/geist-LICENSE.txt",
+  "fonts/geist-mono-LICENSE.txt",
 ]);
 const siteOrigin = "https://docs.invalid";
 const entities = { amp: "&", apos: "'", gt: ">", lt: "<", quot: '"' };

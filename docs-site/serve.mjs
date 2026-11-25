@@ -1,14 +1,18 @@
 import { readFileSync } from "node:fs";
 import { createServer } from "node:http";
-import { join } from "node:path";
+import { extname, join } from "node:path";
 import { publicFiles } from "./verify-site.mjs";
 
 const [, , directory, base] = process.argv;
+const contentTypes = {
+  ".html": "text/html; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".txt": "text/plain; charset=utf-8",
+  ".woff2": "font/woff2",
+};
 const routes = new Map();
 for (const file of publicFiles) {
-  const type = file.endsWith(".html")
-    ? "text/html; charset=utf-8"
-    : "text/css; charset=utf-8";
+  const type = contentTypes[extname(file)];
   const bytes = readFileSync(join(directory, file));
   const asset = { type, bytes };
   routes.set(base + file, asset);

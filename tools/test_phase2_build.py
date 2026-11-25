@@ -230,7 +230,8 @@ class Phase2BuildTest(unittest.TestCase):
             typescript = "web/src/app/main.tsx"
             app = directory / typescript
             original = app.read_bytes()
-            app.write_bytes(original.rstrip(b"\n") + b"   \n")
+            unformatted = original.rstrip(b"\n") + b"   \n"
+            app.write_bytes(unformatted)
             git("add", "--", kotlin, typescript)
             git("commit", "-qm", "Format an ordinary commit after clean build")
             self.assertEqual(
@@ -238,7 +239,7 @@ class Phase2BuildTest(unittest.TestCase):
                 b"/** Returns the proof value. */\nfun proof(): Int = 1\n",
             )
             self.assertEqual(git("show", f"HEAD:{typescript}"), original)
-            self.assertEqual(app.read_bytes(), original)
+            self.assertEqual(app.read_bytes(), unformatted)
             print(
                 "The installed hook formatted Kotlin and TypeScript after clean build.",
                 flush=True,
@@ -370,13 +371,21 @@ class Phase2BuildTest(unittest.TestCase):
             "feasibility/phase-01/index.html": "Phase 01 feasibility record",
             "maintainer-guide/index.html": "Maintainer guide",
             "site.css": ".scroll-region",
+            "fonts/geist-LICENSE.txt": "SIL Open Font License",
+            "fonts/geist-mono-LICENSE.txt": "SIL Open Font License",
+        }
+        fonts = {
+            "fonts/geist-latin-wght-normal.woff2",
+            "fonts/geist-mono-latin-wght-normal.woff2",
         }
         self.assertEqual(
             {str(path.relative_to(docs)) for path in docs.rglob("*") if path.is_file()},
-            expected.keys(),
+            expected.keys() | fonts,
         )
         for name, marker in expected.items():
             self.assertIn(marker, (docs / name).read_text(encoding="utf-8"))
+        for font in fonts:
+            self.assertTrue((docs / font).read_bytes().startswith(b"wOF2"))
         report = Path("feasibility/phase-01.md")
         self.assertEqual(
             (directory / "docs-site/build/staged" / report).read_bytes(),
@@ -411,7 +420,7 @@ class Phase2BuildTest(unittest.TestCase):
             )
             print(f"{task}: {count} JVM tests; zero failures or skips", flush=True)
         print(
-            f"Built {len(assets)} Vite entry assets, {len(entries)} Storybook entries and {len(expected)} docs files.",
+            f"Built {len(assets)} Vite entry assets, {len(entries)} Storybook entries and {len(expected) + len(fonts)} docs files.",
             flush=True,
         )
 

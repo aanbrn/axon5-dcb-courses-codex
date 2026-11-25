@@ -275,6 +275,25 @@ async function assertReportKeyboard(page) {
   await assertPageFits(page, "Keyboard-scrolled report");
 }
 
+async function assertDocsFonts(page) {
+  assert.deepEqual(
+    await page.evaluate(async () => {
+      const fonts = await Promise.all([
+        document.fonts.load("16px Geist"),
+        document.fonts.load('16px "Geist Mono"'),
+      ]);
+      return fonts.map((faces) => faces.map(({ status }) => status));
+    }),
+    [["loaded"], ["loaded"]],
+  );
+  for (const font of ["geist", "geist-mono"]) {
+    const path = `fonts/${font}-latin-wght-normal.woff2`;
+    const response = await page.request.get(new URL(path, docsUrl).href);
+    assert.equal(response.status(), 200);
+    assert.equal(response.headers()["content-type"], "font/woff2");
+  }
+}
+
 test(
   "follows the live directory, both documentation launch modes, and outage recovery",
   { timeout: 100_000 },
@@ -384,6 +403,7 @@ test(
       }
     }
     await assertDocsNavigation(first);
+    await assertDocsFonts(first);
     await visit(
       first,
       first.getByRole("link", { name: "Open demo", exact: true }),

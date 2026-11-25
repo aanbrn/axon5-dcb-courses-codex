@@ -53,7 +53,10 @@ export default function (eleventyConfig) {
 
   eleventyConfig.addPlugin(HtmlBasePlugin);
   eleventyConfig.addGlobalData("launch", launchAction());
-  eleventyConfig.addPassthroughCopy({ [join(input, "site.css")]: "site.css" });
+  eleventyConfig.addPassthroughCopy({
+    [join(input, "site.css")]: "site.css",
+    [join(input, "fonts")]: "fonts",
+  });
   eleventyConfig.on("eleventy.after", ({ directories, outputMode }) => {
     if (outputMode === "fs") verifyPublication(directories.output, pathPrefix);
   });
