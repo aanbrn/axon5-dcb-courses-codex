@@ -6,30 +6,39 @@ const localAppOrigin = "http://127.0.0.1:5173";
 
 function parseAppUrl(value) {
   try {
-    if (!/^https?:\/\/[^/?#]+/.test(value) || /[\s\\\p{Cc}]/u.test(value)) throw new Error();
+    if (!/^https?:\/\/[^/?#]+/.test(value) || /[\s\\\p{Cc}]/u.test(value))
+      throw new Error();
     const url = new URL(value);
     if (url.username || url.password) throw new Error();
     return url;
   } catch {
-    throw new Error("Expected an absolute HTTP(S) app URL without credentials.");
+    throw new Error(
+      "Expected an absolute HTTP(S) app URL without credentials.",
+    );
   }
 }
 
 function launchAction() {
   const trustedOrigins = new Set([localAppOrigin]);
-  for (const origin of (process.env.DOCS_TRUSTED_APP_ORIGINS ?? "").split(",").filter(Boolean)) {
+  for (const origin of (process.env.DOCS_TRUSTED_APP_ORIGINS ?? "")
+    .split(",")
+    .filter(Boolean)) {
     const url = parseAppUrl(origin.trim());
     if (url.protocol !== "https:" || url.href !== `${url.origin}/`) {
-      throw new Error("docsTrustedAppOrigins must contain comma-separated HTTPS origins.");
+      throw new Error(
+        "docsTrustedAppOrigins must contain comma-separated HTTPS origins.",
+      );
     }
     trustedOrigins.add(url.origin);
   }
 
   const configuredUrl = process.env.DOCS_APP_URL ?? "";
-  if (!configuredUrl) return { label: "Read quick start", href: "/quick-start/" };
+  if (!configuredUrl)
+    return { label: "Read quick start", href: "/quick-start/" };
 
   const url = parseAppUrl(configuredUrl);
-  if (!trustedOrigins.has(url.origin)) throw new Error("docsAppUrl must use a trusted app origin.");
+  if (!trustedOrigins.has(url.origin))
+    throw new Error("docsAppUrl must use a trusted app origin.");
   return { label: "Open demo", href: url.href };
 }
 
@@ -37,7 +46,9 @@ export default function (eleventyConfig) {
   const input = process.env.DOCS_INPUT ?? "build/staged";
   const pathPrefix = process.env.DOCS_BASE ?? "/";
   if (!/^\/(?:[A-Za-z0-9_-]+\/)*$/.test(pathPrefix)) {
-    throw new Error("docsBase must be a slash-delimited deployment path, such as /courses/.");
+    throw new Error(
+      "docsBase must be a slash-delimited deployment path, such as /courses/.",
+    );
   }
 
   eleventyConfig.addPlugin(HtmlBasePlugin);
@@ -61,24 +72,44 @@ export default function (eleventyConfig) {
           token.attrSet("id", id);
           used.add(id);
         }
-        if (token.type === "table_open" || token.type === "fence") token.meta = { section };
+        if (token.type === "table_open" || token.type === "fence")
+          token.meta = { section };
       }
     });
 
     function scrollRegion(token, kind) {
       const section = token.meta.section;
-      const label = markdown.utils.escapeHtml(section ? `${kind} — ${section}` : kind);
+      const label = markdown.utils.escapeHtml(
+        section ? `${kind} — ${section}` : kind,
+      );
       return `<div class="scroll-region" role="region" aria-label="${label}" tabindex="0">`;
     }
 
     const renderFence = markdown.renderer.rules.fence;
     markdown.renderer.rules.fence = (tokens, index, ...args) =>
       `${scrollRegion(tokens[index], "Code sample")}${renderFence(tokens, index, ...args)}</div>\n`;
-    markdown.renderer.rules.table_open = (tokens, index, options, _env, renderer) =>
-      scrollRegion(tokens[index], "Data table") + renderer.renderToken(tokens, index, options);
-    markdown.renderer.rules.table_close = (tokens, index, options, _env, renderer) =>
-      renderer.renderToken(tokens, index, options) + "</div>\n";
+    markdown.renderer.rules.table_open = (
+      tokens,
+      index,
+      options,
+      _env,
+      renderer,
+    ) =>
+      scrollRegion(tokens[index], "Data table") +
+      renderer.renderToken(tokens, index, options);
+    markdown.renderer.rules.table_close = (
+      tokens,
+      index,
+      options,
+      _env,
+      renderer,
+    ) => renderer.renderToken(tokens, index, options) + "</div>\n";
   });
 
-  return { dir: { input }, pathPrefix, templateFormats: ["11ty.js", "md"], markdownTemplateEngine: false };
+  return {
+    dir: { input },
+    pathPrefix,
+    templateFormats: ["11ty.js", "md"],
+    markdownTemplateEngine: false,
+  };
 }

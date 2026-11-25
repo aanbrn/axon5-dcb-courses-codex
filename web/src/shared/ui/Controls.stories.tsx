@@ -1,7 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { CircleAlertIcon } from "lucide-react";
 import { expect } from "storybook/test";
-import { Alert, AlertDescription, Button, NativeSelect, NativeSelectOption } from "./index";
+import {
+  Alert,
+  AlertDescription,
+  Button,
+  NativeSelect,
+  NativeSelectOption,
+} from "./index";
 
 const meta = {
   title: "Shared/Controls",
@@ -15,7 +21,9 @@ export const RoleSelector: Story = {
     <div className="role-group">
       <label htmlFor="story-demo-role">Demo role</label>
       <NativeSelect id="story-demo-role" defaultValue="administrator">
-        <NativeSelectOption value="administrator">Administrator</NativeSelectOption>
+        <NativeSelectOption value="administrator">
+          Administrator
+        </NativeSelectOption>
         <NativeSelectOption value="maya">Maya Chen</NativeSelectOption>
         <NativeSelectOption value="alex">Alex Rivera</NativeSelectOption>
       </NativeSelect>
@@ -32,7 +40,9 @@ export const Actions: Story = {
   render: () => (
     <div className="flex flex-wrap items-center gap-4">
       <Button asChild>
-        <a href="http://127.0.0.1:8081/feasibility/phase-01/">Read feasibility report</a>
+        <a href="http://127.0.0.1:8081/feasibility/phase-01/">
+          Read feasibility report
+        </a>
       </Button>
       <Button type="button" variant="outline">
         Retry loading roles
@@ -45,7 +55,9 @@ export const DirectoryAlert: Story = {
   render: () => (
     <Alert variant="destructive">
       <CircleAlertIcon aria-hidden="true" />
-      <AlertDescription>Could not load demo roles. Try again to switch roles.</AlertDescription>
+      <AlertDescription>
+        Could not load demo roles. Try again to switch roles.
+      </AlertDescription>
     </Alert>
   ),
 };

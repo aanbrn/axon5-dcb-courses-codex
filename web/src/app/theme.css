@@ -307,7 +307,8 @@ a {
   color: var(--error-foreground);
 }
 
-[data-slot="alert"][data-variant="destructive"] [data-slot="alert-description"] {
+[data-slot="alert"][data-variant="destructive"]
+  [data-slot="alert-description"] {
   color: inherit;
 }
 

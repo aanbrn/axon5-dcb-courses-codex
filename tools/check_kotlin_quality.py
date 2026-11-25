@@ -30,7 +30,9 @@ def run(root, command):
 
 
 def gradle(root, *tasks):
-    return run(root, ["./gradlew", "--console=plain", "--no-configuration-cache", *tasks])
+    return run(
+        root, ["./gradlew", "--console=plain", "--no-configuration-cache", *tasks]
+    )
 
 
 def source_dir(root, module):
@@ -48,7 +50,9 @@ def kdoc_sections(source):
 
 class KotlinQualityTest(unittest.TestCase):
     def setUp(self):
-        workspace = self.enterContext(tempfile.TemporaryDirectory(prefix="kotlin-quality-"))
+        workspace = self.enterContext(
+            tempfile.TemporaryDirectory(prefix="kotlin-quality-")
+        )
         self.root = Path(workspace) / "project"
         shutil.copytree(
             ROOT,
@@ -83,7 +87,9 @@ class KotlinQualityTest(unittest.TestCase):
             ":fixtures:ktfmtCheck",
             ":fixtures:detektComments",
         )
-        self.require_success(gradle(self.root, *clean_tasks, ":bff:kotlinQualityRuntime"))
+        self.require_success(
+            gradle(self.root, *clean_tasks, ":bff:kotlinQualityRuntime")
+        )
         metadata = self.root / "bff/build/kotlin-quality/commands.json"
         commands = json.loads(metadata.read_text(encoding="utf-8"))
 
@@ -94,10 +100,14 @@ class KotlinQualityTest(unittest.TestCase):
         bad_format = gradle(self.root, ":bff:ktfmtCheck")
         self.require_gradle_failure(bad_format, ":bff:ktfmtCheck")
         reported_path = re.escape(str(candidate.relative_to(self.root)))
-        self.assertRegex(bad_format.stdout, rf"(?m)^.*{reported_path}$", bad_format.stdout)
+        self.assertRegex(
+            bad_format.stdout, rf"(?m)^.*{reported_path}$", bad_format.stdout
+        )
         self.assertIn("non-zero exit value 1", bad_format.stdout)
         self.assertEqual(candidate.read_bytes(), original)
-        print("ktfmtCheck reported KdocFormatWitness.kt and left its bytes unchanged (CLI exit 1).")
+        print(
+            "ktfmtCheck reported KdocFormatWitness.kt and left its bytes unchanged (CLI exit 1)."
+        )
 
         format_candidate = [*commands["ktfmt"], str(candidate)]
         self.require_success(run(self.root, format_candidate))
@@ -114,14 +124,22 @@ class KotlinQualityTest(unittest.TestCase):
         fixture = source_dir(self.root, "fixtures") / "KdocCommentsWitness.kt"
         fixture.write_text("package courses.fixtures\n", encoding="utf-8")
         script = self.root / "bff/build.gradle.kts"
-        sources = {path: path.read_text(encoding="utf-8") for path in (production, fixture, script)}
+        sources = {
+            path: path.read_text(encoding="utf-8")
+            for path in (production, fixture, script)
+        }
         for path, source in sources.items():
             path.write_text(
-                source + "\n/** Returns a quality witness */\nfun kdocCommentsWitness(): Int = 1\n",
+                source
+                + "\n/** Returns a quality witness */\nfun kdocCommentsWitness(): Int = 1\n",
                 encoding="utf-8",
             )
 
-        detekt = [*commands["detekt"], "--input", ",".join(str(path) for path in sources)]
+        detekt = [
+            *commands["detekt"],
+            "--input",
+            ",".join(str(path) for path in sources),
+        ]
         cli = run(self.root, detekt)
         self.assertEqual(cli.returncode, 2, cli.stdout)
         self.assert_comment_findings(cli.stdout, sources)
@@ -135,8 +153,12 @@ class KotlinQualityTest(unittest.TestCase):
         self.assertIn("non-zero exit value 2", bad_comments.stdout)
 
         invalid_config = self.root / "config/detekt/invalid.yml"
-        invalid_config.write_text("unrecognizedRuleSet:\n  active: true\n", encoding="utf-8")
-        invalid = run(self.root, [*detekt[:4], "--config", str(invalid_config), *detekt[-2:]])
+        invalid_config.write_text(
+            "unrecognizedRuleSet:\n  active: true\n", encoding="utf-8"
+        )
+        invalid = run(
+            self.root, [*detekt[:4], "--config", str(invalid_config), *detekt[-2:]]
+        )
         self.assertEqual(invalid.returncode, 3, invalid.stdout)
         self.assertIn("unrecognizedRuleSet", invalid.stdout)
         self.assertNotIn("[EndOfSentenceFormat]", invalid.stdout)
@@ -174,15 +196,13 @@ class KotlinQualityTest(unittest.TestCase):
         witnesses = {}
         for module, (_, package) in SOURCE_SETS.items():
             path = source_dir(self.root, module) / "KdocPublicationWitness.kt"
-            declaration = "fun kdocPublicationWitness(): String = \"quality witness\"\n"
+            declaration = 'fun kdocPublicationWitness(): String = "quality witness"\n'
             path.write_text(f"package {package}\n\n{declaration}", encoding="utf-8")
             witnesses[path] = (package, declaration)
 
         bad = gradle(self.root, *tasks, "--continue")
         for module, (_, package) in SOURCE_SETS.items():
-            diagnostic = (
-                f"[:{module}:{PUBLICATION}] Undocumented: {package}/kdocPublicationWitness/#/"
-            )
+            diagnostic = f"[:{module}:{PUBLICATION}] Undocumented: {package}/kdocPublicationWitness/#/"
             self.assertIn(diagnostic, bad.stdout, bad.stdout)
             print(diagnostic)
         self.assertNotEqual(
@@ -196,7 +216,10 @@ class KotlinQualityTest(unittest.TestCase):
 
         description = "Returns the value used to verify API documentation."
         for path, (package, declaration) in witnesses.items():
-            path.write_text(f"package {package}\n\n/** {description} */\n{declaration}", encoding="utf-8")
+            path.write_text(
+                f"package {package}\n\n/** {description} */\n{declaration}",
+                encoding="utf-8",
+            )
         repaired = gradle(self.root, *tasks)
         self.require_success(repaired)
         self.assertNotIn("Undocumented:", repaired.stdout)
@@ -211,4 +234,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("mode", choices=("format-comments", "publication"))
     args = parser.parse_args()
-    unittest.main(argv=[__file__, f"KotlinQualityTest.test_{args.mode.replace('-', '_')}"])
+    unittest.main(
+        argv=[__file__, f"KotlinQualityTest.test_{args.mode.replace('-', '_')}"]
+    )

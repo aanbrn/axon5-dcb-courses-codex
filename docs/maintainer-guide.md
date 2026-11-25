@@ -43,6 +43,34 @@ mise exec ruff taplo -- python3 tools/doctor.py
 
 Run `./gradlew installGitHooks` to opt in to the staged-content hook. Run the full tracked-file check with `mise exec ruff taplo -- ./gradlew styleCheck`. Both entry points use the checked-in [style policy](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/tools/style/policy.json).
 
+## Pull request build
+
+The `build-and-style` job runs on GitHub's Ubuntu 24.04 x64 runner with read access to repository contents. It validates the Gradle wrapper before running it. The workflow pins each action to the publisher's full commit SHA. [Build workflow](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/.github/workflows/build.yml)
+
+| Action                    | Release                                                             | Purpose                                                                    |
+| ------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Checkout                  | [v7.0.1](https://github.com/actions/checkout/releases/tag/v7.0.1)   | Check out the PR merge revision without retaining checkout credentials     |
+| Gradle Wrapper Validation | [v6.4.1](https://github.com/gradle/actions/releases/tag/v6.4.1)     | Compare the wrapper JAR with published Gradle checksums                    |
+| Setup Java                | [v6.3.0](https://github.com/actions/setup-java/releases/tag/v6.3.0) | Select Eclipse Temurin from `.java-version`                                |
+| Mise Action               | [v5.3.0](https://github.com/jdx/mise-action/releases/tag/v5.3.0)    | Run mise 2026.11.14 and install the Ruff and Taplo versions in `mise.toml` |
+
+The job logs the runner architecture and effective Java, Gradle, mise, Ruff and Taplo versions. Gradle provisions Node from `.nvmrc` and npm from each consumer's `packageManager` field. Run `doctor` after provisioning to see their resolved versions and the BFF test worker's JDK build.
+
+Run the same checks from the repository root. The style command also provisions the locked YAML parser used by the local workflow checker.
+
+```sh
+mise exec ruff taplo -- ./gradlew --console=plain styleCheck
+DOCKER_HOST=tcp://127.0.0.1:1 ./gradlew --console=plain clean build --no-build-cache
+python3 tools/check_pr_workflow.py
+```
+
+The ordinary build generates and checks the web client, builds the app, Storybook and docs, and runs the JVM suites that use local files or loopback HTTP. The browser journey is a separate check with explicit Chromium provisioning. Keep ports 5173, 8080 and 8081 free when running these local checks.
+
+```sh
+python3 tools/test_phase2_build.py
+./gradlew --console=plain :web:provisionBrowser :web:siteSmoke
+```
+
 ## Documentation build
 
 ```sh
@@ -82,12 +110,12 @@ python3 tools/verify_dependency_evidence.py --offline
 
 The verifier uses disposable build sources to record Gradle `dependencies`, `dependencyInsight` and selected graph edges. It compares the checked-in graph, a baseline with only the ordinary Guava bounds removed, and the restored graph. The BFF unit and component tests, fixture isolation, ktfmt, probe unit tests and KDoc fixture run across those states. Probe integration compile and runtime graphs are included. The Docker-backed integration suite is opt-in and its runtime needs separate evidence.
 
-| Scope                                                | Selection and incoming paths                                                                                                                                                                                                                                                                                                                  |
-| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Scope                                                | Selection and incoming paths                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Probe main, unit and integration compile and runtime | Boot manages gRPC at `1.84.1`. The Axon Java transport `2026.1.1` leads to the gRPC graph. The compile classpaths expose `grpc-stub` as the incoming Guava edge. Runtime also exposes `grpc-api` and other gRPC modules. They request `33.6.0-android`, and the ordinary probe implementation constraint selects component `33.8.0-android` by conflict resolution. Gradle reports `jreApiElements` for compile and `jreRuntimeElements` for runtime. |
-| `:bff:ktfmtTool` and `:probe:kdocFormatter`          | ktfmt `0.65` brings Guava `33.5.0-jre`, and its google-java-format `1.23.0` path brings `32.1.3-jre`. The ordinary formatter constraint selects `33.8.0-jre` by conflict resolution.                                                                                                                                                          |
-| BFF main, unit and component compile and runtime     | The full graphs stayed equal across the removal and restoration controls, with no selected Guava in these classpaths.                                                                                                                                                                                                                         |
-| BFF detekt, probe Kotest and probe JVM TypeID        | The graph checks cover these independent tool and suite configurations as additional controls.                                                                                                                                                                                                                                                |
+| `:bff:ktfmtTool` and `:probe:kdocFormatter`          | ktfmt `0.65` brings Guava `33.5.0-jre`, and its google-java-format `1.23.0` path brings `32.1.3-jre`. The ordinary formatter constraint selects `33.8.0-jre` by conflict resolution.                                                                                                                                                                                                                                                                  |
+| BFF main, unit and component compile and runtime     | The full graphs stayed equal across the removal and restoration controls, with no selected Guava in these classpaths.                                                                                                                                                                                                                                                                                                                                 |
+| BFF detekt, probe Kotest and probe JVM TypeID        | The graph checks cover these independent tool and suite configurations as additional controls.                                                                                                                                                                                                                                                                                                                                                        |
 
 The build maintainer owns both Guava bounds and reviews them by **2026-12-01** or sooner after a relevant upstream or BOM change. The unconstrained gRPC and formatter graphs select versions affected by GHSA-xxph-c9ww-hj94 / CVE-2026-102554. Remove each bound when the upstream graph independently selects a compatible fixed release, the affected and control comparisons and applicable tests pass, and the applicable private review has run. [Guava advisory](https://github.com/advisories/GHSA-xxph-c9ww-hj94)
 

@@ -31,31 +31,48 @@ class AxonProbeTest {
         val childPids = mutableListOf<Long>()
         Network.newNetwork().use { unrelated ->
             val unrelatedId = unrelated.id
-            val observed = assertThrows(ControlledFailure::class.java) {
-                fixture.use {
-                    fixture.start()
-                    childPids.add(fixture.startCommand().pid)
-                    val query = ReadCourse(runId, newId())
-                    val before = fixture.startProjection(query)
-                    childPids.add(before.role.pid)
-                    assertTrue(fixture.readHistory(EventCriteria.havingAnyTag()).isEmpty())
-                    subscription = fixture.subscribe(query)
-                    assertEquals(before, subscription.next("forced failure subscription initial result"))
-                    assertEquals(0, before.enrollments)
-                    throw failure
+            val observed =
+                assertThrows(ControlledFailure::class.java) {
+                    fixture.use {
+                        fixture.start()
+                        childPids.add(fixture.startCommand().pid)
+                        val query = ReadCourse(runId, newId())
+                        val before = fixture.startProjection(query)
+                        childPids.add(before.role.pid)
+                        assertTrue(fixture.readHistory(EventCriteria.havingAnyTag()).isEmpty())
+                        subscription = fixture.subscribe(query)
+                        assertEquals(
+                            before,
+                            subscription.next("forced failure subscription initial result"),
+                        )
+                        assertEquals(0, before.enrollments)
+                        throw failure
+                    }
                 }
-            }
             assertTrue(observed === failure && failure.suppressed.isEmpty())
-            val survivingNetwork = DockerClientFactory.instance().client().inspectNetworkCmd().withNetworkId(unrelatedId).exec()
+            val survivingNetwork =
+                DockerClientFactory.instance()
+                    .client()
+                    .inspectNetworkCmd()
+                    .withNetworkId(unrelatedId)
+                    .exec()
             assertEquals(unrelatedId, survivingNetwork.id)
         }
-        assertTrue(subscription.cancellationObserved, "The fixture must cancel its live subscription on failure")
+        assertTrue(
+            subscription.cancellationObserved,
+            "The fixture must cancel its live subscription on failure",
+        )
         assertEquals(childPids, fixture.cleanup.exitedPids)
         assertEquals(1, fixture.cleanup.cancelledSubscriptions)
-        val transcript = mapOf(
-            "test" to testName(testInfo), "runId" to runId, "initialEvents" to 0,
-            "reason" to checkNotNull(failure.message), "cleanup" to fixture.cleanup, "unrelatedNetworkPreserved" to true,
-        )
+        val transcript =
+            mapOf(
+                "test" to testName(testInfo),
+                "runId" to runId,
+                "initialEvents" to 0,
+                "reason" to checkNotNull(failure.message),
+                "cleanup" to fixture.cleanup,
+                "unrelatedNetworkPreserved" to true,
+            )
         writeJson(fixture.evidence.resolve("cleanup.json"), transcript)
         println("PROBE_CLEANUP " + JSON.writeValueAsString(transcript))
     }
@@ -78,14 +95,21 @@ class AxonProbeTest {
             val registrations = fixture.registrations()
             assertTrue(registrations.getValue(fixture.driverRole.clientId).commandsList.isEmpty())
             assertTrue(WRITE_COMMAND in registrations.getValue(writer.clientId).commandsList)
-            val transcript = mapOf(
-                "test" to testName(testInfo), "runId" to fixture.runId,
-                "context" to AXON_CONTEXT, "dcb" to true, "initialEvents" to 0,
-                "worker" to fixture.driverRole, "command" to writer, "receipt" to receipt,
-                "courseId" to command.courseId, "studentId" to command.studentId,
-                "courseEventId" to courseHistory.single().identifier(),
-                "studentEventId" to studentHistory.single().identifier(),
-            )
+            val transcript =
+                mapOf(
+                    "test" to testName(testInfo),
+                    "runId" to fixture.runId,
+                    "context" to AXON_CONTEXT,
+                    "dcb" to true,
+                    "initialEvents" to 0,
+                    "worker" to fixture.driverRole,
+                    "command" to writer,
+                    "receipt" to receipt,
+                    "courseId" to command.courseId,
+                    "studentId" to command.studentId,
+                    "courseEventId" to courseHistory.single().identifier(),
+                    "studentEventId" to studentHistory.single().identifier(),
+                )
             writeJson(fixture.evidence.resolve("tracer.json"), transcript)
             println("PROBE_TRACER " + JSON.writeValueAsString(transcript))
         }
@@ -105,7 +129,10 @@ class AxonProbeTest {
             val query = ReadCourse(runId, command.courseId)
             val writer = fixture.startCommand()
             val baseline = fixture.startProjection(query)
-            assertEquals(CourseState(runId, command.courseId, 0, null, baseline.role, true), baseline)
+            assertEquals(
+                CourseState(runId, command.courseId, 0, null, baseline.role, true),
+                baseline,
+            )
 
             val roles = listOf(fixture.driverRole, writer, baseline.role)
             assertEquals(roles.size, roles.map { it.pid }.toSet().size)
@@ -114,8 +141,14 @@ class AxonProbeTest {
             val driverRegistration = registrations.getValue(fixture.driverRole.clientId)
             val writerRegistration = registrations.getValue(writer.clientId)
             val projectionRegistration = registrations.getValue(baseline.role.clientId)
-            assertTrue(driverRegistration.commandsList.isEmpty() && driverRegistration.queriesList.isEmpty())
-            assertEquals(setOf(READY_COMMAND, WRITE_COMMAND), writerRegistration.commandsList.toSet())
+            assertTrue(
+                driverRegistration.commandsList.isEmpty() &&
+                    driverRegistration.queriesList.isEmpty(),
+            )
+            assertEquals(
+                setOf(READY_COMMAND, WRITE_COMMAND),
+                writerRegistration.commandsList.toSet(),
+            )
             assertTrue(writerRegistration.queriesList.isEmpty())
             assertTrue(projectionRegistration.commandsList.isEmpty())
             assertEquals(listOf(READ_COURSE), projectionRegistration.queriesList.map { it.request })
@@ -124,7 +157,10 @@ class AxonProbeTest {
             }
             assertEquals(roles.size, registeredClients.values.toSet().size)
             val boundedHistory = EventCriteria.havingAnyTag()
-            assertTrue(fixture.readHistory(boundedHistory).isEmpty(), "The fresh server must have no tagged events")
+            assertTrue(
+                fixture.readHistory(boundedHistory).isEmpty(),
+                "The fresh server must have no tagged events",
+            )
 
             fixture.subscribe(query).use { subscription ->
                 val initial = subscription.next("subscription initial result")
@@ -139,25 +175,44 @@ class AxonProbeTest {
                 val markerPosition = GlobalIndexConsistencyMarker.position(marker)
 
                 val commandId = newId()
-                val receipt = fixture.send(WRITE_COMMAND, command, WriteReceipt::class.java, commandId)
+                val receipt =
+                    fixture.send(WRITE_COMMAND, command, WriteReceipt::class.java, commandId)
                 assertReceipt(fixture, writer, command, commandId, receipt)
 
                 val losingEvent = newId()
                 assertNotEquals(receipt.eventId, losingEvent)
-                val losingWrite = enrollmentEvent(losingEvent, StudentEnrolled(runId, command.courseId, losingStudent, newId()))
-                val append = fixture.engine.appendEvents(AppendCondition.withCriteria(oldBoundary).withMarker(marker), null, losingWrite)
-                    .get(MESSAGE_TIMEOUT_SECONDS, SECONDS)
-                val failure = assertThrows(ExecutionException::class.java) { append.commit().get(MESSAGE_TIMEOUT_SECONDS, SECONDS) }
-                val rejection = generateSequence(failure as Throwable) { it.cause }
-                    .filterIsInstance<AppendEventsTransactionRejectedException>().single()
+                val losingWrite =
+                    enrollmentEvent(
+                        losingEvent,
+                        StudentEnrolled(runId, command.courseId, losingStudent, newId()),
+                    )
+                val append =
+                    fixture.engine
+                        .appendEvents(
+                            AppendCondition.withCriteria(oldBoundary).withMarker(marker),
+                            null,
+                            losingWrite,
+                        )
+                        .get(MESSAGE_TIMEOUT_SECONDS, SECONDS)
+                val failure =
+                    assertThrows(ExecutionException::class.java) {
+                        append.commit().get(MESSAGE_TIMEOUT_SECONDS, SECONDS)
+                    }
+                val rejection =
+                    generateSequence(failure as Throwable) { it.cause }
+                        .filterIsInstance<AppendEventsTransactionRejectedException>()
+                        .single()
                 assertEquals(setOf(courseTag, loserTag), rejection.tags())
                 assertEquals(Status.Code.CANCELLED, Status.fromThrowable(rejection).code)
-                assertTrue(generateSequence(rejection as Throwable) { it.cause }
-                    .any { it.message.orEmpty().contains("ConsistencyConditionException") })
+                assertTrue(
+                    generateSequence(rejection as Throwable) { it.cause }
+                        .any { it.message.orEmpty().contains("ConsistencyConditionException") },
+                )
 
                 val courseEvents = fixture.readHistory(course)
                 val studentEvents = fixture.readHistory(EventCriteria.havingTags(winnerTag))
-                val jointEvents = fixture.readHistory(EventCriteria.havingTags(courseTag, winnerTag))
+                val jointEvents =
+                    fixture.readHistory(EventCriteria.havingTags(courseTag, winnerTag))
                 val losingEvents = fixture.readHistory(EventCriteria.havingTags(loserTag))
                 val allEvents = fixture.readHistory(boundedHistory)
                 for (history in listOf(courseEvents, studentEvents, jointEvents, allEvents)) {
@@ -166,43 +221,85 @@ class AxonProbeTest {
                 assertTrue(losingEvents.isEmpty())
 
                 val update = subscription.next("subscription live update")
-                assertEquals(CourseState(runId, command.courseId, 1, receipt.eventId, baseline.role, true), update)
+                assertEquals(
+                    CourseState(runId, command.courseId, 1, receipt.eventId, baseline.role, true),
+                    update,
+                )
                 val after = fixture.readCourse(query)
                 assertEquals(update, after)
 
                 mapOf(
-                    "test" to testName(testInfo), "runId" to runId,
+                    "test" to testName(testInfo),
+                    "runId" to runId,
                     "startedAt" to started.toString(),
-                    "context" to AXON_CONTEXT, "dcb" to true, "credentialFree" to true, "initialEvents" to 0,
-                    "worker" to fixture.driverRole, "command" to writer, "projection" to baseline.role,
+                    "context" to AXON_CONTEXT,
+                    "dcb" to true,
+                    "credentialFree" to true,
+                    "initialEvents" to 0,
+                    "worker" to fixture.driverRole,
+                    "command" to writer,
+                    "projection" to baseline.role,
                     "registeredClients" to registeredClients,
-                    "before" to baseline, "initial" to initial, "update" to update, "after" to after,
-                    "marker" to markerPosition, "receipt" to receipt, "losingEventId" to losingEvent,
-                    "courseId" to command.courseId, "studentId" to command.studentId, "losingStudentId" to losingStudent,
-                    "rejection" to mapOf("type" to rejection.javaClass.simpleName, "status" to Status.fromThrowable(rejection).code.name,
-                        "serverReason" to "ConsistencyConditionException"),
-                    "tagReads" to mapOf("course" to courseEvents.ids(), "winnerStudent" to studentEvents.ids(),
-                        "courseAndStudent" to jointEvents.ids(), "loserStudent" to losingEvents.ids(), "history" to allEvents.ids()),
+                    "before" to baseline,
+                    "initial" to initial,
+                    "update" to update,
+                    "after" to after,
+                    "marker" to markerPosition,
+                    "receipt" to receipt,
+                    "losingEventId" to losingEvent,
+                    "courseId" to command.courseId,
+                    "studentId" to command.studentId,
+                    "losingStudentId" to losingStudent,
+                    "rejection" to
+                        mapOf(
+                            "type" to rejection.javaClass.simpleName,
+                            "status" to Status.fromThrowable(rejection).code.name,
+                            "serverReason" to "ConsistencyConditionException",
+                        ),
+                    "tagReads" to
+                        mapOf(
+                            "course" to courseEvents.ids(),
+                            "winnerStudent" to studentEvents.ids(),
+                            "courseAndStudent" to jointEvents.ids(),
+                            "loserStudent" to losingEvents.ids(),
+                            "history" to allEvents.ids(),
+                        ),
                 )
             }
         }
         assertEquals(1, fixture.cleanup.cancelledSubscriptions)
         assertEquals(2, fixture.cleanup.exitedPids.distinct().size)
-        val transcript = observations + mapOf("finishedAt" to Instant.now().toString(), "cleanup" to fixture.cleanup)
+        val transcript =
+            observations +
+                mapOf("finishedAt" to Instant.now().toString(), "cleanup" to fixture.cleanup)
         writeJson(fixture.evidence.resolve("images.json"), fixture.imageEvidence)
         writeJson(fixture.evidence.resolve("core.json"), transcript)
         println("PROBE_CORE " + JSON.writeValueAsString(transcript))
     }
 
-    private fun assertReceipt(fixture: ProbeFixture, writer: RoleIdentity, command: EnrollStudent, commandId: String, receipt: WriteReceipt) {
+    private fun assertReceipt(
+        fixture: ProbeFixture,
+        writer: RoleIdentity,
+        command: EnrollStudent,
+        commandId: String,
+        receipt: WriteReceipt,
+    ) {
         assertEquals(writer, receipt.role)
         assertNotEquals(fixture.driverRole.pid, writer.pid)
         assertEquals(fixture.runId, receipt.runId)
         assertEquals(commandId, receipt.commandId)
-        assertEquals(5, setOf(fixture.runId, command.courseId, command.studentId, commandId, receipt.eventId).size)
+        assertEquals(
+            5,
+            setOf(fixture.runId, command.courseId, command.studentId, commandId, receipt.eventId)
+                .size,
+        )
     }
 
-    private fun assertWinner(history: List<EventMessage>, command: EnrollStudent, receipt: WriteReceipt) {
+    private fun assertWinner(
+        history: List<EventMessage>,
+        command: EnrollStudent,
+        receipt: WriteReceipt,
+    ) {
         assertEquals(listOf(receipt.eventId), history.ids())
         val event = history.single()
         assertEquals(ENROLLED_EVENT, event.type().qualifiedName().fullName())

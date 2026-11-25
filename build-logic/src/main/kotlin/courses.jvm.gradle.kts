@@ -5,8 +5,10 @@ plugins {
     id("jvm-test-suite")
 }
 
-val javaFeature = providers.fileContents(rootProject.layout.projectDirectory.file(".java-version"))
-    .asText.map { it.trim().toInt() }
+val javaFeature =
+    providers.fileContents(rootProject.layout.projectDirectory.file(".java-version")).asText.map {
+        it.trim().toInt()
+    }
 val catalog = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
 java {

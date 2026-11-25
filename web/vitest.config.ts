@@ -22,7 +22,11 @@ export default defineConfig({
     projects: [
       {
         extends: true,
-        plugins: [storybookTest({ configDir: fileURLToPath(new URL("./.storybook", import.meta.url)) })],
+        plugins: [
+          storybookTest({
+            configDir: fileURLToPath(new URL("./.storybook", import.meta.url)),
+          }),
+        ],
         test: {
           name: "storybook",
           browser: {

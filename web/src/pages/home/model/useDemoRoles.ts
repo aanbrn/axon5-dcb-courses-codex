@@ -3,7 +3,8 @@ import { loadDemoRoles, type DemoRoleDirectory } from "@/shared/api";
 
 const roleStorageKey = "courses.demo.role";
 
-type DemoRole = DemoRoleDirectory["administrator"] | DemoRoleDirectory["students"][number];
+type DemoRole =
+  DemoRoleDirectory["administrator"] | DemoRoleDirectory["students"][number];
 
 type RoleState =
   | { status: "initial" | "loading" | "failed" | "retrying" }
@@ -76,7 +77,8 @@ export function useDemoRoles() {
   }
 
   function selectRole(id: string) {
-    if (state.status !== "ready" || !state.roles.some((role) => role.id === id)) return;
+    if (state.status !== "ready" || !state.roles.some((role) => role.id === id))
+      return;
     storeRole(id);
     setState({ ...state, selectedId: id, fellBack: false });
   }

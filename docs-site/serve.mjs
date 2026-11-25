@@ -6,11 +6,14 @@ import { publicFiles } from "./verify-site.mjs";
 const [, , directory, base] = process.argv;
 const routes = new Map();
 for (const file of publicFiles) {
-  const type = file.endsWith(".html") ? "text/html; charset=utf-8" : "text/css; charset=utf-8";
+  const type = file.endsWith(".html")
+    ? "text/html; charset=utf-8"
+    : "text/css; charset=utf-8";
   const bytes = readFileSync(join(directory, file));
   const asset = { type, bytes };
   routes.set(base + file, asset);
-  if (file.endsWith("index.html")) routes.set(base + file.slice(0, -"index.html".length), asset);
+  if (file.endsWith("index.html"))
+    routes.set(base + file.slice(0, -"index.html".length), asset);
 }
 
 const server = createServer((request, response) => {

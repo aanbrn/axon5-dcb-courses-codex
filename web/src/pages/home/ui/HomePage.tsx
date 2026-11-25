@@ -1,19 +1,29 @@
 import { CircleAlertIcon } from "lucide-react";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
-import { Alert, AlertDescription, Button, NativeSelect, NativeSelectOption } from "@/shared/ui";
+import {
+  Alert,
+  AlertDescription,
+  Button,
+  NativeSelect,
+  NativeSelectOption,
+} from "@/shared/ui";
 import { useDemoRoles } from "../model/useDemoRoles";
 
 const loadingMessage = "Loading demo roles…";
-const fallbackMessage = "Your previous demo student is unavailable. You’re now using Administrator.";
+const fallbackMessage =
+  "Your previous demo student is unavailable. You’re now using Administrator.";
 
 export function HomePage({ docsBase }: { docsBase: URL }) {
   const { state, selectRole, retry } = useDemoRoles();
   const ready = state.status === "ready";
   const failed = state.status === "failed";
   const retrying = state.status === "retrying";
-  const statusMessage = state.status === "loading" || retrying
-    ? loadingMessage
-    : ready && state.fellBack ? fallbackMessage : "";
+  const statusMessage =
+    state.status === "loading" || retrying
+      ? loadingMessage
+      : ready && state.fellBack
+        ? fallbackMessage
+        : "";
   const quickStart = new URL("quick-start/", docsBase).href;
   const selector = useRef<HTMLSelectElement>(null);
   const labelMeasure = useRef<HTMLSpanElement>(null);
@@ -26,7 +36,8 @@ export function HomePage({ docsBase }: { docsBase: URL }) {
     if (!button) return;
     return () => {
       // Capture focus as the retry button leaves the DOM.
-      restoreSelectorFocus.current = button.ownerDocument.activeElement === button;
+      restoreSelectorFocus.current =
+        button.ownerDocument.activeElement === button;
     };
   }, []);
 
@@ -44,9 +55,10 @@ export function HomePage({ docsBase }: { docsBase: URL }) {
 
     const updateClipping = () => {
       const style = getComputedStyle(control);
-      const valueWidth = control.clientWidth
-        - parseFloat(style.paddingInlineStart)
-        - parseFloat(style.paddingInlineEnd);
+      const valueWidth =
+        control.clientWidth -
+        parseFloat(style.paddingInlineStart) -
+        parseFloat(style.paddingInlineEnd);
       setLabelClipped(measure.getBoundingClientRect().width > valueWidth);
     };
 
@@ -105,12 +117,15 @@ export function HomePage({ docsBase }: { docsBase: URL }) {
                 )}
               </>
             )}
-            <p className="role-status" role="status">{statusMessage}</p>
+            <p className="role-status" role="status">
+              {statusMessage}
+            </p>
             {ready && state.roles.length === 1 && (
               <div className="role-notice">
                 <h2>No demo students available</h2>
                 <p>
-                  You can continue as Administrator or read the <a href={quickStart}>quick start</a>.
+                  You can continue as Administrator or read the{" "}
+                  <a href={quickStart}>quick start</a>.
                 </p>
               </div>
             )}
@@ -119,7 +134,9 @@ export function HomePage({ docsBase }: { docsBase: URL }) {
                 {failed && (
                   <Alert variant="destructive">
                     <CircleAlertIcon aria-hidden="true" />
-                    <AlertDescription>Could not load demo roles. Try again to switch roles.</AlertDescription>
+                    <AlertDescription>
+                      Could not load demo roles. Try again to switch roles.
+                    </AlertDescription>
                   </Alert>
                 )}
                 <Button
@@ -139,9 +156,14 @@ export function HomePage({ docsBase }: { docsBase: URL }) {
       <main className="home-main" id="main" tabIndex={-1}>
         <div className="home-content">
           <h1>Axon 5 DCB Courses</h1>
-          <p>Explore how Axon 5 uses Dynamic Consistency Boundaries to enforce course enrollment rules.</p>
+          <p>
+            Explore how Axon 5 uses Dynamic Consistency Boundaries to enforce
+            course enrollment rules.
+          </p>
           <Button asChild>
-            <a href={new URL("feasibility/phase-01/", docsBase).href}>Read feasibility report</a>
+            <a href={new URL("feasibility/phase-01/", docsBase).href}>
+              Read feasibility report
+            </a>
           </Button>
         </div>
       </main>
