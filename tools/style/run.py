@@ -260,9 +260,9 @@ class Policy:
             )
         if rule == "toml":
             return self.cli("taplo", "fmt", "--no-auto-config", "-", data=data)
-        if rule in {"evidence", "shell", "text", "versions"}:
+        if rule in {"evidence", "text", "versions"}:
             return text_format(data, preserve_lines=rule == "evidence")
-        if rule in {"wrapper", "npm-lock"}:
+        if rule in {"shell", "wrapper", "npm-lock"}:
             return data
         raise StyleError(f"Unknown style rule {rule!r}")
 
@@ -285,6 +285,8 @@ class Policy:
                 "taplo", "lint", "--no-schema", "--no-auto-config", "-", data=content
             )
         elif rule == "shell":
+            if "\0" in content.decode("utf-8"):
+                raise StyleError("Text contains a NUL byte")
             command(["sh", "-n"], self.snapshot, data=content)
         elif rule == "npm-lock":
             validate_lock(self.snapshot, path, content)
@@ -383,7 +385,7 @@ def evaluate(policy, entries, selected, scratch):
         try:
             after = policy.format(path, rule, before)
             if after != before:
-                if rule not in {"text", "evidence", "shell", "versions"}:
+                if rule not in {"text", "evidence", "versions"}:
                     after.decode("utf-8")
                     if b"\0" in after or (before.strip() and not after.strip()):
                         raise StyleError("Formatter returned invalid text")

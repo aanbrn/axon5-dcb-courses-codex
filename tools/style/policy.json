@@ -68,7 +68,7 @@
     {
       "id": "shell",
       "paths": [".githooks/pre-commit", "*.sh"],
-      "reason": "Apply the text format and check shell syntax without executing scripts."
+      "reason": "Preserve shell bytes and check syntax without executing scripts."
     },
     {
       "id": "prettier",

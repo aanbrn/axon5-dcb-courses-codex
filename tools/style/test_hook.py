@@ -239,6 +239,27 @@ class HookTest(unittest.TestCase):
         self.assertEqual(repo.show(path), b"alternate\n")
         self.assertEqual(self.index.read_bytes(), primary_index)
 
+    def test_shell_checks_preserve_literal_output(self):
+        repo = self.repo
+        path = "literal.sh"
+        script = (
+            b"#!/bin/sh\ncat <<'EOF'\ncolumn   \nEOF\n"
+            b"printf '%s\\n' 'first\t \nsecond'\n"
+        )
+        target = repo.stage(path, script)
+        expected = b"column   \nfirst\t \nsecond\n"
+        self.assertEqual(repo.run(["sh", path]).stdout, expected)
+        repo.git("commit", "-qm", "Commit shell literal witness")
+        self.assertEqual(repo.show(path), script)
+        self.assertEqual(target.read_bytes(), script)
+        repo.write("committed.sh", repo.show(path))
+        self.assertEqual(repo.run(["sh", "committed.sh"]).stdout, expected)
+        repo.tracked()
+
+        repo.stage(path, b"if true; then\n")
+        self.assertIn(b"[shell] sh exited", repo.tracked(expected=1).stderr)
+        self.assert_aborted(b"[shell] sh exited")
+
     def assert_aborted(self, diagnostic):
         repo = self.repo
         before = self.index.read_bytes()
