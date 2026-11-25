@@ -4,10 +4,10 @@ On 2026-11-25 the native ARM64 probe passed a multi-tag write, an overlapping ap
 
 | Evidence field | Observed value |
 | --- | --- |
-| Acceptance run | `acceptance-5zjznvdt` |
-| Tested revision | `3b5f0ef405e699b7ff6b212366880f846b650d00` |
-| Input tree SHA-256 | `0880d41be1a2441daf2e5ee8ff195207a66817629095d0fb0936094b6f21bd78` |
-| Manifest SHA-256 | `d99a8403e073c21d6b7edd876923ceb339912e6855ec23594aabd169a56f2b0b` |
+| Acceptance run | `acceptance-nvahwpkb` |
+| Tested revision | `0f3101a5d7195f2c5d9d26d42e95849232a8028d` |
+| Input tree SHA-256 | `d4cccac9e0439c65fce4dbfb7bdd41803dbed864aaf4b179228ff6ddb21ca198` |
+| Manifest SHA-256 | `7e658ac02d887445d2846e32716ec3de1acba3b7de199628e0cff90be644b948` |
 | Gradle | `9.9.2` |
 | Kotlin | `2.4.21` |
 | Spring Boot | `4.2.0` |
@@ -46,9 +46,9 @@ DOCKER_HOST=tcp://127.0.0.1:1 ./gradlew --console=plain build --no-build-cache -
 python3 probe/verify_evidence.py --capture --evidence probe/build/reports/feasibility
 ```
 
-The capture creates a unique ignored run directory, sets aside existing probe build products, and runs the ordinary build twice with Docker unreachable. The first build starts without project output. The second reuses the warmed tool and dependency caches. The capture then runs all three integration cases and collects the resolver output and seven secondary stages. It retains the original JUnit XML, command exits, tool identities, raw OCI metadata and SHA-256 fingerprints. Public downloads may populate the Gradle, npm, or Docker caches. The server data, role homes and configuration start empty for the native proof.
+The capture creates a unique ignored run directory, sets aside existing probe build products, and runs the ordinary build twice with Docker unreachable. The first build starts without project output. The second reuses the warmed tool and dependency caches. The capture then runs all three integration cases and collects the resolver output and seven secondary stages. It retains the original JUnit XML, command exits, tool identities, raw OCI metadata and SHA-256 fingerprints. The verifier reads Node, npm, and Pack versions from the diagnostics of the stages that ran them and checks those versions against their owners. Public downloads may populate the Gradle, npm, or Docker caches. The server data, role homes and configuration start empty for the native proof.
 
-To verify this publication against the retained local run, keep its `runs/acceptance-5zjznvdt` directory and use the following command. A repeat capture has a new run ID and its own evidence.
+To verify this publication against the retained local run, keep its `runs/acceptance-nvahwpkb` directory and use the following command. A repeat capture has a new run ID and its own evidence.
 
 ```sh
 python3 probe/verify_evidence.py --evidence probe/build/reports/feasibility --report docs/feasibility/phase-01.md
@@ -82,34 +82,34 @@ Version ownership stays with the checked-in [Gradle wrapper](../../gradle/wrappe
 
 ## Native ARM64 proof
 
-The capture ran from 2026-11-24 23:58:49 UTC through 2026-11-25 00:03:52 UTC. The host reported macOS 27.2.1 on ARM64, with a Linux/ARM64 Docker 29.10.0 daemon. The fixture explicitly pulled the ARM64 child by manifest digest. Docker reported the running image ID as the ARM64 config digest. The container config declared Java `jdk-21.0.13+9`, and the server startup reported Java 21.0.13. The capture hashed the OCI index bytes and both child manifests and configs. The AMD64 rows record registry metadata.
+The capture ran on Python 3.12.1 from 2026-11-25 00:22:18 UTC through 00:27:08 UTC, a total of 290.05 seconds. The host reported macOS 27.2.1 on ARM64, with a Linux/ARM64 Docker 29.10.0 daemon. The fixture explicitly pulled the ARM64 child by manifest digest. Docker reported the running image ID as the ARM64 config digest. The container config declared Java `jdk-21.0.13+9`, and the server startup reported Java 21.0.13. The capture hashed the OCI index bytes and both child manifests and configs. The AMD64 rows record registry metadata.
 
 Each integration case started a disposable container with `AXONIQ_AXONSERVER_STANDALONE_DCB=true`, mapped the management and gRPC ports to loopback, and waited for `/v1/public/me` and the DCB context's elected primary. The clients used `axon.axonserver.servers` for the mapped gRPC address and selected `axon.axonserver.context=default`. The three JVMs used `AxonServerEventStorageEngine` and distributed command and query buses. [Axon Server local installation](https://docs.axoniq.io/axon-server-reference/v2026.1/axon-server/installation/local-installation/), [Versioned context documentation](https://docs.axoniq.io/axon-server-reference/v2026.1/axon-server/administration/multi-context/)
 
 | Role | Observed PID | Client ID |
 | --- | --- | --- |
-| Test worker / driver | 95453 | `probe-driver-acceptance-5zjznvdt` |
-| Command | 96085 | `probe-command-acceptance-5zjznvdt` |
-| Projection | 96367 | `probe-projection-acceptance-5zjznvdt` |
+| Test worker / driver | 60104 | `probe-driver-acceptance-nvahwpkb` |
+| Command | 61139 | `probe-command-acceptance-nvahwpkb` |
+| Projection | 61152 | `probe-projection-acceptance-nvahwpkb` |
 
 ```text
 context default, empty history, terminal marker 0
-course 43cc43ca-b8fc-449b-ac65-b403c4d45460
+course 525f4a3c-0e5c-45ab-9366-514dfc2c4fe7
 direct query before write = 0; open subscription initial result = 0
-command JVM commit = 89e5a621-9f04-4bb3-8ea2-82a1b862d720
-stale append 2aa94012-3466-4c67-beb1-1f584d6e432c
+command JVM commit = de75dc0a-f9f8-4a3f-9ea4-98d8f3c487f4
+stale append 91eace58-970d-4dcd-92b6-1978059c475f
   AppendEventsTransactionRejectedException / CANCELLED / ConsistencyConditionException
-courseId read = [89e5a621-9f04-4bb3-8ea2-82a1b862d720]
-studentId read for a475d1ac-94c4-4e56-a99e-26a14ccfbcf6 = [89e5a621-9f04-4bb3-8ea2-82a1b862d720]
-joint tag read and complete history = [89e5a621-9f04-4bb3-8ea2-82a1b862d720]
-studentId read for 2ef20dc3-1e1c-4192-bcc0-45920ba7c59a = []
-open subscription update = 1, event 89e5a621-9f04-4bb3-8ea2-82a1b862d720
-fresh query = 1, event 89e5a621-9f04-4bb3-8ea2-82a1b862d720
+courseId read = [de75dc0a-f9f8-4a3f-9ea4-98d8f3c487f4]
+studentId read for e5f93e8b-f1d5-430a-8e4e-b247263f138d = [de75dc0a-f9f8-4a3f-9ea4-98d8f3c487f4]
+joint tag read and complete history = [de75dc0a-f9f8-4a3f-9ea4-98d8f3c487f4]
+studentId read for a26b7684-4520-4e01-8c76-b48e4d85e8c3 = []
+open subscription update = 1, event de75dc0a-f9f8-4a3f-9ea4-98d8f3c487f4
+fresh query = 1, event de75dc0a-f9f8-4a3f-9ea4-98d8f3c487f4
 ```
 
 JUnit executed the remote tagged write tracer, overlapping append and subscription case, and controlled cleanup failure case with zero skips, errors or failures. Both cleanup paths closed the opened subscription, exited the two child processes, and removed the owned container. The forced failure left an unrelated Docker network intact.
 
-The cold and warm ordinary wrapper invocations took 8.19 and 4.25 seconds. Each executed one Jupiter contract smoke case. The exact dry-run tasks included `:probe:test` and left the Docker integration and image tasks explicit. The full integration wrapper invocation took 95.47 seconds with cached tool and image inputs and freshly initialized scenario containers. The harness budgets 90 seconds for server readiness, 45 seconds per child, 20 seconds per message operation, and five minutes for the integration task. A first-time download adds network-dependent time.
+The cold and warm ordinary wrapper invocations took 6.86 and 2.76 seconds. Each executed one Jupiter contract smoke case. The exact dry-run tasks included `:probe:test` and left the Docker integration and image tasks explicit. The full integration wrapper invocation took 96.07 seconds, including 91.961 seconds recorded in the JUnit suite, with cached tool and image inputs and freshly initialized scenario containers. The harness budgets 90 seconds for server readiness, 45 seconds per child, 20 seconds per message operation, and five minutes for the integration task. A first-time download adds network-dependent time.
 
 ## Secondary checks
 
@@ -120,7 +120,7 @@ All seven diagnostic stages returned zero. Each result was collected independent
 | Kotlin / Jupiter / Kotest | `./gradlew --console=plain :probe:kotestProbe --rerun-tasks` | Kotlin 2.4.21 and Jupiter 6.1.3 executed the named Kotest 6.2.7 property case in the Temurin worker. Seed `20261124` ran 32 checks. Use the combination for shared test conventions in Phase 2. [Kotest 6.2.7](https://github.com/kotest/kotest/releases/tag/v6.2.7) |
 | ktfmt / KDoc | `./gradlew --console=plain :probe:kdocProbe --rerun-tasks` | `org.jetbrains.kotlinx:ktfmt:0.65` wrapped the long paragraph in the `kotlinlang` style and preserved the link, list, fenced example, and tags. Both formatted outputs shared SHA-256 `539206da981249e09a0f9d4aa9bea0dadcd3571d57e38c7127a6908bb4df8106`. Phase 2 owns shared formatting, detekt comments and Dokka enforcement. [ktfmt 0.65](https://github.com/Kotlin/ktfmt/releases/tag/v0.65) |
 | TypeID interoperability | `./gradlew --console=plain :probe:typeIdJvmVectors --rerun-tasks`, then `./gradlew --console=plain :probe:typeIdProbe --rerun-tasks` | JVM `de.fxlae:typeid-java:0.3.1` and `typeid-js@1.2.0` with the native TypeScript 7.0.2 compiler each checked 9 valid and 21 invalid vectors. The two exchanges checked two independently produced IDs per direction, including their prefixes and 16 UUID bytes. Phase 3 owns application storage round trips and TypeScript dependency selection. [TypeID vectors](https://github.com/jetify-com/typeid/tree/cb20c6eeb4bc6e5a115fceffcbb22f331d4033f8/spec), [JVM library release](https://github.com/fxlae/typeid-java/tree/v0.3.1), [TypeScript release](https://github.com/microsoft/typescript-go/releases/tag/typescript%2Fv7.0.2) |
-| Gradle/npm and Paketo | `./gradlew --console=plain :probe:frontendAssets --rerun-tasks`, then `./gradlew --console=plain :probe:frontendImageProbe --rerun-tasks` | Gradle drove `npm ci`, preserved the lock, and staged static assets. Pack 0.40.11 and lifecycle 0.21.29 used the catalog-pinned Jammy buildpackless builder 0.0.363, Jammy run image, and Web Servers 4.16.3 on ARM64. Two marker builds served HTTP 200 with bodies matching their own staged bytes. Phase 2 owns the project asset build, and Phase 5 owns application image packaging. [Pack release](https://github.com/buildpacks/pack/releases/tag/v0.40.11), [Paketo Web Servers 4.16.3](https://github.com/paketo-buildpacks/web-servers/releases/tag/v4.16.3) |
+| Gradle/npm and Paketo | `./gradlew --console=plain :probe:frontendAssets --rerun-tasks`, then `./gradlew --console=plain :probe:frontendImageProbe --rerun-tasks` | Gradle drove `npm ci`, preserved the lock, and staged a 138-byte HTML artifact. The verifier matched its bytes to the reported SHA-256. Pack `0.40.11+git-523c9ce.build-7117` and lifecycle 0.21.29 used the catalog-pinned Jammy buildpackless builder 0.0.363, Jammy run image, and Web Servers 4.16.3 on ARM64. Two marker builds served HTTP 200 with 144- and 145-byte bodies matching their own staged bytes. Phase 2 owns the project asset build, and Phase 5 owns application image packaging. [Pack release](https://github.com/buildpacks/pack/releases/tag/v0.40.11), [Paketo Web Servers 4.16.3](https://github.com/paketo-buildpacks/web-servers/releases/tag/v4.16.3) |
 
 The separate TypeID npm advisory check on 2026-11-25 ran `npm audit --ignore-scripts --json` against the official advisory API. It exited `1` with two Moderate entries for one underlying advisory, GHSA-w5hq-g745-h8pq / CVE-2026-41907, and zero High or Critical entries. The Jetify dependency's `^10.0.0` range selects `uuid@10.0.0` and does not admit the upstream fixes. The installed Jetify bundle imports only `uuid.stringify` and `uuid.v7`, and the fixture uses fixed UUID bytes and parsed TypeID suffixes. The advisory concerns `v3`, `v5`, and `v6` with supplied output buffers. The build maintainer owns the temporary `probe/typeid` hold through 2026-12-02. Reassess immediately if its input or API surface changes. When a verified Jetify release selects a patched `uuid`, refresh the lock and repeat the exact audit and TypeID check. Application dependency selection stays open. [Upstream uuid advisory](https://github.com/uuidjs/uuid/security/advisories/GHSA-w5hq-g745-h8pq), [Plan 01-04 advisory assessment](../../.planning/phases/01-axon-server-and-toolchain-feasibility/01-04-SUMMARY.md#npm-advisory-assessment)
 

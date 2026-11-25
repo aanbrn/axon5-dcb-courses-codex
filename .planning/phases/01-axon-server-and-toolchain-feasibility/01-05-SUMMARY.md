@@ -59,11 +59,11 @@ status: complete
 
 ## Execution
 
-- Started 2026-11-24T23:21:11Z and completed the implementation and report commits at approximately 2026-11-25T00:08:28Z.
-- Run `acceptance-5zjznvdt` captured tested revision `3b5f0ef405e699b7ff6b212366880f846b650d00`, input SHA-256 `0880d41be1a2441daf2e5ee8ff195207a66817629095d0fb0936094b6f21bd78`, and manifest SHA-256 `d99a8403e073c21d6b7edd876923ceb339912e6855ec23594aabd169a56f2b0b`.
-- Both ordinary builds executed the contract smoke case with the Docker endpoint unreachable. The cold and warm invocations took 8.19 and 4.25 seconds. Three integration cases executed in 95.47 seconds with zero skips, errors or failures. The verifier correlated JUnit, the three JVMs, independent durable reads, the typed rejection, the remote subscription update and the cleanup path.
+- Started 2026-11-24T23:21:11Z. The original implementation and report commits were complete at approximately 2026-11-25T00:08:28Z.
+- The post-review capture `acceptance-nvahwpkb` ran from 2026-11-25T00:22:18Z through 00:27:08Z in 290.05 seconds. It captured tested revision `0f3101a5d7195f2c5d9d26d42e95849232a8028d`, input SHA-256 `d4cccac9e0439c65fce4dbfb7bdd41803dbed864aaf4b179228ff6ddb21ca198`, and manifest SHA-256 `7e658ac02d887445d2846e32716ec3de1acba3b7de199628e0cff90be644b948`. It supersedes `acceptance-5zjznvdt`.
+- Both ordinary builds executed the contract smoke case with the Docker endpoint unreachable. The cold and warm invocations took 6.86 and 2.76 seconds. Three integration cases executed in a 96.07-second wrapper invocation, with 91.961 seconds reported by JUnit and zero skips, errors or failures. The verifier correlated three JVMs, independent durable reads, the typed rejection, the remote subscription update and the cleanup path. The winner was event `de75dc0a-f9f8-4a3f-9ea4-98d8f3c487f4`.
 - Gradle 9.9.2, Kotlin 2.4.21, Spring Boot 4.2.0, both Axon Framework distributions 5.4.2, Temurin 25.0.5.1+2-LTS, Axon Server 2026.1.8 and Linux/ARM64 Docker 29.10.0 passed together. The OCI index and both runnable children were independently measured. Docker's running config matched the ARM64 registry config.
-- All seven secondary stages exited zero and all four groups passed. The report CLI also passed after the documentation commit. Local preflight rejected a changed OCI config, an integration task added to the ordinary dry-run graph, a mismatched report digest, missing terms, and a broken guide link.
+- All seven secondary stages exited zero and all four groups passed. The stage diagnostics confirm Node 26.13.1, npm 12.2.3, and Pack 0.40.11 for the applicable stages. The staged HTML was 138 bytes, and the two native HTTP bodies were 144 and 145 bytes. The refreshed report passed verification on Python 3.9.6 and 3.12.1. Local preflight rejected a changed OCI config, an integration task added to the ordinary dry-run graph, a mismatched report digest, missing terms, and a broken guide link.
 
 ## Task Commits
 
@@ -78,6 +78,7 @@ status: complete
 
 1. **[Rule 2 - Security]** The scoped review reproduced GHSA-xxph-c9ww-hj94 in the role and test graphs at Guava 33.6.0-android and in the formatter graph at 33.5.0-jre. The existing BOMs did not select a fixed release. Catalog-backed lower bounds selected 33.8.0-android and 33.8.0-jre in their consuming configurations. Affected and control graph comparisons, the ordinary build, native integration and KDoc checks passed. Commits `079f39d` and `0ea8753` capture the version-owner corrections.
 2. **[Rule 3 - Reproduction]** The checker source was committed after local preflight and before the fresh capture so the tested revision itself contains the acceptance command. Final task acceptance used the live capture after that commit.
+3. **[Rule 1 - Verification]** Post-review commit `0f3101a` corrected failure classification, took Node, npm, and Pack identity from the diagnostic producers, made timestamp parsing compatible with Python 3.9, and validated the staged HTML digest. The live rerun passed with the same runtime tuple and OCI digests.
 
 ## Remaining Review Scope
 
@@ -88,4 +89,4 @@ status: complete
 
 ## Self-Check: PASSED
 
-All three declared files exist, all four implementation and report commits are reachable, and the report matches the retained acceptance manifest.
+All three declared files exist, the original implementation and report commits and the post-review correction are reachable, and the report matches the retained post-review acceptance manifest.
