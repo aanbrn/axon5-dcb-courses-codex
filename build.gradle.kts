@@ -5,14 +5,14 @@ plugins {
     id("courses.jvm") apply false
 }
 
-val applicationProjects = listOf(project(":bff"), project(":web"))
+val productionProjects = listOf(project(":bff"), project(":web"), project(":docs-site"))
 
 listOf(tasks.clean, tasks.assemble, tasks.check).forEach { lifecycle ->
     lifecycle.configure {
         val taskName = name
         dependsOn(
-            applicationProjects.map { application ->
-                providers.provider { application.tasks.named(taskName) }
+            productionProjects.map { project ->
+                providers.provider { project.tasks.named(taskName) }
             },
         )
     }
