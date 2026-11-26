@@ -7,10 +7,10 @@ current_phase_name: Build and UI Foundations
 current_plan: 11
 status: verifying
 stopped_at: Phase 02 implementation verified; awaiting UAT
-last_updated: "2026-11-26T04:29:07.905Z"
+last_updated: "2026-11-26T04:39:35.385Z"
 last_activity: 2026-11-26
-last_activity_desc: Completed quick task 261126-fhh to document mise and enable the canonical runtime files
-state_head: 390ffd7b4d7518123ec8ed35a14f35d0b09dd18d
+last_activity_desc: Completed quick task 261126-fxn to pin Python and lint PR workflows
+state_head: 99f4d3276fca59e8202689fd749b0d4901ce93b4
 progress:
   total_phases: 8
   completed_phases: 1
@@ -34,7 +34,7 @@ Phase: 02 (Build and UI Foundations)
 Current Plan: 11
 Total Plans in Phase: 11
 Status: Implementation verified locally — awaiting user acceptance testing
-Last activity: 2026-11-26 -- Completed quick task 261126-fhh to document mise and enable the canonical runtime files
+Last activity: 2026-11-26 -- Completed quick task 261126-fxn to pin Python and lint PR workflows
 
 Progress: [█░░░░░░░░░] 13%
 
@@ -127,6 +127,7 @@ None yet.
 |---|-------------|------|--------|-----------|
 | 261126-fhh | Document mise and enable canonical Java and Node version files | 2026-11-26 | d92322e | [261126-fhh-document-mise-and-enable-canonical-java-](./quick/261126-fhh-document-mise-and-enable-canonical-java-/) |
 | 2 | Add local Kotlin inspections with Qodana | 2026-11-26 | 390ffd7 | — |
+| 261126-fxn | Pin Python and lint the PR workflows | 2026-11-26 | 99f4d32 | [261126-fxn-pin-python-for-local-tooling-and-the-pr-](./quick/261126-fxn-pin-python-for-local-tooling-and-the-pr-/) |
 
 ## Session Continuity
 
