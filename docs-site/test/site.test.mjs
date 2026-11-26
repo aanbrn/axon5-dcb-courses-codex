@@ -118,6 +118,83 @@ test("the root site offers the local quick start as its only launch action", (t)
   assertLaunch(site.output, "/quick-start/", "Read quick start");
 });
 
+for (const base of ["/", "/courses/"]) {
+  for (const [name, fixture, diagnostic, target] of [
+    [
+      "raw anchor with spaces around equals",
+      '<a href = "../missing-raw-article/">Missing article</a>',
+      "Missing destination",
+      "missing-raw-article/",
+    ],
+    [
+      "raw image with an unquoted source",
+      "<img SRC=../missing-image.svg alt=Fixture>",
+      "Missing destination",
+      "missing-image.svg",
+    ],
+    [
+      "Markdown link",
+      "[Missing article](../missing-markdown-article/)",
+      "Missing destination",
+      "missing-markdown-article/",
+    ],
+    [
+      "missing fragment on an existing page",
+      "[Missing section](../maintainer-guide/#missing-section)",
+      "Missing fragment",
+      "#missing-section",
+    ],
+    [
+      "fragment matching only a non-anchor name",
+      '<span name="not-an-anchor">Fixture</span>\n\n[Missing ID](#not-an-anchor)',
+      "Missing fragment",
+      "#not-an-anchor",
+    ],
+  ]) {
+    test(`publication at ${base} rejects a broken ${name}`, (t) => {
+      const site = variant(t, { base });
+      appendFileSync(join(site.input, "quick-start.md"), `\n\n${fixture}\n`);
+      const result = site.build();
+      assert.equal(result.status, 1, result.stderr || result.stdout);
+      assert.ok(
+        result.stderr
+          .split("\n")
+          .some(
+            (line) =>
+              line.includes(`${diagnostic} in quick-start/index.html:`) &&
+              line.includes(target),
+          ),
+        result.stderr,
+      );
+    });
+  }
+
+  test(`publication at ${base} accepts real destinations and fragment targets`, (t) => {
+    const site = variant(t, { base });
+    appendFileSync(
+      join(site.input, "quick-start.md"),
+      [
+        "",
+        "",
+        '<span ID = "caf&eacute;">Decoded ID</span>',
+        "<a NAME=legacy-target>Legacy anchor</a>",
+        '<a HREF="#caf%C3%A9">Decoded ID link</a>',
+        "<a href=#legacy-target>Legacy anchor link</a>",
+        '<a href = "../site.css">Stylesheet</a>',
+        "[Guide](../maintainer-guide/#setup-and-diagnostics)",
+        "",
+        '<!-- <a href="../ignored-comment/">Comment</a> -->',
+        "",
+        '`<a href="../ignored-example/">Code</a>`',
+        "",
+      ].join("\n"),
+    );
+    const result = site.build();
+    assert.equal(result.status, 0, result.stderr);
+    verifyPublication(site.output, base);
+  });
+}
+
 test("the nested site offers the configured trusted app URL and keeps all navigation in scope", (t) => {
   const app = "https://demo.example.invalid/enroll/?view=demo&mode=student";
   const site = variant(t, {
