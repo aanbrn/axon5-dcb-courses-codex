@@ -57,13 +57,13 @@ Run `./gradlew installGitHooks` to opt in to the staged-content hook. Commit fro
 
 The hook formats staged content and leaves your working files untouched. After a commit that applies formatting, use `git diff -- <path>` to review the unstaged changes. To copy the committed formatting back, use `git restore --patch --worktree -- <path>` and select only hunks that contain formatting you want to keep. If a hunk also contains local edits, carry the formatting over in your editor.
 
-## Pull request build
+## Build and style checks
 
-The `build-and-style` job runs on GitHub's Ubuntu 24.04 x64 runner with read access to repository contents. It validates the Gradle wrapper before running it. The workflow pins each action to the publisher's full commit SHA. [Build workflow](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/.github/workflows/build.yml)
+The `build-and-style` job checks the PR merge revision on pull requests and the pushed revision on `main`, including after a merge. It runs on GitHub's Ubuntu 24.04 x64 runner with read access to repository contents. It validates the Gradle wrapper before running it. The workflow pins each action to the publisher's full commit SHA. [Build workflow](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/.github/workflows/build.yml)
 
 | Action                    | Release                                                             | Purpose                                                                                                    |
 | ------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Checkout                  | [v7.0.1](https://github.com/actions/checkout/releases/tag/v7.0.1)   | Check out the PR merge revision without retaining checkout credentials                                     |
+| Checkout                  | [v7.0.1](https://github.com/actions/checkout/releases/tag/v7.0.1)   | Check out the PR merge revision or the pushed `main` revision without retaining checkout credentials       |
 | Gradle Wrapper Validation | [v6.4.1](https://github.com/gradle/actions/releases/tag/v6.4.1)     | Compare the wrapper JAR with published Gradle checksums                                                    |
 | Setup Java                | [v6.3.0](https://github.com/actions/setup-java/releases/tag/v6.3.0) | Select Eclipse Temurin from `.java-version`                                                                |
 | Mise Action               | [v5.3.0](https://github.com/jdx/mise-action/releases/tag/v5.3.0)    | Run mise 2026.11.14 and install the Python, actionlint, ShellCheck, Ruff and Taplo versions in `mise.toml` |
