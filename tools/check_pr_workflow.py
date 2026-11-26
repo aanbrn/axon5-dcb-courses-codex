@@ -14,6 +14,7 @@ WRAPPER = "gradle/actions/wrapper-validation@8da46b539cd8fe6ab27ca75128919a18d75
 SETUP_JAVA = "actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880"
 SETUP_MISE = "jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78"
 MISE_TOOLS = ("python", "aqua:rhysd/actionlint", "shellcheck", "ruff", "taplo")
+EVENT_POLICY = "Use pull_request without filters and limit push to the main branch."
 WORKFLOW_LINT = (
     "mise exec aqua:rhysd/actionlint shellcheck -- "
     "actionlint -shellcheck=shellcheck -pyflakes="
@@ -158,7 +159,11 @@ def check_workflow(path):
 
 def verify_controls(workflow):
     text = workflow.read_text(encoding="utf-8")
+    main_push = "  push:\n    branches:\n      - main\n"
     controls = [
+        (main_push, "", EVENT_POLICY),
+        (main_push, "  push:\n", EVENT_POLICY),
+        (main_push, "  push:\n    branches:\n      - another-branch\n", EVENT_POLICY),
         ("contents: read", "contents: write", "Grant only contents: read."),
         (CHECKOUT, "actions/checkout@v7.0.1", "Step 1 must use the reviewed action"),
         (
