@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative, sep } from "node:path";
+import { Parser } from "htmlparser2";
 
 export const publicFiles = new Set([
   "index.html",
@@ -13,34 +14,21 @@ export const publicFiles = new Set([
   "fonts/geist-mono-LICENSE.txt",
 ]);
 const siteOrigin = "https://docs.invalid";
-const entities = { amp: "&", apos: "'", gt: ">", lt: "<", quot: '"' };
 
-function* elements(html) {
-  for (const [, attributes] of html.matchAll(
-    /<[a-z][\w:-]*\b((?:[^"'<>]|"[^"]*"|'[^']*')*)>/gi,
-  )) {
-    yield new Map(
-      Array.from(
-        attributes.matchAll(/\s([\w:-]+)=(?:"([^"]*)"|'([^']*)')/g),
-        ([, name, double, single]) => [
-          name.toLowerCase(),
-          (double ?? single).replace(
-            /&(#\d+|#x[\da-f]+|amp|apos|gt|lt|quot);/gi,
-            (_, entity) => {
-              if (!entity.startsWith("#"))
-                return entities[entity.toLowerCase()];
-              const codePoint = Number(
-                entity.toLowerCase().replace(/^#x/, "0x").replace(/^#/, ""),
-              );
-              return codePoint > 0 && codePoint <= 0x10ffff
-                ? String.fromCodePoint(codePoint)
-                : "\uFFFD";
-            },
-          ),
-        ],
-      ),
-    );
-  }
+function indexPage(html) {
+  const links = [];
+  const fragments = new Set();
+  const parser = new Parser({
+    onopentag(tag, attributes) {
+      const { href, src, id, name } = attributes;
+      if (href !== undefined) links.push(href);
+      if (src !== undefined) links.push(src);
+      if (id !== undefined) fragments.add(id);
+      if (tag === "a" && name !== undefined) fragments.add(name);
+    },
+  });
+  parser.end(html);
+  return { links, fragments };
 }
 
 export function verifyPublication(
@@ -75,32 +63,25 @@ export function verifyPublication(
   for (const name of publicFiles) {
     if (!files.has(name)) throw new Error(`Missing public artifact: ${name}`);
     if (name.endsWith(".html"))
-      pages.set(name, Array.from(elements(files.get(name).toString("utf8"))));
+      pages.set(name, indexPage(files.get(name).toString("utf8")));
   }
 
-  for (const [name, tags] of pages) {
+  for (const [name, { links }] of pages) {
     const page = `${siteOrigin}${base}${name.replace(/index\.html$/, "")}`;
-    for (const attributes of tags) {
-      for (const link of [attributes.get("href"), attributes.get("src")]) {
-        if (link === undefined || /^https?:\/\//i.test(link)) continue;
-        const target = new URL(link, page);
-        if (target.origin !== siteOrigin || !target.pathname.startsWith(base)) {
-          throw new Error(`Invalid site link in ${name}: ${link}`);
-        }
-        let destination = decodeURIComponent(
-          target.pathname.slice(base.length),
-        );
-        if (target.pathname.endsWith("/")) destination += "index.html";
-        if (!files.has(destination))
-          throw new Error(`Missing destination in ${name}: ${link}`);
-        if (target.hash) {
-          const id = decodeURIComponent(target.hash.slice(1));
-          if (
-            !pages.get(destination)?.some((element) => element.get("id") === id)
-          ) {
-            throw new Error(`Missing fragment in ${name}: ${link}`);
-          }
-        }
+    for (const link of links) {
+      if (/^https?:\/\//i.test(link)) continue;
+      const target = new URL(link, page);
+      if (target.origin !== siteOrigin || !target.pathname.startsWith(base)) {
+        throw new Error(`Invalid site link in ${name}: ${link}`);
+      }
+      let destination = decodeURIComponent(target.pathname.slice(base.length));
+      if (target.pathname.endsWith("/")) destination += "index.html";
+      if (!files.has(destination))
+        throw new Error(`Missing destination in ${name}: ${link}`);
+      if (target.hash) {
+        const id = decodeURIComponent(target.hash.slice(1));
+        if (!pages.get(destination)?.fragments.has(id))
+          throw new Error(`Missing fragment in ${name}: ${link}`);
       }
     }
   }
