@@ -2,10 +2,14 @@
 phase: 02-build-and-ui-foundations
 reviewed: 2026-11-25T16:37:30Z
 depth: standard
-files_reviewed: 71
+files_reviewed: 77
 files_reviewed_list:
+  - .gitattributes
   - .githooks/pre-commit
   - .github/workflows/build.yml
+  - .gitignore
+  - .idea/inspectionProfiles/Project_Default.xml
+  - .qodana/profiles/spring-beans.xml
   - bff/build.gradle.kts
   - bff/src/componentTest/kotlin/courses/bff/DirectoryHttpTest.kt
   - bff/src/main/kotlin/courses/bff/BffApplication.kt
@@ -34,10 +38,12 @@ files_reviewed_list:
   - fixtures/src/testFixtures/kotlin/courses/fixtures/DirectoryFixtures.kt
   - gradle/libs.versions.toml
   - mise.toml
+  - qodana.yaml
   - settings.gradle.kts
   - tools/check_kotlin_quality.py
   - tools/check_pr_workflow.py
   - tools/doctor.py
+  - tools/qodana-scan.sh
   - tools/style/package.json
   - tools/style/policy.json
   - tools/style/run.py
@@ -76,10 +82,10 @@ files_reviewed_list:
   - web/vite.config.ts
   - web/vitest.config.ts
 findings:
-  critical: 3
+  critical: 4
   warning: 4
   info: 0
-  total: 7
+  total: 8
   necessity: 0
 status: issues_found
 ---
@@ -176,3 +182,41 @@ The installed hook can erase an editor save, diverge from the persistent index d
 ---
 
 _Reviewed at 2026-11-25T16:37:30Z by gsd-code-reviewer at standard depth._
+
+## Incremental Review After the Original Verification
+
+- **Reviewed:** 2026-11-26T08:14:43Z
+- **Depth:** standard
+- **Range:** `393ae8c73e60585fed8611f1c3a5bf833fedef01..3779fa227d23e1503dc04d70a35e5839172eff72` on `gsd/phase-02-build-and-ui-foundations`
+- **Status:** `issues_found` with one new blocker
+
+GSD returned `degraded` with `source: phase-range` and `reason: no-task-commit-rows` for `check evaluation-scope --phase 02 --since 393ae8c --raw`. The resolved paths match the supplied scope and the committed diff. The frontmatter counts the distinct files and findings across both reviews. The seven original findings retain their recorded dispositions. [Original review dispositions](02-REVIEW-DISPOSITION.md)
+
+The incremental scope contains ten files.
+
+- `.gitattributes`
+- `.gitignore`
+- `.idea/inspectionProfiles/Project_Default.xml`
+- `.qodana/profiles/spring-beans.xml`
+- `build-logic/src/main/kotlin/courses.jvm.gradle.kts`
+- `build-logic/src/main/kotlin/courses.kotlin-quality.gradle.kts`
+- `docs-site/build.gradle.kts`
+- `docs/maintainer-guide.md`
+- `qodana.yaml`
+- `tools/qodana-scan.sh`
+
+The Gradle edits preserve lazy toolchain resolution and the ordered staging allowlist. The original follow-up recorded a clean build and both root and prefixed documentation checks after those edits. Shell syntax, ShellCheck and `git diff --check` passed during this review. The committed archive at `3779fa2` excludes the IntelliJ profile and contains the Qodana YAML and Spring entry-point XML. [Gradle and documentation verification](../../quick/261126-i4h-resolve-actionable-qodana-findings/261126-i4h-SUMMARY.md)
+
+The retained SARIF controls show that the Axon plugin removed the four handler diagnostics and Spring configuration removed the three probe factories and the temporary genuine bean control. The unused and lookalike bean controls still appear. The native IntelliJ reports show 97 Gradle incubation diagnostics before the profile and zero after it, with both Guava `@Beta` diagnostics present in each report. The maintainer confirmed the editor behavior after reopening the project. The ordinary Qodana report for `fff0b35` retained all 51 Gradle diagnostics with its analysis cache cleaned of the previously seeded editor profile. [Axon verification](../../quick/261126-ink-qualify-axon-and-spring-inspection-suppo/261126-ink-SUMMARY.md), [Spring verification](../../quick/261126-jp0-recognize-spring-bean-entry-points-in-qo/261126-jp0-SUMMARY.md), [IntelliJ and Qodana verification](../../quick/261126-jsl-reduce-intentional-gradle-incubation-noi/261126-jsl-SUMMARY.md)
+
+Manual acceptance covers all seven UAT rows. Hosted QA-08 still requires the matching `build-and-style` run. [Phase 02 UAT](02-UAT.md), [Phase 02 verification](02-VERIFICATION.md)
+
+### CR-04: Historical Qodana scans silently use the editor profile and can contaminate later scans
+
+**Severity:** BLOCKER
+
+**File:** `tools/qodana-scan.sh:36-53`
+
+**Issue:** The launcher accepts any committed revision and archives it with that revision's attributes. The exclusion at `.gitattributes:2` took effect in `fff0b35`. A checked archive of `e434f25` still contains `.idea/inspectionProfiles/Project_Default.xml`, and its retained ordinary scan reports `configProfile: recommended` and `executionSuccessful: true` with zero findings. The clean comparison at `fff0b35` reports 51 `UnstableApiUsage` findings. Both revisions and `3779fa2` select the same analysis cache through the Spring XML blob `3c9deeb0d85d54bdd7d3a968093dc2545359c330`. Qodana persisted the editor profile to that cache. The cached copy matches the historical profile byte for byte, and the clean comparison required moving it out first. The historical result silently drops real diagnostics and can seed the same suppression into a later scan of a clean archive. [Recorded archive and cache control](../../quick/261126-jsl-reduce-intentional-gradle-incubation-noi/261126-jsl-SUMMARY.md#deviations-from-plan)
+
+**Fix:** Enforce the editor-profile exclusion when the launcher prepares every extracted scan snapshot. Advance the analysis-cache namespace so older cached IDE settings are bypassed while retaining the shared Gradle and plugin caches. Run the ordinary launcher against `e434f25`, then `3779fa2` and then `e434f25` using one cache. Require the Gradle diagnostics in all three reports and verify that the analysis cache contains no editor profile.
