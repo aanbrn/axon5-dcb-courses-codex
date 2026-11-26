@@ -7,10 +7,10 @@ current_phase_name: Build and UI Foundations
 current_plan: 11
 status: verifying
 stopped_at: Phase 02 UAT complete and local verification refreshed; hosted build-and-style pending
-last_updated: "2026-11-26T09:21:12.732Z"
+last_updated: "2026-11-26T09:32:46.332Z"
 last_activity: 2026-11-26
-last_activity_desc: "Completed quick task 261126-mdh: Invalidate the Vite build when dotenv expansion inputs change"
-state_head: 1bc1dab8e8b92ef548ee7119585763e65bb4c823
+last_activity_desc: "Completed quick task 261126-mq2: Use browser-conforming HTML parsing for publication checks"
+state_head: 1ca7bf947420172fcfb24b52e85b227d89de8410
 progress:
   total_phases: 8
   completed_phases: 1
@@ -34,7 +34,7 @@ Phase: 02 (Build and UI Foundations)
 Current Plan: 11
 Total Plans in Phase: 11
 Status: UAT complete and implementation verified locally. Hosted build-and-style evidence pending.
-Last activity: 2026-11-26 -- Completed quick task 261126-mdh: Invalidate the Vite build when dotenv expansion inputs change
+Last activity: 2026-11-26 -- Completed quick task 261126-mq2: Use browser-conforming HTML parsing for publication checks
 
 Progress: [█░░░░░░░░░] 13%
 
@@ -139,6 +139,7 @@ None yet.
 | 261126-lmh | Isolate historical Qodana scans from IDEA profiles | 2026-11-26 | 3df371b | [261126-lmh-isolate-historical-qodana-scans-from-ide](./quick/261126-lmh-isolate-historical-qodana-scans-from-ide/) |
 | 261126-mcu | Match published link verification to browser and local routes | 2026-11-26 | c967802 | [261126-mcu-match-published-link-verification-to-bro](./quick/261126-mcu-match-published-link-verification-to-bro/) |
 | 261126-mdh | Invalidate the Vite build when dotenv expansion inputs change | 2026-11-26 | 68c43a0 | [261126-mdh-invalidate-the-vite-build-when-dotenv-ex](./quick/261126-mdh-invalidate-the-vite-build-when-dotenv-ex/) |
+| 261126-mq2 | Use browser-conforming HTML parsing for publication checks | 2026-11-26 | 1ca7bf9 | [261126-mq2-use-browser-conforming-html-parsing-for-](./quick/261126-mq2-use-browser-conforming-html-parsing-for-/) |
 
 ## Session Continuity
 
