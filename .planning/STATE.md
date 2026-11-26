@@ -7,10 +7,10 @@ current_phase_name: Build and UI Foundations
 current_plan: 11
 status: verifying
 stopped_at: Phase 02 implementation verified; awaiting UAT
-last_updated: "2026-11-25T17:17:41.333Z"
-last_activity: 2026-11-25
-last_activity_desc: Completed per-tab demo roles and directory recovery
-state_head: d9a9614d3b7454d47e8e921cb674becb5ee7f157
+last_updated: "2026-11-26T04:17:31.471Z"
+last_activity: 2026-11-26
+last_activity_desc: Completed quick task 261126-fhh to document mise and enable the canonical runtime files
+state_head: d92322eb78efcb6559327c6ddee9fe426ec77806
 progress:
   total_phases: 8
   completed_phases: 1
@@ -34,7 +34,7 @@ Phase: 02 (Build and UI Foundations)
 Current Plan: 11
 Total Plans in Phase: 11
 Status: Implementation verified locally — awaiting user acceptance testing
-Last activity: 2026-11-25 -- Completed per-tab demo roles and directory recovery
+Last activity: 2026-11-26 -- Completed quick task 261126-fhh to document mise and enable the canonical runtime files
 
 Progress: [█░░░░░░░░░] 13%
 
@@ -120,6 +120,12 @@ None yet.
 
 - The earlier Phase 1 references and dependency review records are context from the brief. Reconcile them against recovered or reproduced evidence in this checkout.
 - Hosted repository controls and account-based Platform verification have external prerequisites. Record status as those checks are reached.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 261126-fhh | Document mise and enable canonical Java and Node version files | 2026-11-26 | d92322e | [261126-fhh-document-mise-and-enable-canonical-java-](./quick/261126-fhh-document-mise-and-enable-canonical-java-/) |
 
 ## Session Continuity
 
