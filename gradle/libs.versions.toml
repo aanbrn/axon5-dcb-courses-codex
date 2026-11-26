@@ -22,6 +22,7 @@ paketo-run-config = "sha256:1476b8e33ea3e063e2ce2875ec08b10db578f0af176d5ac1ca48
 paketo-web-ref = "docker.io/paketobuildpacks/web-servers:4.16.3@sha256:a01f811143ca2629a1cfb2b053a63de0b845cf6e38d19ca375f2c3d6c62c6e97"
 paketo-web-child = "sha256:d0600f9c22f6fbb9f0900a75cb8667300374d5c3c81f0ba125304f6f4ebe4c73"
 paketo-web-config = "sha256:dc2c8e58401c379d8a8320b348de6705b9804720f26fb9b60e88236c7fe508c9"
+qodana-jvm-community-image = "jetbrains/qodana-jvm-community:2026.3@sha256:5420d961a4f3a850adc47fc6565916eb6fe558f3205f511ac7bc75b98812c37e"
 spring-boot = "4.2.0"
 typeid-java = "0.3.1"
 

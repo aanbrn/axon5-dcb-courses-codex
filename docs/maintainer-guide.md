@@ -105,6 +105,17 @@ For hosted deployments, provide an HTTPS `docsAppUrl` and include its origin in 
 
 Set `VITE_DOCS_BASE` when building the hosted web app with `./gradlew :web:webBuild`. Use the published documentation URL with its full deployment prefix, for example `https://docs.example.com/courses/`.
 
+## Local Kotlin inspections
+
+Run Qodana Community for JVM with Docker and Python 3.11 or newer. The command inspects a committed revision, using `HEAD` by default.
+
+```sh
+sh tools/qodana-scan.sh
+sh tools/qodana-scan.sh HEAD~1
+```
+
+The script uses the Qodana image pinned in the Gradle catalog and provides the Temurin feature version from the inspected revision's `.java-version`. It imports a separate source snapshot and runs `qodana.recommended`. Open the HTML or SARIF report in the printed directory under `.gradle/qodana/runs/`. Repeated scans reuse the cache in `.gradle/qodana/cache/`.
+
 ## Feasibility probe
 
 The [probe build](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/probe/build.gradle.kts) provides the opt-in DCB integration suite. Follow the [probe runbook](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/probe/README.md) to reproduce the native proof. The [feasibility report](/feasibility/phase-01/#hosted-amd64-verification-and-retirement) records the evidence and conditions for retiring the probe.
