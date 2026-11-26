@@ -14,8 +14,10 @@ if ! plugin_config=$(git rev-parse --verify --end-of-options "$revision:qodana.y
 fi
 
 output="$PWD/.gradle/qodana"
+analysis_cache="$output/cache"
+gradle_cache="$output/cache/gradle"
 plugin_cache="$output/plugin-cache/$plugin_config"
-mkdir -p "$output/cache/gradle" "$output/runs" "$plugin_cache"
+mkdir -p "$gradle_cache" "$output/runs" "$plugin_cache"
 lock="$output/cache.lock"
 if ! mkdir "$lock"; then
   printf '%s\n' 'The local Qodana cache is in use.' >&2
@@ -34,6 +36,23 @@ printf 'Qodana report directory: %s\n' "$run/results"
 git archive --output="$run/project.tar" "$revision"
 tar -xf "$run/project.tar" -C "$run/project"
 rm "$run/project.tar"
+
+entry_points_path=.qodana/profiles/spring-beans.xml
+if [ -f "$run/project/$entry_points_path" ]; then
+  project_idea="$run/project/.idea"
+  if [ -L "$project_idea" ] || [ -e "$project_idea/misc.xml" ] || [ -L "$project_idea/misc.xml" ]; then
+    printf '%s\n' 'Cannot install Qodana entry points over archived .idea settings.' >&2
+    exit 1
+  fi
+  entry_points_config=$(git rev-parse --verify --end-of-options "$revision:$entry_points_path")
+  mkdir -p "$project_idea"
+  git cat-file blob "$entry_points_config" > "$project_idea/misc.xml"
+
+  # Qodana restores .idea settings from its analysis cache before reading the project.
+  analysis_cache="$output/analysis-cache/$entry_points_config"
+  mkdir -p "$analysis_cache"
+fi
+
 git -C "$run/project" init -q --template=
 git -C "$run/project" add --all
 git -C "$run/project" -c user.name='Qodana' -c user.email='qodana@example.test' \
@@ -43,12 +62,13 @@ docker run --rm "eclipse-temurin:${java_feature}-jdk" \
   tar -C /opt/java/openjdk -cf - . > "$run/temurin.tar"
 tar -xf "$run/temurin.tar" -C "$run/temurin"
 rm "$run/temurin.tar"
-printf 'org.gradle.java.installations.paths=/opt/temurin\n' > "$output/cache/gradle/gradle.properties"
+printf 'org.gradle.java.installations.paths=/opt/temurin\n' > "$gradle_cache/gradle.properties"
 
 docker run --rm \
   --volume "$run/project:/data/project" \
   --volume "$run/results:/data/results" \
-  --volume "$output/cache:/data/cache" \
+  --volume "$analysis_cache:/data/cache" \
+  --volume "$gradle_cache:/data/cache/gradle" \
   --volume "$plugin_cache:/data/cache/plugins" \
   --volume "$run/temurin:/opt/temurin:ro" \
   "$image" scan --profile-name qodana.recommended --save-report --timeout 900000
