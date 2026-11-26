@@ -1,6 +1,6 @@
 ---
 phase: 02-build-and-ui-foundations
-verified: 2026-11-25T17:10:17Z
+verified: 2026-11-26T04:20:12Z
 status: human_needed
 score: 29/31 must-haves verified
 covered_files: [
@@ -129,9 +129,15 @@ covered_files: [
   "web/vite.config.ts",
   "web/vitest.config.ts"
   ]
-covered_digest: "v4:sha256:bfe1405eae3a3da7a5dad304afb8cd7c89e9d1b2b9b8483914460fb68fb7429d"
+covered_digest: "v4:sha256:e30c0e676164cda08bd2b8a1bbeed5f78166d86c2227684f53a6569fbc88b2cb"
 behavior_unverified: 0
 overrides_applied: 0
+re_verification:
+  previous_status: human_needed
+  previous_score: 29/31
+  gaps_closed: []
+  gaps_remaining: []
+  regressions: []
 decision_coverage:
   honored: 15
   total: 15
@@ -164,9 +170,9 @@ human_verification:
 
 **Phase goal** — As a maintainer, I want to build and test the demo shell and generated BFF client through shared conventions, so that I can verify later feature slices from a clean checkout.
 
-**Verdict** — `human_needed` · 29/31 must-haves verified · implementation checked at `d9a9614`
+**Verdict** — `human_needed` · 29/31 must-haves verified · initial implementation checked at `d9a9614`, with targeted re-verification at `d92322e`
 
-Initial verification. The clean-checkout outcome was demonstrated locally. Phase acceptance still needs native browser and assistive-technology observations. The matching hosted PR job is a ship checkpoint. No implementation blocker was found.
+The clean-checkout outcome was demonstrated locally. Phase acceptance still needs native browser and assistive-technology observations. The matching hosted PR job is a ship checkpoint. No implementation blocker was found.
 
 ## User Flow Coverage
 
@@ -307,6 +313,18 @@ GSD reported 15/15 trackable decisions honored. The shipped paths support the D-
 
 No unreferenced `TBD`, `FIXME` or `XXX` markers or disabled requirement-linked tests were found in the changed implementation. The fixed demo catalog and isolated story data serve their declared use cases. The reviewed corrections are present for index-only publication, path-limited commits, shell literal whitespace, partial-response deadlines, prefixed preview, malformed Node pins and comma-bearing detekt paths. The docs ship both Geist assets and licenses. Wide named docs regions support keyboard scrolling. The review accepted explicit sequential focus for those regions across widths.
 
+### Targeted Re-verification After Quick Task 261126-fhh
+
+On 2026-11-26, the stale fingerprint named `mise.toml` and `docs/maintainer-guide.md`. The diff in `d92322e` affects FND-02 and the maintainer setup instructions. The scope covered runtime selection, the CI entry points and rendered docs.
+
+| Check | Observed evidence |
+| --- | --- |
+| Authoritative version files | `mise ls --current` showed Java feature `25` from `.java-version`, exact Node.js `26.13.1` from `.nvmrc`, and Pack, Ruff and Taplo from `mise.toml`. A disposable copy with conflicting `.sdkmanrc`, `.node-version` and `package.json` files selected the same owners. The documented `mise exec java node` commands reported Temurin build `25.0.5.1+2-LTS` and Node.js `v26.13.1`. |
+| CI and Gradle runtime selection | The pinned CI setup action reads `.java-version` with `distribution: temurin`. The workflow installs only Ruff and Taplo with mise, and an empty mise install directory produced no `JAVA_HOME` export. The JVM convention uses `.java-version` and `JvmVendorSpec.ADOPTIUM`. The Gradle Node consumers download from `.nvmrc` and select npm from their `packageManager` entries. `python3 tools/check_pr_workflow.py` accepted the reviewed workflow and rejected both negative controls. |
+| Published maintainer guide | `cmp` confirmed the staged guide is byte-identical to the canonical Markdown. The rendered maintainer guide includes the trust and install commands, the runtime source and version checks, Gradle launcher inspection and the scoped style command. The [quick task results](../../quick/261126-fhh-document-mise-and-enable-canonical-java-/261126-fhh-SUMMARY.md#verification) record a passing `styleCheck`, `doctor` and all 14 `docsCheck` tests. |
+
+FND-02 and roadmap criterion 4 remain verified. This re-verification used targeted checks and the quick task's build results. The phase score and acceptance checkpoints carry forward from the initial verification. Hosted execution remains a ship checkpoint.
+
 ## Human Verification Required
 
 ### 1. Native role selector and forced colors
@@ -373,4 +391,5 @@ After the authorized workflow pushes the branch and opens the PR, run `gh pr che
 
 No failed implementation truths were found. Actual 200% text zoom and the matching hosted PR job account for the two uncertain truths. The remaining native-accessibility and explicit judgment checks are listed above. The private B8 scan is incomplete pending authorized inputs and the first hosted AMD64 DCB runtime proof belongs to Phase 7.
 
-_Verified 2026-11-25T17:10:17Z by gsd-verifier._
+_Initially verified 2026-11-25T17:10:17Z by gsd-verifier._
+_Targeted re-verification completed 2026-11-26T04:20:12Z by gsd-verifier._
