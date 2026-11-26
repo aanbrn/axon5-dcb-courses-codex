@@ -7,10 +7,10 @@ current_phase_name: Build and UI Foundations
 current_plan: 11
 status: verifying
 stopped_at: Phase 02 UAT complete and local verification refreshed; hosted build-and-style pending
-last_updated: "2026-11-26T09:20:56.754Z"
+last_updated: "2026-11-26T09:21:12.732Z"
 last_activity: 2026-11-26
-last_activity_desc: "Completed quick task 261126-mcu: Match published link verification to browser and local routes"
-state_head: c96780221b9fa19af5987c68927ebdced67a9351
+last_activity_desc: "Completed quick task 261126-mdh: Invalidate the Vite build when dotenv expansion inputs change"
+state_head: 1bc1dab8e8b92ef548ee7119585763e65bb4c823
 progress:
   total_phases: 8
   completed_phases: 1
@@ -34,7 +34,7 @@ Phase: 02 (Build and UI Foundations)
 Current Plan: 11
 Total Plans in Phase: 11
 Status: UAT complete and implementation verified locally. Hosted build-and-style evidence pending.
-Last activity: 2026-11-26 -- Completed quick task 261126-mcu: Match published link verification to browser and local routes
+Last activity: 2026-11-26 -- Completed quick task 261126-mdh: Invalidate the Vite build when dotenv expansion inputs change
 
 Progress: [█░░░░░░░░░] 13%
 
@@ -138,6 +138,7 @@ None yet.
 | 261126-lmn | Reject invalid demo shell settings and role data | 2026-11-26 | cca11b1 | [261126-lmn-reject-invalid-demo-shell-settings-and-r](./quick/261126-lmn-reject-invalid-demo-shell-settings-and-r/) |
 | 261126-lmh | Isolate historical Qodana scans from IDEA profiles | 2026-11-26 | 3df371b | [261126-lmh-isolate-historical-qodana-scans-from-ide](./quick/261126-lmh-isolate-historical-qodana-scans-from-ide/) |
 | 261126-mcu | Match published link verification to browser and local routes | 2026-11-26 | c967802 | [261126-mcu-match-published-link-verification-to-bro](./quick/261126-mcu-match-published-link-verification-to-bro/) |
+| 261126-mdh | Invalidate the Vite build when dotenv expansion inputs change | 2026-11-26 | 68c43a0 | [261126-mdh-invalidate-the-vite-build-when-dotenv-ex](./quick/261126-mdh-invalidate-the-vite-build-when-dotenv-ex/) |
 
 ## Session Continuity
 
