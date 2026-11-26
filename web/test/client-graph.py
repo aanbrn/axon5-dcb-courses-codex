@@ -92,11 +92,19 @@ class Candidate:
             if npm_cache.is_dir():
                 shutil.copytree(npm_cache, directory / "npm-cache" / "_cacache")
 
-    def gradle(self, label, *tasks, fails_with=(), excludes=(), generation_only=False):
+    def gradle(
+        self,
+        label,
+        *tasks,
+        fails_with=(),
+        excludes=(),
+        generation_only=False,
+        build_cache=False,
+    ):
         command = [
             "./gradlew",
             "--console=plain",
-            "--no-build-cache",
+            "--build-cache" if build_cache else "--no-build-cache",
             "--no-configuration-cache",
             *tasks,
         ]
@@ -378,6 +386,13 @@ def verify_invalidation(candidate):
 
 def verify_docs_base(candidate):
     distribution = candidate.project / "web/build/dist"
+    outcomes = candidate.gradle("Repeat the default production build", BUNDLE)
+    require(
+        outcomes.get(BUNDLE) == "UP-TO-DATE",
+        f"The repeated default bundle reported {outcomes.get(BUNDLE)}",
+    )
+    candidate.frontend_assets("http://127.0.0.1:8081/")
+
     # An explicitly empty override must invalidate the existing default bundle.
     candidate.environment[DOCS_SETTING] = ""
     candidate.gradle(
@@ -428,17 +443,31 @@ def verify_docs_base(candidate):
         encoding="utf-8",
     )
     candidate.environment.update(DOCS_PORT="443", DOCS_PREFIX="first")
-    outcomes = candidate.gradle("Build with expanded production dotenv values", BUNDLE)
+    outcomes = candidate.gradle(
+        "Build with expanded production dotenv values", BUNDLE, build_cache=True
+    )
     require(outcomes.get(BUNDLE) == "EXECUTED", "The initial bundle did not execute")
     candidate.frontend_assets("https://docs.example.test/first/")
 
     candidate.environment["DOCS_PREFIX"] = "second"
-    outcomes = candidate.gradle("Change only the inherited documentation path", BUNDLE)
+    outcomes = candidate.gradle(
+        "Change only the inherited documentation path", BUNDLE, build_cache=True
+    )
     require(
         outcomes.get(BUNDLE) == "EXECUTED",
         f"The bundle reported {outcomes.get(BUNDLE)} after the inherited path changed",
     )
     candidate.frontend_assets("https://docs.example.test/second/")
+
+    expanded_port_sentinel = "expanded-port-private-sentinel"
+    candidate.environment["DOCS_PORT"] = expanded_port_sentinel
+    candidate.gradle(
+        "Reject a change to only the inherited documentation port",
+        BUNDLE,
+        fails_with=(f"{BUNDLE} FAILED", DOCS_DIAGNOSTIC),
+        excludes=(expanded_port_sentinel,),
+        build_cache=True,
+    )
 
 
 def main():
