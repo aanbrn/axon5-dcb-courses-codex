@@ -14,7 +14,6 @@ if ! plugin_config=$(git rev-parse --verify --end-of-options "$revision:qodana.y
 fi
 
 output="$PWD/.gradle/qodana"
-analysis_cache="$output/cache"
 gradle_cache="$output/cache/gradle"
 plugin_cache="$output/plugin-cache/$plugin_config"
 mkdir -p "$gradle_cache" "$output/runs" "$plugin_cache"
@@ -33,11 +32,13 @@ mkdir "$run/project" "$run/results" "$run/temurin"
 printf '%s\n' "$revision" > "$run/revision"
 printf 'Qodana report directory: %s\n' "$run/results"
 
-git archive --output="$run/project.tar" "$revision"
+git archive --output="$run/project.tar" "$revision" \
+  -- . ':(top,exclude,literal).idea/inspectionProfiles/Project_Default.xml'
 tar -xf "$run/project.tar" -C "$run/project"
 rm "$run/project.tar"
 
 entry_points_path=.qodana/profiles/spring-beans.xml
+entry_points_config=no-entry-points
 if [ -f "$run/project/$entry_points_path" ]; then
   project_idea="$run/project/.idea"
   if [ -L "$project_idea" ] || [ -e "$project_idea/misc.xml" ] || [ -L "$project_idea/misc.xml" ]; then
@@ -47,11 +48,11 @@ if [ -f "$run/project/$entry_points_path" ]; then
   entry_points_config=$(git rev-parse --verify --end-of-options "$revision:$entry_points_path")
   mkdir -p "$project_idea"
   git cat-file blob "$entry_points_config" > "$project_idea/misc.xml"
-
-  # Qodana restores .idea settings from its analysis cache before reading the project.
-  analysis_cache="$output/analysis-cache/$entry_points_config"
-  mkdir -p "$analysis_cache"
 fi
+
+# Qodana restores .idea settings from its analysis cache before reading the project.
+analysis_cache="$output/analysis-cache/without-editor-profile/$entry_points_config"
+mkdir -p "$analysis_cache"
 
 git -C "$run/project" init -q --template=
 git -C "$run/project" add --all
