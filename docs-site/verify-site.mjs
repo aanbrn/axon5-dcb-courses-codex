@@ -15,16 +15,28 @@ export const publicFiles = new Set([
 ]);
 const siteOrigin = "https://docs.invalid";
 
-function indexPage(html) {
+function indexPage(html, source) {
   const links = [];
   const fragments = new Set();
+  let templateDepth = 0;
   const parser = new Parser({
     onopentag(tag, attributes) {
+      const isActive = templateDepth === 0;
+      if (tag === "template") templateDepth += 1;
+      if (!isActive) return;
+
       const { href, src, id, name } = attributes;
+      if (tag === "base" && href !== undefined)
+        throw new Error(
+          `Active base href in ${source}: ${JSON.stringify(href)}`,
+        );
       if (href !== undefined) links.push(href);
       if (src !== undefined) links.push(src);
       if (id !== undefined) fragments.add(id);
       if (tag === "a" && name !== undefined) fragments.add(name);
+    },
+    onclosetag(tag) {
+      if (tag === "template") templateDepth -= 1;
     },
   });
   parser.end(html);
@@ -63,7 +75,7 @@ export function verifyPublication(
   for (const name of publicFiles) {
     if (!files.has(name)) throw new Error(`Missing public artifact: ${name}`);
     if (name.endsWith(".html"))
-      pages.set(name, indexPage(files.get(name).toString("utf8")));
+      pages.set(name, indexPage(files.get(name).toString("utf8"), name));
   }
 
   for (const [name, { links }] of pages) {
