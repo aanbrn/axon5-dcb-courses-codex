@@ -110,24 +110,24 @@ None yet. Validate through shipped and verified work.
 | Use Axon Server | Native DCB persistence and Axon message routing | Pending compatibility proof |
 | Split services by CQRS role | Preserve cross-entity decisions while making location transparency visible | Pending implementation |
 | Compare Axon 4 aggregates in documentation only | Preserve the before/after explanation without maintaining a second application | Pending implementation |
-| Use a demo role switcher in v1 | Keep the example focused on DCB | Pending implementation |
+| Use a demo role switcher in v1 | Keep the example focused on DCB | Phase 2 verified the demo role directory, reload, tab independence, and retry. |
 | Retain AI-assisted planning and lessons in the repository | The development process is a second learning goal | Pending implementation |
 | Keep one authoritative version owner per ecosystem | Avoid drift and preserve automated updates | Pending implementation |
 | Use TypeID (type prefix, UUIDv7, base32) for entity IDs and native `uuid` in storage | Client-generatable, time-ordered, readable typed IDs, with a high cost for changing event identifiers later | Verify Kotlin and TypeScript libraries in Phase 1 |
-| Establish a dedicated UI foundation, carry a UI-SPEC and a UI slice for each feature, build a dedicated DCB teaching UI, and run a final UI review | Keep features demonstrable end to end and give the showcase a design contract | Pending implementation |
-| Use Storybook and target WCAG 2.2 AA with axe in component and E2E suites | Make the design system inspectable and accessibility testable | Pending implementation |
+| Establish a dedicated UI foundation, carry a UI-SPEC and a UI slice for each feature, build a dedicated DCB teaching UI, and run a final UI review | Keep features demonstrable end to end and give the showcase a design contract | Phase 2 verified the foundation and its UI-SPEC. Feature slices and the showcase follow. |
+| Use Storybook and target WCAG 2.2 AA with axe in component and E2E suites | Make the design system inspectable and accessibility testable | Phase 2 verified Storybook, automated accessibility controls, and the shell's manual checks. |
 | Use branches per phase and `$gsd-ship` PRs with squash merge only. Protect `main` with required PRs, required checks, linear history, and zero required approvals | Preserve a review point and clean history for a solo author | Phase branches configured in GSD. Remote controls pending. |
 | Let release-please own version tags and releases. Disable GSD tag creation | Prevent tag ownership conflicts | GSD tag creation disabled. Release automation pending. |
 | Report defects and gaps upstream first, maintain one `docs/upstream/` record per case, and enforce links on marked workarounds in CI | Make local workarounds visible and removable | Pending implementation |
-| Pin CLI tools with mise and maintain a tooling inventory and `doctor` check | Reproduce the environment beyond Gradle | Pending implementation |
+| Pin CLI tools with mise and maintain a tooling inventory and `doctor` check | Reproduce the environment beyond Gradle | Phase 2 verified the tooling inventory and `doctor` locally. |
 | Use vetted third-party and project-owned skills locally in OpenCode | Treat skills as reviewed code and verify OpenCode compatibility before adoption | Pending selection and implementation |
-| Use the Gradle Node plugin for frontend and docs-site subprojects | Make the BFF OpenAPI contract, generated client, and frontend an explicit build graph under `./gradlew build` | Pending implementation |
+| Use the Gradle Node plugin for frontend and docs-site subprojects | Make the BFF OpenAPI contract, generated client, and frontend an explicit build graph under `./gradlew build` | Phase 2 verified client regeneration and the frontend and docs outputs from a clean checkout. |
 | Build all images with Cloud Native Buildpacks (Paketo), using `bootBuildImage` for JVM apps and the Web Servers buildpack for the frontend, with no Dockerfiles | Share a build approach, SBOM support, base rebase, and JVM memory tuning | Verify Gradle-driven npm builds and packaging of static assets in Phase 1 |
 | Use npm and `package-lock.json` for the frontend and docs site. Consider pnpm for specific tooling needs. | Use a reproducible install with one project build path | Selected for Phase 1 verification |
 | Use JUnit 6 as the runner with Kotest assertions and property testing | Align with Spring Boot 4, Testcontainers, Gradle Test Suites, and idiomatic Kotlin tests | Verify Kotlin 2.4 and Kotest compatibility in Phase 1 |
-| Use Gradle JVM Test Suites and Java Test Fixtures | Separate test levels without duplicating shared helpers | Pending implementation |
-| Enforce frontend FSD with Steiger | Make frontend boundaries as explicit as backend ones | Pending implementation |
-| Auto-format and style-check produced artifacts | Apply the same standard regardless of author | Pending implementation |
+| Use Gradle JVM Test Suites and Java Test Fixtures | Separate test levels without duplicating shared helpers | Phase 2 verified separate BFF test suites and shared fixtures. |
+| Enforce frontend FSD with Steiger | Make frontend boundaries as explicit as backend ones | Phase 2 verified the shell and a rejected boundary violation. |
+| Auto-format and style-check produced artifacts | Apply the same standard regardless of author | Phase 2 verified the shared policy locally. The matching hosted `build-and-style` result is a ship gate. |
 | Use ktfmt for Kotlin/KDoc formatting, detekt `comments` rules, and Dokka `failOnWarning` | Treat documentation quality as part of Kotlin code quality | Verify ktfmt behavior on representative KDoc in Phase 1 |
 
 ### Dependency Maintenance

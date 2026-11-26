@@ -9,7 +9,7 @@ Build, browser, architecture, and CI checks grow alongside the features they exe
 ## Phases
 
 - [x] **Phase 1: Axon Server and Toolchain Feasibility** - Run the DCB compatibility probe and record the evidence for stack selection. (completed 2026-11-25)
-- [ ] **Phase 2: Build and UI Foundations** - Set up the shared build, test conventions, and browser shell with a generated OpenAPI client.
+- [x] **Phase 2: Build and UI Foundations** - Set up the shared build, test conventions, and browser shell with a generated OpenAPI client. (completed 2026-11-26)
 - [ ] **Phase 3: Core Enrollment and Live Views** - Ship a complete course and student enrollment workflow with live updates and contention tests.
 - [ ] **Phase 4: Course Names and Atomic Transfers** - Teach cross-entity decisions through unique names, capacity changes, and transfers.
 - [ ] **Phase 5: Scheduling and Waitlist Automation** - Apply schedule constraints, promote eligible students, and package the complete set of application roles.
@@ -62,7 +62,7 @@ Build, browser, architecture, and CI checks grow alongside the features they exe
 4. A maintainer can run `doctor`, audit authoritative version owners, and run JUnit 6 and Kotest through Gradle JVM Test Suites with shared Java Test Fixtures. The documented dependency maintenance process links recovered or reproduced evidence and keeps advisory inputs and results private.
 5. The pre-commit hook and CI use the same repository formatting and style checks. Representative Kotlin and KDoc pass ktfmt and detekt, and a Dokka warning fails the build.
 
-**Plans:** 11/11 plans executed
+**Plans:** 11/11 plans complete
 **Wave 1**
 - [x] 02-01-PLAN.md
 
@@ -194,7 +194,7 @@ Build, browser, architecture, and CI checks grow alongside the features they exe
 | Phase | Plans Complete | Status | Completed |
 | --- | --- | --- | --- |
 | 1. Axon Server and Toolchain Feasibility | 5/5 | Complete    | 2026-11-25 |
-| 2. Build and UI Foundations | 11/11 | In Progress | - |
+| 2. Build and UI Foundations | 11/11 | Complete    | 2026-11-26 |
 | 3. Core Enrollment and Live Views | 0/TBD | Not started | - |
 | 4. Course Names and Atomic Transfers | 0/TBD | Not started | - |
 | 5. Scheduling and Waitlist Automation | 0/TBD | Not started | - |

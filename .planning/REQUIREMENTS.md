@@ -131,7 +131,7 @@
 | CQRS-01 | Phase 3 | Pending |
 | CQRS-02 | Phase 3 | Pending |
 | CQRS-03 | Phase 5 | Pending |
-| CQRS-04 | Phase 2 | Pending |
+| CQRS-04 | Phase 2 | Pending (role-directory contract verified. Feature operations and live views follow in later slices.) |
 | UI-01 | Phase 2 | Complete |
 | UI-02 | Phase 5 | Pending |
 | UI-03 | Phase 2 | Complete |
@@ -146,7 +146,7 @@
 | QA-05 | Phase 6 | Pending |
 | QA-06 | Phase 7 | Pending |
 | QA-07 | Phase 2 | Complete |
-| QA-08 | Phase 2 | Pending |
+| QA-08 | Phase 2 | Blocked (awaiting the matching hosted `build-and-style` result) |
 | CI-01 | Phase 7 | Pending |
 | CI-02 | Phase 7 | Pending |
 | CI-03 | Phase 7 | Pending |
