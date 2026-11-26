@@ -24,6 +24,7 @@ import org.springframework.boot.test.web.server.LocalServerPort
 import tools.jackson.core.JsonPointer
 import tools.jackson.databind.JsonNode
 import tools.jackson.databind.json.JsonMapper
+import tools.jackson.databind.node.ArrayNode
 import tools.jackson.databind.node.ObjectNode
 
 @SpringBootTest(
@@ -88,6 +89,41 @@ class DirectoryHttpTest {
             listOf("required" to "administrator"),
             violations.map { it.keyword to it.property },
         )
+    }
+
+    @Test
+    fun `directory schema rejects whitespace-only role fields`() {
+        val directory = mapper.readTree(get(directoryPath).body())
+        val schema = responseSchema(200, jsonMediaType)
+        for (rolePath in listOf("/administrator", "/students/0")) {
+            for (field in listOf("id", "label")) {
+                for (blank in listOf(" \t", "\u00A0", "\uFEFF")) {
+                    val mutated = directory.deepCopy()
+                    (mutated.at(rolePath) as ObjectNode).put(field, blank)
+                    val violations = schema.validate(mutated)
+                    assertEquals(
+                        listOf("pattern" to "$rolePath/$field"),
+                        violations.map { it.keyword to it.instanceLocation.toString() },
+                    )
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `directory schema accepts role fields with content and an empty student list`() {
+        val directory = mapper.readTree(get(directoryPath).body())
+        val schema = responseSchema(200, jsonMediaType)
+        (directory.required("administrator") as ObjectNode)
+            .put("id", " \tadmin ")
+            .put("label", " \uFEFFAdministrator")
+        (directory.at("/students/0") as ObjectNode)
+            .put("id", "\u0085")
+            .put("label", " \u00A0Maya Chen \t")
+        assertTrue(schema.validate(directory).isEmpty())
+
+        (directory.required("students") as ArrayNode).removeAll()
+        assertTrue(schema.validate(directory).isEmpty())
     }
 
     @Test

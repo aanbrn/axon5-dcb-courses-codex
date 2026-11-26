@@ -3,6 +3,7 @@ import { once } from "node:events";
 import { createServer } from "node:http";
 import { after, test } from "node:test";
 import { createServer as createViteServer } from "vite";
+import { ZodError } from "zod";
 
 const vite = await createViteServer({
   configFile: false,
@@ -73,6 +74,58 @@ for (const [name, payload] of Object.entries(invalidPayloads)) {
     await assert.rejects(loadDemoRoles(), { name: "ZodError" });
   });
 }
+
+const whitespaceOnly = {
+  "space and tab": " \t",
+  "non-breaking space": "\u00a0",
+  "zero-width no-break space": "\ufeff",
+};
+
+for (const role of ["administrator", "student"] as const) {
+  for (const field of ["id", "label"] as const) {
+    for (const [name, value] of Object.entries(whitespaceOnly)) {
+      test(`the generated schema rejects ${role} ${field} containing only ${name}`, async (t) => {
+        const [payload, path] =
+          role === "administrator"
+            ? [
+                {
+                  ...directory,
+                  administrator: { ...administrator, [field]: value },
+                },
+                ["administrator", field],
+              ]
+            : [
+                { ...directory, students: [{ ...maya, [field]: value }, alex] },
+                ["students", 0, field],
+              ];
+        t.mock.method(globalThis, "fetch", async () => Response.json(payload));
+
+        await assert.rejects(loadDemoRoles(), (error: unknown) => {
+          assert(error instanceof ZodError);
+          assert.deepEqual(
+            error.issues.map((issue) => issue.path),
+            [path],
+          );
+          return true;
+        });
+      });
+    }
+  }
+}
+
+test("preserves role identifiers and labels containing content and whitespace", async (t) => {
+  const payload = {
+    administrator: {
+      ...administrator,
+      id: " \tadmin ",
+      label: " \ufeffAdministrator",
+    },
+    students: [{ ...maya, id: "\u0085", label: " \u00a0Maya Chen \t" }, alex],
+  };
+  t.mock.method(globalThis, "fetch", async () => Response.json(payload));
+
+  assert.deepEqual(await loadDemoRoles(), payload);
+});
 
 for (const [name, students] of [
   [
