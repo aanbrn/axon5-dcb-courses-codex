@@ -1,5 +1,8 @@
 # Local IDE and Codex files
-/.idea/
+/.idea/*
+!/.idea/inspectionProfiles/
+/.idea/inspectionProfiles/*
+!/.idea/inspectionProfiles/Project_Default.xml
 /.codex/
 *.iml
 
