@@ -3,6 +3,22 @@ phase: 02
 review: 02-REVIEW.md
 titles: json
 findings:
+  - id: CR-05
+    severity: critical
+    disposition: open
+    title: "Gradle skips documentation URL validation after a dotenv substitution changes"
+  - id: WR-05
+    severity: warning
+    disposition: open
+    title: "The publication gate resolves relative URLs against the wrong base"
+  - id: WR-06
+    severity: warning
+    disposition: open
+    title: "Inert template content can satisfy a fragment check"
+  - id: WR-07
+    severity: warning
+    disposition: open
+    title: "The verifier accepts encoded paths that the preview cannot serve"
   - id: CR-01
     severity: critical
     disposition: fixed
@@ -33,25 +49,29 @@ findings:
     title: "Gradle's comment check breaks on a path containing a comma"
   - id: CR-04
     severity: critical
-    disposition: open
+    disposition: fixed
     title: "Historical Qodana scans silently use the editor profile and can contaminate later scans"
-open: 1
-total: 8
-recorded: 2026-11-26T08:16:50.893Z
+open: 4
+total: 12
+recorded: 2026-11-26T09:10:29.576Z
 ---
 
 # Phase 02: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| CR-01 | critical | fixed | 02-REVIEW-FIX.md |
-| CR-02 | critical | fixed | 02-REVIEW-FIX.md |
-| CR-03 | critical | fixed | 02-REVIEW-FIX.md |
-| WR-01 | warning | fixed | 02-REVIEW-FIX.md |
-| WR-02 | warning | fixed | 02-REVIEW-FIX.md |
-| WR-03 | warning | fixed | 02-REVIEW-FIX.md |
-| WR-04 | warning | fixed | 02-REVIEW-FIX.md |
-| CR-04 | critical | open | - |
+| CR-05 | critical | open | - |
+| WR-05 | warning | open | - |
+| WR-06 | warning | open | - |
+| WR-07 | warning | open | - |
+| CR-01 | critical | fixed | 02-REVIEW-FIX.md (not in the current review) |
+| CR-02 | critical | fixed | 02-REVIEW-FIX.md (not in the current review) |
+| CR-03 | critical | fixed | 02-REVIEW-FIX.md (not in the current review) |
+| WR-01 | warning | fixed | 02-REVIEW-FIX.md (not in the current review) |
+| WR-02 | warning | fixed | 02-REVIEW-FIX.md (not in the current review) |
+| WR-03 | warning | fixed | 02-REVIEW-FIX.md (not in the current review) |
+| WR-04 | warning | fixed | 02-REVIEW-FIX.md (not in the current review) |
+| CR-04 | critical | fixed | [`3df371b` and three verified scans](../../quick/261126-lmh-isolate-historical-qodana-scans-from-ide/261126-lmh-VERIFICATION.md) (not in the current review) |
 
 Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
 Set `deferred` by hand and put the reason in the Source cell; both are preserved. A `|` in the reason is kept as prose and escaped on the next run.
