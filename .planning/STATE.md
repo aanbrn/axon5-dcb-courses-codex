@@ -7,10 +7,10 @@ current_phase_name: Core Enrollment and Live Views
 current_plan: Not started
 status: planning
 stopped_at: "PR #2 is open. The hosted check passed for the reviewed source. Verify the current PR head before squash merge."
-last_updated: "2026-11-26T09:54:01.359Z"
+last_updated: "2026-11-26T10:29:42.800Z"
 last_activity: 2026-11-26
-last_activity_desc: "Phase 02 shipped as PR #2"
-state_head: 554a728979779a7e06cbd46136384214f785829d
+last_activity_desc: "Completed quick task 261126-o3f: Run build and style on pushes to main"
+state_head: b51840d6e7f8e4549a9a74eb62241a28fa904693
 progress:
   total_phases: 8
   completed_phases: 2
@@ -34,7 +34,7 @@ Phase: 3 — Core Enrollment and Live Views
 Current Plan: Not started
 Total Plans in Phase: 0
 Status: Ready to plan after Phase 02 merges.
-Last activity: 2026-11-26 -- Phase 02 shipped as PR #2
+Last activity: 2026-11-26 -- Completed quick task 261126-o3f: Run build and style on pushes to main
 
 Progress: [███░░░░░░░] 25%
 
@@ -140,6 +140,7 @@ None yet.
 | 261126-mcu | Match published link verification to browser and local routes | 2026-11-26 | c967802 | [261126-mcu-match-published-link-verification-to-bro](./quick/261126-mcu-match-published-link-verification-to-bro/) |
 | 261126-mdh | Invalidate the Vite build when dotenv expansion inputs change | 2026-11-26 | 68c43a0 | [261126-mdh-invalidate-the-vite-build-when-dotenv-ex](./quick/261126-mdh-invalidate-the-vite-build-when-dotenv-ex/) |
 | 261126-mq2 | Use browser-conforming HTML parsing for publication checks | 2026-11-26 | 1ca7bf9 | [261126-mq2-use-browser-conforming-html-parsing-for-](./quick/261126-mq2-use-browser-conforming-html-parsing-for-/) |
+| 261126-o3f | Run build and style on pushes to main | 2026-11-26 | b51840d | [261126-o3f-run-build-and-style-on-pushes-to-main](./quick/261126-o3f-run-build-and-style-on-pushes-to-main/) |
 
 ## Session Continuity
 
