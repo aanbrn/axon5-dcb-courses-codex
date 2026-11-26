@@ -133,4 +133,15 @@ The final clean-build harness reran all three checks with a refused Docker endpo
 
 Separate Chromium runs passed 18 shell cases, the full BFF and prefixed documentation journey, and 13 Storybook stories with axe. Chromium loaded both documented local fonts through `/courses/`. The docs tests checked 14 assertions and the nine-file public output was checked during the clean build.
 
-The Phase 01 regression passed the contract unit test, the 32-check Kotest property, the TypeID vector suites and two-way exchange, the frontend asset producer, and the two-pass KDoc proof. The KDoc proof initially failed because the shared formatter had normalized its input. Restoring the original fixture bytes and assigning that single fixture a plain-text check restored the proof. `styleCheck`, the formatter and detekt controls, Dokka publication, and all required `doctor` rows passed. The Docker-backed integration and Pack image stages were outside this rerun because the Docker daemon was unavailable. Their original Phase 01 evidence and hosted handoff remain in the feasibility record.
+The Phase 01 regression passed the contract unit test, the 32-check Kotest property, the TypeID vector suites and two-way exchange, the frontend asset producer, and the two-pass KDoc proof. The KDoc proof initially failed because the shared formatter had normalized its input. Restoring the original fixture bytes and assigning that single fixture a plain-text check restored the proof. `styleCheck`, the formatter and detekt controls, Dokka publication, and all required `doctor` rows passed. The Docker-backed stages ran separately after Colima became available.
+
+### Native Phase 01 Follow-Up
+
+On 2026-11-26, two runs at `f879e15` passed on macOS ARM64 with Colima and Docker 29.10.0 (`linux/aarch64`). The integration worker used the Colima context's socket as `DOCKER_HOST`, `/var/run/docker.sock` as `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE`, and `127.0.0.1` as `TESTCONTAINERS_HOST_OVERRIDE`.
+
+| Command | Observed result |
+| --- | --- |
+| `./gradlew --no-daemon --console=plain :probe:integrationTest --rerun-tasks` | Three tests passed with zero failures, errors or skips. Axon Server rejected the stale append with `CANCELLED` / `ConsistencyConditionException`. The tag reads found the same winning event, and the subscription and fresh query agreed on one enrollment. The injected-failure case cancelled the subscription, exited both role JVMs, removed the owned container and preserved the unrelated network. |
+| `./gradlew --no-daemon --console=plain :probe:frontendImageProbe --rerun-tasks` | Pack 0.40.11 detected the Nginx buildpack. Both variants returned HTTP 200 with bytes matching their respective staged assets. The two variants differed from each other and the probe removed its owned resources. |
+
+The local JUnit XML is under `probe/build/test-results/integrationTest/`. The correlated DCB records and native packaging evidence are under `probe/build/reports/feasibility/`. Phase 7 still owns the first hosted AMD64 DCB runtime run.

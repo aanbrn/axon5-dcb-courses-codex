@@ -275,7 +275,7 @@ Existence, substantive implementation and active consumption were checked for ev
 | `:web:foundationProof` | Retained direct output confirms rejection of the boundary violation and unnamed button, followed by passing restored variants. | Pass |
 | `python3 tools/check_kotlin_quality.py format-comments` and `publication` | The current style and quality checks passed under orchestrator testing. Retained control output shows the deliberate comment and publication failures and repaired positive runs. Both current Dokka sites exist. | Pass |
 | Current JUnit XML and Phase 1 non-Docker regression | BFF unit and component XML and Phase 1 smoke, Kotest and TypeID JVM XML have no failures or skips. The orchestrator also exercised the TypeID exchange, frontend assets and two-pass KDoc. | Pass |
-| Phase 1 integration and native packaging | The Docker daemon was unavailable. The previous native ARM64 run is historical evidence. Phase 7 owns first hosted AMD64 DCB runtime proof. | Outside this rerun |
+| Phase 1 integration and native packaging | On 2026-11-26, a native ARM64 rerun at `f879e15` passed all three Axon Server integration tests and both Paketo static variants. The [native follow-up](02-VALIDATION.md#native-phase-01-follow-up) records the commands and output. Phase 7 owns the first hosted AMD64 DCB runtime proof. | Pass |
 
 Phase 2 probes use Python and Gradle entry points. No conventional or named `probe-*.sh` was declared. Retained direct runner results were inspected where available alongside the new local checks and build artifacts.
 
