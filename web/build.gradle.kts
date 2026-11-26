@@ -117,7 +117,10 @@ val webBuild =
                 },
             )
             .withPathSensitivity(PathSensitivity.RELATIVE)
-        inputs.property("docsBase", providers.environmentVariable("VITE_DOCS_BASE").orElse(""))
+        inputs.property(
+            "docsBase",
+            providers.environmentVariable("VITE_DOCS_BASE").map { listOf(it) }.orElse(emptyList()),
+        )
         script = vite
         args = listOf("build")
         outputs.dir(distribution)

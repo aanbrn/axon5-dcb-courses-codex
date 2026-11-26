@@ -18,6 +18,10 @@ GENERATED = Path("web/build/generated")
 GENERATE = ":web:generateClient"
 TYPECHECK = ":web:typecheck"
 BUNDLE = ":web:webBuild"
+DOCS_SETTING = "VITE_DOCS_BASE"
+DOCS_DIAGNOSTIC = (
+    "VITE_DOCS_BASE must be an absolute HTTP(S) documentation directory URL."
+)
 TASK_LINE = re.compile(r"^> Task (:[\w:.-]+)(?: ([A-Z-]+))?$", re.MULTILINE)
 GENERATION_TASKS = {":web:nodeSetup", ":web:npmSetup", ":web:npmInstall", GENERATE}
 INFRASTRUCTURE_TASKS = re.compile(
@@ -81,13 +85,14 @@ class Candidate:
             "npm_config_cache": str(directory / "npm-cache"),
         }
         self.environment.pop("DOCKER_CONTEXT", None)
+        self.environment.pop(DOCS_SETTING, None)
         # Only public npm data is reusable. npm can write into its private copy.
         if cache_path := os.environ.get("npm_config_cache"):
             npm_cache = Path(cache_path) / "_cacache"
             if npm_cache.is_dir():
                 shutil.copytree(npm_cache, directory / "npm-cache" / "_cacache")
 
-    def gradle(self, label, *tasks, fails_with=(), generation_only=False):
+    def gradle(self, label, *tasks, fails_with=(), excludes=(), generation_only=False):
         command = [
             "./gradlew",
             "--console=plain",
@@ -106,7 +111,7 @@ class Candidate:
             timeout=360,
             check=False,
         )
-        print(process.stdout, end="", flush=True)
+        self.report(process.stdout, excludes)
         require(
             (self.project / LOCK).read_bytes() == self.lock_bytes,
             "npm changed the lockfile bytes",
@@ -159,16 +164,60 @@ class Candidate:
             )
         return {name: (output / name).read_bytes() for name in files}
 
-    def frontend_assets(self):
+    def frontend_assets(self, docs_base=None):
         distribution = self.project / "web/build/dist"
         html = (distribution / "index.html").read_text(encoding="utf-8")
         scripts = re.findall(r'<script\b[^>]*\bsrc="(/assets/[^"/]+\.js)"', html)
         require(bool(scripts), "Vite index.html has no production script")
+        entries = []
         for script in scripts:
+            entry = distribution / script.lstrip("/")
             require(
-                (distribution / script.lstrip("/")).stat().st_size > 0,
+                entry.stat().st_size > 0,
                 f"Empty Vite asset {script}",
             )
+            entries.append(entry)
+        if docs_base is not None:
+            literal = re.compile(rf"([`\"']){re.escape(docs_base)}\1")
+            require(
+                any(
+                    literal.search(entry.read_text(encoding="utf-8"))
+                    for entry in entries
+                ),
+                f"The Vite entry does not contain the normalized URL {docs_base}",
+            )
+
+    def reject_dev_startup(self, sentinel):
+        web = self.project / "web"
+        node_version = (self.project / ".nvmrc").read_text(encoding="utf-8").strip()
+        executable = "node.exe" if os.name == "nt" else "bin/node"
+        (node,) = (web / ".gradle/nodejs").glob(f"node-v{node_version}-*/{executable}")
+        print(
+            "\nReject invalid documentation base during development startup", flush=True
+        )
+        process = subprocess.run(
+            [node, "node_modules/vite/bin/vite.js", "dev"],
+            cwd=web,
+            env=self.environment,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            timeout=15,
+            check=False,
+        )
+        self.report(process.stdout, (sentinel,))
+        require(
+            process.returncode != 0 and DOCS_DIAGNOSTIC in process.stdout,
+            "Vite dev did not reject the invalid documentation base",
+        )
+
+    @staticmethod
+    def report(output, excludes):
+        require(
+            not any(fragment in output for fragment in excludes),
+            "The command disclosed the configured documentation base",
+        )
+        print(output, end="", flush=True)
 
 
 def require_build_order(outcomes):
@@ -199,7 +248,7 @@ def verify_clean(candidate):
     ):
         require(outcomes.get(task) == "EXECUTED", f"Root build did not execute {task}")
     candidate.generated_files()
-    candidate.frontend_assets()
+    candidate.frontend_assets("http://127.0.0.1:8081/")
     jars = list((candidate.project / "bff/build/libs").glob("*.jar"))
     boot_jar = next((jar for jar in jars if not jar.name.endswith("-plain.jar")), None)
     require(boot_jar is not None, "No executable BFF JAR was assembled")
@@ -259,7 +308,7 @@ def verify_invalidation(candidate):
         candidate.generated_files() == original_files,
         "Unchanged generation changed the client bytes",
     )
-    candidate.frontend_assets()
+    candidate.frontend_assets("http://127.0.0.1:8081/")
 
     shutil.rmtree(candidate.project / GENERATED)
     outcomes = candidate.gradle(
@@ -327,6 +376,54 @@ def verify_invalidation(candidate):
     candidate.frontend_assets()
 
 
+def verify_docs_base(candidate):
+    distribution = candidate.project / "web/build/dist"
+    # An explicitly empty override must invalidate the existing default bundle.
+    candidate.environment[DOCS_SETTING] = ""
+    candidate.gradle(
+        "Reject an explicitly empty documentation base",
+        BUNDLE,
+        fails_with=(f"{BUNDLE} FAILED", DOCS_DIAGNOSTIC),
+    )
+
+    sentinel = "invalid-port-sentinel"
+    invalid_base = f"https://docs.example.test:{sentinel}/courses/"
+    shutil.rmtree(distribution, ignore_errors=True)
+    candidate.environment[DOCS_SETTING] = invalid_base
+    candidate.gradle(
+        "Reject a malformed documentation base from the process environment",
+        BUNDLE,
+        fails_with=(f"{BUNDLE} FAILED", DOCS_DIAGNOSTIC),
+        excludes=(sentinel,),
+    )
+    require(
+        not any(distribution.glob("*")), "An invalid documentation base produced output"
+    )
+    candidate.reject_dev_startup(sentinel)
+
+    candidate.environment.pop(DOCS_SETTING)
+    (candidate.project / "web/.env.production").write_text(
+        f"{DOCS_SETTING}={invalid_base}\n", encoding="utf-8"
+    )
+    candidate.gradle(
+        "Reject a malformed documentation base from the production env file",
+        BUNDLE,
+        fails_with=(f"{BUNDLE} FAILED", DOCS_DIAGNOSTIC),
+        excludes=(sentinel,),
+    )
+    require(
+        not any(distribution.glob("*")),
+        "An invalid production env file produced output",
+    )
+
+    docs_base = "https://docs.example.test/courses"
+    candidate.environment[DOCS_SETTING] = docs_base
+    candidate.gradle(
+        "Override the production env file in the process environment", BUNDLE
+    )
+    candidate.frontend_assets(f"{docs_base}/")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group(required=True)
@@ -343,6 +440,7 @@ def main():
             verify_clean(candidate)
         else:
             verify_invalidation(candidate)
+            verify_docs_base(candidate)
         print(
             f"Verified unchanged web lock SHA-256 {hashlib.sha256(candidate.lock_bytes).hexdigest()}"
         )
