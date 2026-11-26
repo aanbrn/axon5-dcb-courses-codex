@@ -1,9 +1,9 @@
 ---
-status: testing
+status: complete
 phase: 02-build-and-ui-foundations
 source: [02-VERIFICATION.md]
 started: 2026-11-25T17:17:41Z
-updated: 2026-11-26T04:20:42Z
+updated: 2026-11-26T08:11:08.168Z
 ---
 
 ## Setup
@@ -14,11 +14,7 @@ For each browser observation record the OS, browser and any assistive technology
 
 ## Current Test
 
-number: 7
-name: Test-tier prohibition review
-expected: |
-  Review the four test-tier prohibition projections against the linked task-level controls. Record the maintainer's disposition for local contract generation, the single-operation OpenAPI contract, staged-file isolation and the ordinary build graph.
-awaiting: user response
+[testing complete]
 
 ## Tests
 
@@ -55,14 +51,16 @@ result: pass
 ### 7. Test-tier prohibition review
 
 expected: Review the four test-tier prohibition projections against the linked task-level controls. Record the maintainer's disposition for local contract generation, the single-operation OpenAPI contract, staged-file isolation and the ordinary build graph.
-result: [pending]
+result: pass
+
+The maintainer accepted all four guarantees after reviewing their local evidence. [Verification controls](02-VERIFICATION.md#negative-guarantees)
 
 ## Summary
 
 total: 7
-passed: 6
+passed: 7
 issues: 0
-pending: 1
+pending: 0
 skipped: 0
 blocked: 0
 
