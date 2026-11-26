@@ -179,6 +179,24 @@ for (const base of ["/", "/courses/"]) {
       "Missing fragment",
       "#not-an-anchor",
     ],
+    [
+      "active base override",
+      '<base href="../feasibility/phase-01/"><a href="../maintainer-guide/">Guide</a>',
+      "Active base href",
+      "../feasibility/phase-01/",
+    ],
+    [
+      "active base override with an empty href",
+      '<base href="">',
+      "Active base href",
+      '""',
+    ],
+    [
+      "fragment matching only a nested template ID",
+      '<template><template><span id="template-only">Fixture</span></template></template>\n\n[Missing ID](#template-only)',
+      "Missing fragment",
+      "#template-only",
+    ],
   ]) {
     test(`publication at ${base} rejects a broken ${name}`, (t) => {
       const site = variant(t, { base });
