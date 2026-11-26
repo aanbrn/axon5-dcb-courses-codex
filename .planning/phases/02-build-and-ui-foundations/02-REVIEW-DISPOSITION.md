@@ -5,7 +5,7 @@ titles: json
 findings:
   - id: WR-08
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "The publication gate mistakes literal textarea content for an active base"
   - id: CR-05
     severity: critical
@@ -55,16 +55,16 @@ findings:
     severity: critical
     disposition: fixed
     title: "Historical Qodana scans silently use the editor profile and can contaminate later scans"
-open: 1
+open: 0
 total: 13
-recorded: 2026-11-26T09:23:07.411Z
+recorded: 2026-11-26T09:33:57.369Z
 ---
 
 # Phase 02: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| WR-08 | warning | open | - |
+| WR-08 | warning | fixed | [`1ca7bf9` and two Chromium controls](../../quick/261126-mq2-use-browser-conforming-html-parsing-for-/261126-mq2-SUMMARY.md) (not in the current review) |
 | CR-05 | critical | fixed | [`68c43a0` and Gradle invalidation tests](../../quick/261126-mdh-invalidate-the-vite-build-when-dotenv-ex/261126-mdh-SUMMARY.md) (not in the current review) |
 | WR-05 | warning | fixed | [`c967802` and the two-base publication tests](../../quick/261126-mcu-match-published-link-verification-to-bro/261126-mcu-SUMMARY.md) (not in the current review) |
 | WR-06 | warning | fixed | [`c967802` and the two-base publication tests](../../quick/261126-mcu-match-published-link-verification-to-bro/261126-mcu-SUMMARY.md) (not in the current review) |
