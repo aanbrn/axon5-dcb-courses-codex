@@ -156,7 +156,7 @@ decision_coverage:
 
 **Verdict** — `passed` · 30/30 local must-haves verified · reviewed source `1ca7bf947420172fcfb24b52e85b227d89de8410`
 
-The final clean checkout produced the generated client, browser shell, Storybook, and documentation site through the shared build. The live browser checks passed and the maintainer accepted all seven UAT items. Plan 02-09 defines local verification before ship and requires a matching hosted `build-and-style` result for ship and merge acceptance. The hosted check is recorded below as the remaining acceptance gate. [02-09 plan](02-09-PLAN.md) · [Completed UAT](02-UAT.md)
+The final clean checkout produced the generated client, browser shell, Storybook, and documentation site through the shared build. The live browser checks passed and the maintainer accepted all seven UAT items. The hosted `build-and-style` job passed for the reviewed source. Plan 02-09 requires a matching successful job on the current PR head at merge. [02-09 plan](02-09-PLAN.md) · [Completed UAT](02-UAT.md) · [Hosted evidence](#hosted-evidence-at-ship)
 
 ## User Flow Coverage
 
@@ -285,7 +285,7 @@ The linked suites have active contract, state and failure assertions. The JUnit 
 | UI-01 | 03, 04, 06, 09, 11 | Foundation and manual checks verified | Approved UI-SPEC, production components, Steiger and its negative control, required Storybook states and axe checks. The maintainer accepted the three native and assistive checks in UAT. |
 | UI-03 | 01, 03, 06, 09, 11 | Implemented behavior verified | Real browser selection of all three roles, tab independence, reload, validated fallback and retry. |
 | QA-07 | 02, 05, 07, 09 | Satisfied | ktfmt semantics and two-pass proof, detekt negative witness, and both Dokka warning failures and repairs. The Phase 1 specimen is preserved. |
-| QA-08 | 05, 07, 09 | Blocked at hosted acceptance | Shared staged and full-tree policy, real Git controls, validated PR workflow, workflow lint with ShellCheck and local clean build are verified. The requirement stays unchecked until the matching hosted job passes. |
+| QA-08 | 05, 07, 09 | Satisfied | Shared staged and full-tree policy, real Git controls, workflow lint with ShellCheck and clean build passed locally and the matching hosted job passed for the reviewed source. [Hosted evidence](#hosted-evidence-at-ship) |
 | DOC-06 | 04, 08, 09 | Satisfied | Reconciled public B17/B8 provenance, public selected-graph reproduction, explicit incomplete B8 status and verified publication boundaries. |
 
 All nine Phase 2 IDs occur in at least one plan. No orphaned requirements were found.
@@ -320,7 +320,7 @@ The stale status at `9af7b3f` identified six changed paths. The review checked t
 | PR workflow and guide | The workflow retains read-only permissions, pinned actions and Temurin selection from `.java-version`. Its mise allowlist installs the five CI tools. The actionlint command with ShellCheck passed independently. The workflow guard accepted the reviewed workflow and rejected write permission, unpinned checkout and disabled ShellCheck. The staged guide matched its source bytes and the rendered guide included the lint and Qodana commands. [Quick task results](../../quick/261126-fxn-pin-python-for-local-tooling-and-the-pr-/261126-fxn-SUMMARY.md#verification) record the passing style, doctor, hook and docs checks. |
 | Opt-in Qodana runner | Shell syntax and ShellCheck passed independently. The script archives the selected revision, reads its `.java-version`, supplies Linux Temurin to the catalog-pinned Qodana image, and stores reports under the ignored `.gradle/qodana/runs/` path. The retained `e765a30` outputs contain HTML and a SARIF report with 61 results. The runner is invoked through the documented opt-in command. [Local Qodana evidence](02-VALIDATION.md#local-qodana-follow-up) |
 
-FND-02 and the local checks for QA-08 remain verified. The hosted QA-08 check still needs a matching `build-and-style` run.
+FND-02 and the local checks for QA-08 remained verified at this checkpoint. The later hosted QA-08 result is recorded below.
 
 ### Re-verification After UAT
 
@@ -367,17 +367,17 @@ None.
 
 The maintainer accepted all seven UAT items at `3779fa2`, covering the native selector and forced colors, screen-reader announcements, actual 200% text zoom, the demo role and private advisory boundaries, the Phase 1 handoff and the four test-tier controls. The UAT record has zero pending or blocked rows. [Completed UAT](02-UAT.md)
 
-The ASVS Level 1 security audit records zero open threats. Validation remains `validated` with `nyquist_compliant: false` pending the hosted evidence. [Security audit](02-SECURITY.md) · [Validation](02-VALIDATION.md) · [UI review](02-UI-REVIEW.md)
+The ASVS Level 1 security audit records zero open threats. The pre-ship validation recorded the local outcome and the separate hosted acceptance condition. [Security audit](02-SECURITY.md) · [Validation](02-VALIDATION.md) · [UI review](02-UI-REVIEW.md)
 
 ## Hosted Evidence at Ship
 
-**Required for ship and merge acceptance.** The SHA-pinned, read-only `build-and-style` job must pass on the reviewed PR head or a verified PR merge commit with that head as the PR parent. The available phase evidence has no matching hosted result. Plan 02-09 explicitly allows local verification to finish before the PR exists in its verification and success criteria at lines 132–136. [Plan 02-09](02-09-PLAN.md)
+On 2026-11-26, the SHA-pinned, read-only `build-and-style` job passed in 4m49s for [PR #2](https://github.com/aanbrn/axon5-dcb-courses-codex/pull/2). GitHub Actions reported event `pull_request` and head `013d29c170f3da98a78797a92039ebb410771da2`. Checkout fetched and reported test merge `39c39b3f0c8f331ce1423cd356bb7faaaf9bf6a3`. The GitHub commit API confirmed its parents as base `44589a41ea50672fb86554742b5b41c5a0cf0b45` and that PR head. The job ran on `ubuntu-24.04`, with `uname -sm` reporting `Linux x86_64`. [Run 45795044228](https://github.com/aanbrn/axon5-dcb-courses-codex/actions/runs/45795044228)
 
-After the authorized ship lifecycle publishes the PR, use `gh pr checks --watch` and inspect the matching run with `gh run view <run-id>`. Record the PR and run URL or ID, checked SHA or verified merge-parent mapping, runner OS and architecture, and passing wrapper validation, actionlint with ShellCheck, `styleCheck` and `clean build --no-build-cache`. A moved PR head needs a matching new run. QA-08 stays blocked pending this evidence.
+Gradle wrapper validation, actionlint with ShellCheck, `styleCheck` and `clean build --no-build-cache` all passed. Gradle reported 2m51s for style and 1m34s for the clean build. This run verifies the reviewed source and closes QA-08. Before merge, verify a successful run for the current head or its corresponding test merge. The PR verification checklist records the latest run and mapping after planning-only commits. [Plan 02-09](02-09-PLAN.md) · [Job 139823423852](https://github.com/aanbrn/axon5-dcb-courses-codex/actions/runs/45795044228/job/139823423852)
 
 ## Gaps Summary
 
-All local must-haves are verified. The matching hosted PR job remains the Plan 02-09 acceptance gate. Private B8 remains incomplete within its documented Maven inventory and advisory-feed scope, pending an authorized feed, scanner and inputs. The first hosted AMD64 DCB runtime proof belongs to Phase 7. [Private review scope](../../../docs/maintainer-guide.md#private-jvm-advisory-procedure-b8) · [Phase 7 handoff](../../../docs/feasibility/phase-01.md#hosted-amd64-verification-and-retirement)
+All local must-haves are verified, and the hosted PR job passed for the reviewed source. Plan 02-09 requires a matching successful job for the head used at merge. Private B8 remains incomplete within its documented Maven inventory and advisory-feed scope, pending an authorized feed, scanner and inputs. The first hosted AMD64 DCB runtime proof belongs to Phase 7. [Private review scope](../../../docs/maintainer-guide.md#private-jvm-advisory-procedure-b8) · [Phase 7 handoff](../../../docs/feasibility/phase-01.md#hosted-amd64-verification-and-retirement)
 
 _Initially verified 2026-11-25T17:10:17Z by gsd-verifier._
 _Targeted re-verification completed 2026-11-26T04:20:12Z by gsd-verifier._

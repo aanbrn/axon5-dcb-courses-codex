@@ -56,7 +56,7 @@ Each automated status reflects an observed result against its implementation. Re
 | 02-08-01 | 02-08 | 7 | FND-02 DOC-06 | T-02-14 | Diagnose a regular build in the presence of missing optional tools | CLI/evidence | `python3 tools/doctor.py --self-test && env DOCKER_HOST=tcp://127.0.0.1:1 ./gradlew --console=plain doctor` | Present | Local pass |
 | 02-08-02 | 02-08 | 7 | DOC-06 FND-02 | T-02-14 T-02-15 | Reproduce the cited public records and document the private procedure | CLI/evidence | `python3 tools/verify_dependency_evidence.py && ./gradlew --console=plain :docs-site:check` | Present | Local pass |
 | 02-09-01 | 02-09 | 8 | FND-06 CQRS-04 UI-01 UI-03 | T-02-16 | Open both sites and exercise the complete local launch guide | Integration/CI | `python3 tools/test_phase2_build.py && ./gradlew --console=plain :web:provisionBrowser :web:siteSmoke` | Present | Local pass |
-| 02-09-02 | 02-09 | 8 | FND-02 FND-06 QA-07 QA-08 DOC-06 | T-02-16 T-02-17 | Bring the tracked tree under the shared formatter and pin the PR workflow | Integration/CI | `python3 tools/check_pr_workflow.py && mise exec ruff taplo -- ./gradlew --console=plain styleCheck && env DOCKER_HOST=tcp://127.0.0.1:1 ./gradlew --console=plain clean build --no-build-cache` | Present | Local pass, hosted pending |
+| 02-09-02 | 02-09 | 8 | FND-02 FND-06 QA-07 QA-08 DOC-06 | T-02-16 T-02-17 | Bring the tracked tree under the shared formatter and pin the PR workflow | Integration/CI | `python3 tools/check_pr_workflow.py && mise exec ruff taplo -- ./gradlew --console=plain styleCheck && env DOCKER_HOST=tcp://127.0.0.1:1 ./gradlew --console=plain clean build --no-build-cache` | Present | Local and hosted pass |
 
 ### Plan 02-09 local evidence
 
@@ -71,7 +71,7 @@ Each automated status reflects an observed result against its implementation. Re
 
 | Gate | Depends on | Required observation | Status |
 | --- | --- | --- | --- |
-| Hosted `build-and-style` | Locally verified 02-09-02 workflow committed and pushed by the authorized GSD ship lifecycle | `gh pr checks --watch`, then `gh run view <run-id>`. Record PR, workflow, reviewed head SHA or verified PR merge mapping, URL/ID, runner architecture, wrapper validation, style and clean build conclusions. Repeat on head changes. | Pending ship |
+| Hosted `build-and-style` | Locally verified 02-09-02 workflow committed and pushed by the authorized GSD ship lifecycle | `gh pr checks --watch`, then `gh run view <run-id>`. Record PR, workflow, reviewed head SHA or verified PR merge mapping, URL/ID, runner architecture, wrapper validation, style and clean build conclusions. Repeat on head changes. | Passed for the reviewed source in PR #2. [Hosted evidence](02-VERIFICATION.md#hosted-evidence-at-ship) |
 | Private B8 | Authorized inventory generation, scanner and private feed available outside the repository | Keep the public status incomplete while prerequisites are missing. Any check, coverage and findings belong only in the authorized private location. | Open |
 | Hosted AMD64 DCB runtime | Phase 7 | Use application suites if equivalent or the retained probe. Both image child digests and an AMD64 hosted build do not establish DCB runtime coverage. | Phase 7 |
 
@@ -117,7 +117,7 @@ The fallback prohibitions in the owner plans use the descriptor-less `projectPro
 
 The plan summaries record the local results for all 25 tasks. The package preflight row records registry evidence and its disposition. The maintainer accepted all seven manual checks, including native accessibility and the four test-tier controls. [UAT results](02-UAT.md)
 
-**Approval** pending the hosted `build-and-style` evidence.
+**Ship evidence** The hosted `build-and-style` passed for the reviewed source. The merge gate requires a matching successful run for the current PR head. [Phase verification](02-VERIFICATION.md#hosted-evidence-at-ship)
 
 ## Validation Audit 2026-11-25
 

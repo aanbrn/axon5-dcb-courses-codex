@@ -56,7 +56,7 @@
 - [ ] **QA-05** A Gatling or k6 scenario drives concurrent subscriptions and reports results with the observed domain invariant.
 - [ ] **QA-06** CI measures and publishes code coverage from the applicable test suites.
 - [x] **QA-07** Kotlin code is idiomatic and documented. Verify representative KDoc formatting with ktfmt, detekt `comments` checks, and Dokka `failOnWarning`.
-- [ ] **QA-08** A pre-commit hook and CI apply the same formatting and style checks to all covered repository artifacts.
+- [x] **QA-08** A pre-commit hook and CI apply the same formatting and style checks to all covered repository artifacts.
 
 ### CI/CD and Supply Chain
 
@@ -146,7 +146,7 @@
 | QA-05 | Phase 6 | Pending |
 | QA-06 | Phase 7 | Pending |
 | QA-07 | Phase 2 | Complete |
-| QA-08 | Phase 2 | Blocked (awaiting the matching hosted `build-and-style` result) |
+| QA-08 | Phase 2 | Complete |
 | CI-01 | Phase 7 | Pending |
 | CI-02 | Phase 7 | Pending |
 | CI-03 | Phase 7 | Pending |
