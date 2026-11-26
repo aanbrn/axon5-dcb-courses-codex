@@ -81,7 +81,7 @@ dependencies {
     add(detektDependencies.name, catalog.findLibrary("detekt-cli").get())
 }
 
-val toolLauncher = javaToolchains.launcherFor(java.toolchain)
+val toolLauncher: Provider<JavaLauncher> = javaToolchains.launcherFor(java.toolchain)
 val ktfmtMain = "org.jetbrains.kotlinx.ktfmt.cli.Main"
 val ktfmtStyle = "--kotlinlang-style"
 val detektMain = "io.gitlab.arturbosch.detekt.cli.Main"

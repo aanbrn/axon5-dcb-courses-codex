@@ -18,7 +18,7 @@ java {
     }
 }
 
-val testLauncher = javaToolchains.launcherFor(java.toolchain)
+val testLauncher: Provider<JavaLauncher> = javaToolchains.launcherFor(java.toolchain)
 val jupiterVersion = catalog.findVersion("junit").get().requiredVersion
 
 testing.suites.withType<JvmTestSuite>().configureEach {
