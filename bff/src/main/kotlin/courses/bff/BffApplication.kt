@@ -18,6 +18,10 @@ fun main(args: Array<String>) {
     runApplication<BffApplication>(*args)
 }
 
+// Match the ECMAScript whitespace set used by the OpenAPI string patterns.
+private val nonWhitespace =
+    Regex("""[^\u0009-\u000D\u0020\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]""")
+
 /**
  * Describes a role that a visitor can select in the demo.
  *
@@ -25,15 +29,34 @@ fun main(args: Array<String>) {
  * @property label role name shown in the browser.
  * @property kind role category from the API contract.
  */
-data class DemoRole(val id: String, val label: String, val kind: String)
+data class DemoRole(val id: String, val label: String, val kind: String) {
+    init {
+        require(nonWhitespace.containsMatchIn(id)) {
+            "A demo role ID must contain a non-whitespace character."
+        }
+        require(nonWhitespace.containsMatchIn(label)) {
+            "A demo role label must contain a non-whitespace character."
+        }
+    }
+}
 
 /**
  * Lists the available administrator and student demo roles.
  *
  * @property administrator the role that manages courses.
- * @property students the student roles in display order.
+ * @param students the student roles supplied by the caller.
  */
-data class DemoRoleDirectory(val administrator: DemoRole, val students: List<DemoRole>)
+class DemoRoleDirectory(val administrator: DemoRole, students: List<DemoRole>) {
+    /** The immutable snapshot of student roles in display order. */
+    val students: List<DemoRole> = java.util.List.copyOf(students)
+
+    init {
+        val ids = mutableSetOf(administrator.id)
+        require(this.students.all { ids.add(it.id) }) {
+            "Demo role IDs must be unique across the directory."
+        }
+    }
+}
 
 /** Serves the directory used by the demo role selector. */
 @RestController
