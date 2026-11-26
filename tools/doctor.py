@@ -700,6 +700,31 @@ class DoctorTests(unittest.TestCase):
         self.assertIn("required | DEFERRED | Managed Node", result.stdout)
         self.assertIn("required | PASS | Node version pin | .nvmrc", result.stdout)
 
+    def test_wrong_python_patch_fails_in_both_modes(self):
+        observed = platform.python_version()
+        major, minor, patch_version = sys.version_info[:3]
+        expected = f"{major}.{minor}.{patch_version + 1}"
+        config = read_toml("mise.toml")
+        config["tools"]["python"] = expected
+        read = read_toml
+
+        def read_with_pin(path):
+            return config if path == "mise.toml" else read(path)
+
+        for managed in (None, self.managed):
+            with (
+                self.subTest(bootstrap=managed is None),
+                patch.dict(os.environ, self.env, clear=True),
+                patch(f"{__name__}.read_toml", side_effect=read_with_pin),
+                redirect_stdout(StringIO()) as output,
+            ):
+                self.assertEqual(report(managed), 1, output.getvalue())
+                self.assertIn(
+                    f"required | FAIL | Python | mise.toml | {expected} | {observed}",
+                    output.getvalue(),
+                )
+                self.assertIn("Run mise install python", output.getvalue())
+
     def test_invalid_node_pin_blocks_bootstrap_and_gradle_reports(self):
         pin = self.directory / ".nvmrc"
         read = read_file
