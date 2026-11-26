@@ -1,4 +1,16 @@
+# This file pins the independent Pack, Ruff and Taplo CLIs.
+# mise reads Java from .java-version and Node.js from .nvmrc.
 [tools]
 pack = "0.40.11"
 ruff = "0.17.4"
 taplo = "0.10.0"
+
+[settings]
+java.shorthand_vendor = "temurin"
+idiomatic_version_file_enable_tools = ["java", "node"]
+# Keep the runtime versions in the same files the build and CI already read.
+idiomatic_version_file_disable_files = [
+  "java:.sdkmanrc",
+  "node:.node-version",
+  "node:package.json",
+]

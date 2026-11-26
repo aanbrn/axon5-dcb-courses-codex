@@ -20,7 +20,19 @@ layout: page.11ty.js
 
 ## Setup and diagnostics
 
-Use an ARM64 or AMD64 host running macOS or Linux with Git, a POSIX shell, Python 3.11 or newer and mise. Install Eclipse Temurin at the feature release in `.java-version` and point `JAVA_HOME` at that JDK. Gradle uses an Eclipse Adoptium toolchain for the BFF JVM suites. The complete vendor, patch and build strings in doctor are observations. The version file stays feature-only.
+Use an ARM64 or AMD64 host running macOS or Linux with Git, a POSIX shell, Python 3.11 or newer and mise. If mise requests trust, review `mise.toml` and run `mise trust` from the repository root.
+
+Install Eclipse Temurin at the feature release in `.java-version` and point `JAVA_HOME` at that JDK, or use mise to supply Eclipse Temurin and Node.js to individual commands. Gradle uses an Eclipse Adoptium toolchain for the BFF JVM suites. The complete vendor, patch and build strings in doctor are observations. The version file stays feature-only.
+
+```sh
+mise install java node
+mise ls --current
+mise exec java node -- java -version
+mise exec java node -- node --version
+mise exec java node -- ./gradlew --version
+```
+
+The `Source` column shows `.java-version` for Java and `.nvmrc` for Node.js. Edit those files when changing the JDK feature or Node version. The project config excludes `.sdkmanrc`, `.node-version` and `package.json` from runtime discovery so these versions come from the same files used by CI and Gradle. Gradle installs its own Node.js and uses each consumer's `packageManager` pin for npm. The `mise.toml` pins control Pack, Ruff and Taplo.
 
 ```sh
 mise install ruff taplo
