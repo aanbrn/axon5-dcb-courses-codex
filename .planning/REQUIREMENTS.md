@@ -9,11 +9,11 @@
 ### Build Foundation
 
 - [x] **FND-01** Reproduce a Kotlin and Spring Boot compatibility probe that verifies the Axon 5 APIs, wiring, tagged conflict detection, and cross-process message routing in a DCB-enabled Axon Server context before pinning the version matrix. Record the official references, exact tested artifacts and image terms, bootstrap steps, and selected ARM64 and AMD64 image digests.
-- [ ] **FND-02** Build and check the toolchain with one authoritative version owner per ecosystem, pinned independent CLIs in mise, an inventory, and a `doctor` check. Keep `.java-version` at the Temurin feature version and record the actual build separately.
+- [x] **FND-02** Build and check the toolchain with one authoritative version owner per ecosystem, pinned independent CLIs in mise, an inventory, and a `doctor` check. Keep `.java-version` at the Temurin feature version and record the actual build separately.
 - [ ] **FND-03** Exchange type-prefixed UUIDv7 TypeIDs between Kotlin and TypeScript and round-trip them through native `uuid` storage.
 - [ ] **FND-04** Build project images through Paketo Cloud Native Buildpacks, using `bootBuildImage` for JVM services and the Web Servers buildpack for the frontend. Package the static assets built by Gradle using npm and `package-lock.json`.
-- [ ] **FND-05** Run Gradle JVM Test Suites with shared Java Test Fixtures, JUnit 6, and compatible Kotest assertions and property tests. JUnit supplies the runner.
-- [ ] **FND-06** Build the frontend and documentation site from Gradle Node subprojects. On a clean `./gradlew build`, generate the frontend client from the BFF OpenAPI contract before building the frontend.
+- [x] **FND-05** Run Gradle JVM Test Suites with shared Java Test Fixtures, JUnit 6, and compatible Kotest assertions and property tests. JUnit supplies the runner.
+- [x] **FND-06** Build the frontend and documentation site from Gradle Node subprojects. On a clean `./gradlew build`, generate the frontend client from the BFF OpenAPI contract before building the frontend.
 
 ### Domain and Consistency
 
@@ -39,9 +39,9 @@
 
 ### Frontend and Teaching UI
 
-- [ ] **UI-01** A React and TypeScript UI uses Feature-Sliced Design with Steiger checks. A dedicated UI foundation defines reusable components and view patterns in Storybook.
+- [x] **UI-01** A React and TypeScript UI uses Feature-Sliced Design with Steiger checks. A dedicated UI foundation defines reusable components and view patterns in Storybook.
 - [ ] **UI-02** Each business feature has a UI-SPEC and a browser slice that exposes the operation, shows its outcome, and keeps related views live through subscription queries.
-- [ ] **UI-03** A reader can switch between an admin and individual demo students.
+- [x] **UI-03** A reader can switch between an admin and individual demo students.
 - [ ] **UI-04** A reader can use a dedicated teaching UI to browse and filter tagged events.
 - [ ] **UI-05** A reader can inspect a selected command attempt and see the criteria and actual historical events that formed its decision boundary.
 - [ ] **UI-06** A reader can run a concurrent last-seat demonstration and see both attempt outcomes and the committed capacity invariant.
@@ -55,8 +55,8 @@
 - [ ] **QA-04** Playwright verifies browser workflows and architecture tests enforce backend module and frontend slice boundaries.
 - [ ] **QA-05** A Gatling or k6 scenario drives concurrent subscriptions and reports results with the observed domain invariant.
 - [ ] **QA-06** CI measures and publishes code coverage from the applicable test suites.
-- [ ] **QA-07** Kotlin code is idiomatic and documented. Verify representative KDoc formatting with ktfmt, detekt `comments` checks, and Dokka `failOnWarning`.
-- [ ] **QA-08** A pre-commit hook and CI apply the same formatting and style checks to all covered repository artifacts.
+- [x] **QA-07** Kotlin code is idiomatic and documented. Verify representative KDoc formatting with ktfmt, detekt `comments` checks, and Dokka `failOnWarning`.
+- [x] **QA-08** A pre-commit hook and CI apply the same formatting and style checks to all covered repository artifacts.
 
 ### CI/CD and Supply Chain
 
@@ -80,7 +80,7 @@
 - [ ] **DOC-03** Diagrams and snippets explain the project’s DCB decisions and compare the same scenarios with Axon 4 aggregates, including trade-offs.
 - [ ] **DOC-04** The repository retains `.planning/` history and publishes how AI-assisted development was used, including lessons learned.
 - [ ] **DOC-05** Third-party and project-owned skills used locally are vetted and their compatibility with OpenCode is documented.
-- [ ] **DOC-06** Document the dependency maintenance and private advisory procedure from the project brief, reconcile the cited review records against this checkout’s evidence, and keep private inputs and results outside the repository.
+- [x] **DOC-06** Document the dependency maintenance and private advisory procedure from the project brief, reconcile the cited review records against this checkout’s evidence, and keep private inputs and results outside the repository.
 
 ## User Stories
 
@@ -111,11 +111,11 @@
 | Requirement | Phase | Status |
 | --- | --- | --- |
 | FND-01 | Phase 1 | Complete |
-| FND-02 | Phase 2 | Pending |
+| FND-02 | Phase 2 | Complete |
 | FND-03 | Phase 3 | Pending |
 | FND-04 | Phase 5 | Pending |
-| FND-05 | Phase 2 | Pending |
-| FND-06 | Phase 2 | Pending |
+| FND-05 | Phase 2 | Complete |
+| FND-06 | Phase 2 | Complete |
 | DCB-01 | Phase 3 | Pending |
 | DCB-02 | Phase 4 | Pending |
 | DCB-03 | Phase 4 | Pending |
@@ -131,10 +131,10 @@
 | CQRS-01 | Phase 3 | Pending |
 | CQRS-02 | Phase 3 | Pending |
 | CQRS-03 | Phase 5 | Pending |
-| CQRS-04 | Phase 2 | Pending |
-| UI-01 | Phase 2 | Pending |
+| CQRS-04 | Phase 2 | Pending (role-directory contract verified. Feature operations and live views follow in later slices.) |
+| UI-01 | Phase 2 | Complete |
 | UI-02 | Phase 5 | Pending |
-| UI-03 | Phase 2 | Pending |
+| UI-03 | Phase 2 | Complete |
 | UI-04 | Phase 6 | Pending |
 | UI-05 | Phase 6 | Pending |
 | UI-06 | Phase 6 | Pending |
@@ -145,8 +145,8 @@
 | QA-04 | Phase 6 | Pending |
 | QA-05 | Phase 6 | Pending |
 | QA-06 | Phase 7 | Pending |
-| QA-07 | Phase 2 | Pending |
-| QA-08 | Phase 2 | Pending |
+| QA-07 | Phase 2 | Complete |
+| QA-08 | Phase 2 | Complete |
 | CI-01 | Phase 7 | Pending |
 | CI-02 | Phase 7 | Pending |
 | CI-03 | Phase 7 | Pending |
@@ -161,6 +161,6 @@
 | DOC-03 | Phase 8 | Pending |
 | DOC-04 | Phase 8 | Pending |
 | DOC-05 | Phase 8 | Pending |
-| DOC-06 | Phase 2 | Pending |
+| DOC-06 | Phase 2 | Complete |
 
 All 52 v1 requirements map to one phase each.

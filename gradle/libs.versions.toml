@@ -3,6 +3,8 @@ axon = "5.4.2"
 axoniq = "5.4.2"
 axon-server-image = "axoniq/axonserver:2026.1.8@sha256:57b6ad30353cc0df1612d6a30be03a1df85b4b49b5f2feee218a70d1cb7794c2"
 coroutines = "1.10.2"
+detekt = "1.23.8"
+dokka = "2.3.0"
 gradle-node = "7.1.0"
 guava-android = "33.8.0-android"
 guava-jre = "33.8.0-jre"
@@ -10,6 +12,7 @@ junit = "6.1.3"
 kotlin = "2.4.21"
 kotest = "6.2.7"
 ktfmt = "0.65"
+networknt-validator = "3.0.9"
 paketo-builder-ref = "docker.io/paketobuildpacks/builder-jammy-buildpackless-base:0.0.363@sha256:5af7e0854783326ba6da9f038b6cb5206a5712478c7ffc096c43b122b94e3ea7"
 paketo-builder-child = "sha256:67707cbbb950ebcb578896984e41fb6b90a17b26e482cebbe2f395347a633516"
 paketo-builder-config = "sha256:18160026f9331ec8b13f4093f0bc61fa3fe95700f149d20210fcfbfa2a955162"
@@ -19,6 +22,7 @@ paketo-run-config = "sha256:1476b8e33ea3e063e2ce2875ec08b10db578f0af176d5ac1ca48
 paketo-web-ref = "docker.io/paketobuildpacks/web-servers:4.16.3@sha256:a01f811143ca2629a1cfb2b053a63de0b845cf6e38d19ca375f2c3d6c62c6e97"
 paketo-web-child = "sha256:d0600f9c22f6fbb9f0900a75cb8667300374d5c3c81f0ba125304f6f4ebe4c73"
 paketo-web-config = "sha256:dc2c8e58401c379d8a8320b348de6705b9804720f26fb9b60e88236c7fe508c9"
+qodana-jvm-community-image = "jetbrains/qodana-jvm-community:2026.3@sha256:5420d961a4f3a850adc47fc6565916eb6fe558f3205f511ac7bc75b98812c37e"
 spring-boot = "4.2.0"
 typeid-java = "0.3.1"
 
@@ -27,12 +31,14 @@ axon-bom = { module = "org.axonframework:axon-framework-bom", version.ref = "axo
 axoniq-bom = { module = "io.axoniq.framework:axoniq-framework-bom", version.ref = "axoniq" }
 axoniq-starter = { module = "io.axoniq.framework:axoniq-spring-boot-starter" }
 coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+detekt-cli = { module = "io.gitlab.arturbosch.detekt:detekt-cli", version.ref = "detekt" }
 guava-android = { module = "com.google.guava:guava", version.ref = "guava-android" }
 guava-jre = { module = "com.google.guava:guava", version.ref = "guava-jre" }
 jackson-databind = { module = "tools.jackson.core:jackson-databind" }
 kotest-assertions = { module = "io.kotest:kotest-assertions-core-jvm", version.ref = "kotest" }
 kotest-property = { module = "io.kotest:kotest-property-jvm", version.ref = "kotest" }
 ktfmt = { module = "org.jetbrains.kotlinx:ktfmt", version.ref = "ktfmt" }
+networknt-validator = { module = "com.networknt:json-schema-validator", version.ref = "networknt-validator" }
 reactor-core = { module = "io.projectreactor:reactor-core" }
 spring-boot-bom = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
 spring-boot-starter = { module = "org.springframework.boot:spring-boot-starter" }
@@ -40,6 +46,8 @@ testcontainers = { module = "org.testcontainers:testcontainers" }
 typeid-java = { module = "de.fxlae:typeid-java", version.ref = "typeid-java" }
 
 [plugins]
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 gradle-node = { id = "com.github.node-gradle.node", version.ref = "gradle-node" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }

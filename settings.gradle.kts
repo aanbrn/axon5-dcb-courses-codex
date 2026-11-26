@@ -1,4 +1,6 @@
 pluginManagement {
+    includeBuild("build-logic")
+
     repositories {
         gradlePluginPortal()
         mavenCentral()
@@ -12,4 +14,9 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "axon5-dcb-courses"
-include(":probe")
+
+include(":probe", ":bff", ":web", ":docs-site")
+
+if (file("fixtures").isDirectory) {
+    include(":fixtures")
+}

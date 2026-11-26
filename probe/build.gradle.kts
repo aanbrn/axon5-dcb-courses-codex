@@ -12,8 +12,10 @@ plugins {
     id("jvm-test-suite")
 }
 
-val javaFeature = providers.fileContents(rootProject.layout.projectDirectory.file(".java-version"))
-    .asText.map { it.trim().toInt() }
+val javaFeature =
+    providers.fileContents(rootProject.layout.projectDirectory.file(".java-version")).asText.map {
+        it.trim().toInt()
+    }
 
 java {
     toolchain {
@@ -44,9 +46,11 @@ dependencies {
 val roleClasspath = sourceSets.main.map { it.runtimeClasspath }
 val roleLauncher = javaToolchains.launcherFor(java.toolchain)
 val buildDirectory = layout.buildDirectory
-val evidenceDirectory = providers.environmentVariable("PROBE_EVIDENCE_DIR")
-    .map { rootProject.file(it) }
-    .orElse(buildDirectory.dir("reports/feasibility").map { it.asFile })
+val evidenceDirectory =
+    providers
+        .environmentVariable("PROBE_EVIDENCE_DIR")
+        .map { rootProject.file(it) }
+        .orElse(buildDirectory.dir("reports/feasibility").map { it.asFile })
 val typeIdFixture = layout.projectDirectory.file("typeid/vectors.json")
 val typeIdRunId = providers.environmentVariable("PROBE_RUN_ID").orElse("local")
 val typeIdExchangeId: String by lazy { UUID.randomUUID().toString() }
@@ -54,7 +58,8 @@ val kotlinExchange = buildDirectory.file("typeid/kotlin-origin.json")
 val typeScriptExchange = buildDirectory.file("typeid/typescript-origin.json")
 val typeIdLockfile = layout.projectDirectory.file("typeid/package-lock.json")
 
-fun sha256(bytes: ByteArray): String = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes))
+fun sha256(bytes: ByteArray): String =
+    HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes))
 
 fun observation(stage: String, fields: Map<String, Any>) {
     println("PROBE_SECONDARY ${JsonOutput.toJson(mapOf("stage" to stage) + fields)}")
@@ -67,16 +72,19 @@ fun publishArtifact(name: String, bytes: ByteArray): String {
     return name
 }
 
-fun Configuration.moduleVersions() = incoming.resolutionResult.allComponents
-    .mapNotNull { it.moduleVersion }
-    .associate { "${it.group}:${it.name}" to it.version }
+fun Configuration.moduleVersions() =
+    incoming.resolutionResult.allComponents
+        .mapNotNull { it.moduleVersion }
+        .associate { "${it.group}:${it.name}" to it.version }
 
 fun verifySecondaryIsolation() {
     for (name in listOf("runtimeClasspath", "integrationTestRuntimeClasspath")) {
-        val helpers = configurations.getByName(name).moduleVersions().keys.filter { coordinate ->
-            coordinate.startsWith("io.kotest:") || coordinate.startsWith("de.fxlae:") ||
-                coordinate == "org.jetbrains.kotlinx:ktfmt"
-        }
+        val helpers =
+            configurations.getByName(name).moduleVersions().keys.filter { coordinate ->
+                coordinate.startsWith("io.kotest:") ||
+                    coordinate.startsWith("de.fxlae:") ||
+                    coordinate == "org.jetbrains.kotlinx:ktfmt"
+            }
         check(helpers.isEmpty()) { "Secondary helpers leaked into $name: $helpers" }
     }
 }
@@ -100,8 +108,11 @@ testing.suites {
                 workingDir(workerDirectory)
                 systemProperty("user.home", workerHome.get().asFile.absolutePath)
                 doFirst {
-                    for (directory in listOf(workerHome.get().asFile, workerDirectory.get().asFile)) {
-                        check(directory.deleteRecursively() && directory.mkdirs()) { "Cannot initialize $directory" }
+                    for (directory in
+                        listOf(workerHome.get().asFile, workerDirectory.get().asFile)) {
+                        check(directory.deleteRecursively() && directory.mkdirs()) {
+                            "Cannot initialize $directory"
+                        }
                     }
                 }
             }
@@ -132,18 +143,40 @@ testing.suites {
                 inputs.property("probe.serverImage", libs.versions.axon.server.image)
 
                 doFirst {
-                    for (directory in listOf(workerHome.get().asFile, workerDirectory.get().asFile)) {
-                        check(directory.deleteRecursively() && directory.mkdirs()) { "Cannot initialize $directory" }
+                    for (directory in
+                        listOf(workerHome.get().asFile, workerDirectory.get().asFile)) {
+                        check(directory.deleteRecursively() && directory.mkdirs()) {
+                            "Cannot initialize $directory"
+                        }
                     }
-                    val dockerEnvironment = listOf(
-                        "DOCKER_HOST", "TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE", "TESTCONTAINERS_HOST_OVERRIDE",
-                        "PATH", "LANG", "LC_ALL", "TMPDIR", "SystemRoot",
-                    ).mapNotNull { key -> providers.environmentVariable(key).orNull?.let { key to it } }.toMap()
-                    setEnvironment(dockerEnvironment + ("HOME" to workerHome.get().asFile.absolutePath))
+                    val dockerEnvironment =
+                        listOf(
+                                "DOCKER_HOST",
+                                "TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE",
+                                "TESTCONTAINERS_HOST_OVERRIDE",
+                                "PATH",
+                                "LANG",
+                                "LC_ALL",
+                                "TMPDIR",
+                                "SystemRoot",
+                            )
+                            .mapNotNull { key ->
+                                providers.environmentVariable(key).orNull?.let { key to it }
+                            }
+                            .toMap()
+                    setEnvironment(
+                        dockerEnvironment + ("HOME" to workerHome.get().asFile.absolutePath),
+                    )
                     systemProperty("probe.serverImage", libs.versions.axon.server.image.get())
-                    systemProperty("probe.runId", providers.environmentVariable("PROBE_RUN_ID").orElse("").get())
+                    systemProperty(
+                        "probe.runId",
+                        providers.environmentVariable("PROBE_RUN_ID").orElse("").get(),
+                    )
                     systemProperty("probe.roleClasspath", roleClasspath.get().asPath)
-                    systemProperty("probe.roleJava", roleLauncher.get().executablePath.asFile.absolutePath)
+                    systemProperty(
+                        "probe.roleJava",
+                        roleLauncher.get().executablePath.asFile.absolutePath,
+                    )
                 }
             }
         }
@@ -168,38 +201,75 @@ testing.suites {
                 outputs.upToDateWhen { false }
                 doLast {
                     verifySecondaryIsolation()
-                    val report = reports.junitXml.outputLocation.get().asFile.resolve("TEST-$testClass.xml")
-                    val xml = DocumentBuilderFactory.newDefaultInstance().apply {
-                        setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
-                    }.newDocumentBuilder().parse(report)
+                    val report =
+                        reports.junitXml.outputLocation.get().asFile.resolve("TEST-$testClass.xml")
+                    val xml =
+                        DocumentBuilderFactory.newDefaultInstance()
+                            .apply {
+                                setFeature(
+                                    "http://apache.org/xml/features/disallow-doctype-decl",
+                                    true,
+                                )
+                            }
+                            .newDocumentBuilder()
+                            .parse(report)
                     val cases = xml.getElementsByTagName("testcase")
-                    check(cases.length == 1 && cases.item(0).attributes.getNamedItem("name").nodeValue == "$testCase()" &&
-                        xml.getElementsByTagName("failure").length == 0 && xml.getElementsByTagName("error").length == 0 &&
-                        xml.getElementsByTagName("skipped").length == 0) { "Expected one passing Jupiter case: $testCase" }
-                    val worker = xml.getElementsByTagName("system-out").item(0).textContent.lineSequence()
-                        .single { it.startsWith("PROBE_KOTEST_WORKER ") }
-                        .removePrefix("PROBE_KOTEST_WORKER ").split(' ', limit = 3)
+                    check(
+                        cases.length == 1 &&
+                            cases.item(0).attributes.getNamedItem("name").nodeValue ==
+                                "$testCase()" &&
+                            xml.getElementsByTagName("failure").length == 0 &&
+                            xml.getElementsByTagName("error").length == 0 &&
+                            xml.getElementsByTagName("skipped").length == 0,
+                    ) {
+                        "Expected one passing Jupiter case: $testCase"
+                    }
+                    val worker =
+                        xml.getElementsByTagName("system-out")
+                            .item(0)
+                            .textContent
+                            .lineSequence()
+                            .single { it.startsWith("PROBE_KOTEST_WORKER ") }
+                            .removePrefix("PROBE_KOTEST_WORKER ")
+                            .split(' ', limit = 3)
                     val (vendor, build, architecture) = worker[2].split('|')
-                    check(vendor == "Eclipse Adoptium" && Runtime.Version.parse(build).feature() == javaFeature.get()) {
+                    check(
+                        vendor == "Eclipse Adoptium" &&
+                            Runtime.Version.parse(build).feature() == javaFeature.get(),
+                    ) {
                         "Unexpected Kotlin test worker: ${worker[2]}"
                     }
-                    val expectedModules = mapOf(
-                        "org.jetbrains.kotlin:kotlin-stdlib" to libs.versions.kotlin.get(),
-                        "org.junit.platform:junit-platform-launcher" to libs.versions.junit.get(),
-                        "org.junit.jupiter:junit-jupiter-engine" to libs.versions.junit.get(),
-                        "io.kotest:kotest-assertions-core-jvm" to libs.versions.kotest.get(),
-                        "io.kotest:kotest-property-jvm" to libs.versions.kotest.get(),
-                    )
-                    val selected = configurations.getByName("kotestProbeRuntimeClasspath").moduleVersions()
+                    val expectedModules =
+                        mapOf(
+                            "org.jetbrains.kotlin:kotlin-stdlib" to libs.versions.kotlin.get(),
+                            "org.junit.platform:junit-platform-launcher" to
+                                libs.versions.junit.get(),
+                            "org.junit.jupiter:junit-jupiter-engine" to libs.versions.junit.get(),
+                            "io.kotest:kotest-assertions-core-jvm" to libs.versions.kotest.get(),
+                            "io.kotest:kotest-property-jvm" to libs.versions.kotest.get(),
+                        )
+                    val selected =
+                        configurations.getByName("kotestProbeRuntimeClasspath").moduleVersions()
                     val resolved = selected.filterKeys { it in expectedModules }
-                    check(resolved == expectedModules) { "Unexpected Jupiter/Kotest runtime modules: $resolved" }
+                    check(resolved == expectedModules) {
+                        "Unexpected Jupiter/Kotest runtime modules: $resolved"
+                    }
                     val artifact = publishArtifact("kotest-junit.xml", report.readBytes())
-                    observation("kotest", mapOf(
-                        "artifacts" to listOf(artifact), "junitCase" to testCase, "testCount" to cases.length,
-                        "propertySeed" to worker[0].toLong(), "propertyChecks" to worker[1].toInt(),
-                        "resolvedModules" to resolved, "workerVendor" to vendor, "workerBuild" to build,
-                        "workerArchitecture" to architecture, "coreDependenciesIsolated" to true,
-                    ))
+                    observation(
+                        "kotest",
+                        mapOf(
+                            "artifacts" to listOf(artifact),
+                            "junitCase" to testCase,
+                            "testCount" to cases.length,
+                            "propertySeed" to worker[0].toLong(),
+                            "propertyChecks" to worker[1].toInt(),
+                            "resolvedModules" to resolved,
+                            "workerVendor" to vendor,
+                            "workerBuild" to build,
+                            "workerArchitecture" to architecture,
+                            "coreDependenciesIsolated" to true,
+                        ),
+                    )
                 }
             }
         }
@@ -226,25 +296,39 @@ testing.suites {
                 systemProperty("probe.typeIdRunId", typeIdRunId.get())
                 systemProperty("probe.typeIdExchangeId", typeIdExchangeId)
                 timeout = Duration.ofMinutes(2)
-                doFirst { check(!output.exists() || output.delete()) { "Could not clear old Kotlin exchange" } }
+                doFirst {
+                    check(!output.exists() || output.delete()) {
+                        "Could not clear old Kotlin exchange"
+                    }
+                }
                 doLast {
                     verifySecondaryIsolation()
                     val fixture = JsonSlurper().parse(typeIdFixture.asFile) as Map<*, *>
                     val source = fixture["source"] as Map<*, *>
                     val revision = source["revision"] as String
-                    val version = configurations.getByName("typeIdJvmVectorsRuntimeClasspath").moduleVersions()
-                        .getValue("de.fxlae:typeid-java")
-                    check(version == libs.versions.typeid.java.get()) { "Unexpected JVM TypeID version: $version" }
+                    val version =
+                        configurations
+                            .getByName("typeIdJvmVectorsRuntimeClasspath")
+                            .moduleVersions()
+                            .getValue("de.fxlae:typeid-java")
+                    check(version == libs.versions.typeid.java.get()) {
+                        "Unexpected JVM TypeID version: $version"
+                    }
                     val bytes = output.readBytes()
                     val artifact = publishArtifact("typeid-jvm-origin.json", bytes)
-                    observation("typeid-jvm", mapOf(
-                        "artifacts" to listOf(artifact), "jvmArtifact" to "de.fxlae:typeid-java:$version",
-                        "sourceRevision" to revision,
-                        "positiveVectors" to (fixture["valid"] as List<*>).size,
-                        "negativeVectors" to (fixture["invalid"] as List<*>).size,
-                        "wrongExpectedPrefixRejected" to true, "kotlinOriginSha256" to sha256(bytes),
-                        "coreDependenciesIsolated" to true,
-                    ))
+                    observation(
+                        "typeid-jvm",
+                        mapOf(
+                            "artifacts" to listOf(artifact),
+                            "jvmArtifact" to "de.fxlae:typeid-java:$version",
+                            "sourceRevision" to revision,
+                            "positiveVectors" to (fixture["valid"] as List<*>).size,
+                            "negativeVectors" to (fixture["invalid"] as List<*>).size,
+                            "wrongExpectedPrefixRejected" to true,
+                            "kotlinOriginSha256" to sha256(bytes),
+                            "coreDependenciesIsolated" to true,
+                        ),
+                    )
                 }
             }
         }
@@ -260,14 +344,20 @@ configurations.configureEach {
 }
 
 val kdocFormatterImplementation = configurations.dependencyScope("kdocFormatterImplementation")
-val kdocFormatter = configurations.resolvable("kdocFormatter") {
-    extendsFrom(kdocFormatterImplementation.get())
-}.get()
+val kdocFormatter =
+    configurations
+        .resolvable("kdocFormatter") {
+            extendsFrom(kdocFormatterImplementation.get())
+        }
+        .get()
+
 dependencies {
     add(kdocFormatterImplementation.name, libs.ktfmt)
     constraints {
         add(kdocFormatterImplementation.name, libs.guava.jre) {
-            because("The formatter graph must select a Guava release with the GHSA-xxph-c9ww-hj94 fix")
+            because(
+                "The formatter graph must select a Guava release with the GHSA-xxph-c9ww-hj94 fix",
+            )
         }
     }
 }
@@ -287,9 +377,10 @@ fun JavaExec.formatKdoc(input: RegularFile, output: Provider<RegularFile>) {
     doFirst { input.asFile.copyTo(output.get().asFile, overwrite = true) }
 }
 
-val formatKdoc = tasks.register<JavaExec>("formatKdocSpecimen") {
-    formatKdoc(kdocFixture, firstKdocPass)
-}
+val formatKdoc =
+    tasks.register<JavaExec>("formatKdocSpecimen") {
+        formatKdoc(kdocFixture, firstKdocPass)
+    }
 
 tasks.register<JavaExec>("kdocProbe") {
     group = "verification"
@@ -302,29 +393,61 @@ tasks.register<JavaExec>("kdocProbe") {
         val original = kdocFixture.asFile.readBytes()
         val first = firstKdocPass.get().asFile.readBytes()
         val second = secondKdocPass.get().asFile.readBytes()
-        val lines = first.toString(Charsets.UTF_8).lineSequence()
-            .dropWhile { it != "/**" }.drop(1).takeWhile { it != " */" }
-            .map { it.removePrefix(" *").removePrefix(" ") }.toList()
+        val lines =
+            first
+                .toString(Charsets.UTF_8)
+                .lineSequence()
+                .dropWhile { it != "/**" }
+                .drop(1)
+                .takeWhile { it != " */" }
+                .map { it.removePrefix(" *").removePrefix(" ") }
+                .toList()
         val paragraph = lines.takeWhile(String::isNotBlank)
-        val expectedParagraph = "Normalizes a label with [String.trim] and preserves intentional whitespace in this example " +
-            "so the formatter must reflow this paragraph without changing its words."
-        check(!original.contentEquals(first) && paragraph.size > 1 && paragraph.joinToString(" ") == expectedParagraph) {
+        val expectedParagraph =
+            "Normalizes a label with [String.trim] and preserves intentional whitespace in this example " +
+                "so the formatter must reflow this paragraph without changing its words."
+        check(
+            !original.contentEquals(first) &&
+                paragraph.size > 1 &&
+                paragraph.joinToString(" ") == expectedParagraph,
+        ) {
             "Expected ktfmt to wrap the long KDoc paragraph and retain its words and symbol link"
         }
-        check(lines.drop(paragraph.size) == listOf(
-            "", "- Trim leading whitespace.", "- Trim trailing whitespace.", "", "```kotlin",
-            "val source = \"  example  \"", "val label = normalizeLabel(source)", "```", "",
-            "@param source the untrimmed label", "@return the trimmed label",
-        )) { "ktfmt changed the KDoc list, fenced example, or parameter/return tags: $lines" }
+        check(
+            lines.drop(paragraph.size) ==
+                listOf(
+                    "",
+                    "- Trim leading whitespace.",
+                    "- Trim trailing whitespace.",
+                    "",
+                    "```kotlin",
+                    "val source = \"  example  \"",
+                    "val label = normalizeLabel(source)",
+                    "```",
+                    "",
+                    "@param source the untrimmed label",
+                    "@return the trimmed label",
+                ),
+        ) {
+            "ktfmt changed the KDoc list, fenced example, or parameter/return tags: $lines"
+        }
         check(first.contentEquals(second)) { "The second ktfmt pass changed the first pass bytes" }
         val version = kdocFormatter.moduleVersions().getValue("org.jetbrains.kotlinx:ktfmt")
         check(version == libs.versions.ktfmt.get()) { "Unexpected ktfmt version: $version" }
         val artifact = publishArtifact("kdoc-formatted.kt", first)
-        observation("kdoc", mapOf(
-            "artifacts" to listOf(artifact), "formatterVersion" to version, "style" to "kotlinlang",
-            "beforeSha256" to sha256(original), "afterSha256" to sha256(first), "secondSha256" to sha256(second),
-            "contentPreserved" to true, "coreDependenciesIsolated" to true,
-        ))
+        observation(
+            "kdoc",
+            mapOf(
+                "artifacts" to listOf(artifact),
+                "formatterVersion" to version,
+                "style" to "kotlinlang",
+                "beforeSha256" to sha256(original),
+                "afterSha256" to sha256(first),
+                "secondSha256" to sha256(second),
+                "contentPreserved" to true,
+                "coreDependenciesIsolated" to true,
+            ),
+        )
     }
 }
 
@@ -335,12 +458,13 @@ fun Exec.runFrontendTask(name: String) {
     if (gradle.startParameter.isRerunTasks) args("--rerun-tasks")
 }
 
-val frontendAssets = tasks.register<Exec>("frontendAssets") {
-    group = "verification"
-    description = "Build and verify the probe's static assets with the isolated npm build."
-    runFrontendTask("frontendAssets")
-    providers.gradleProperty("probeMarker").orNull?.let { args("-PprobeMarker=$it") }
-}
+val frontendAssets =
+    tasks.register<Exec>("frontendAssets") {
+        group = "verification"
+        description = "Build and verify the probe's static assets with the isolated npm build."
+        runFrontendTask("frontendAssets")
+        providers.gradleProperty("probeMarker").orNull?.let { args("-PprobeMarker=$it") }
+    }
 
 tasks.register<Exec>("frontendImageProbe") {
     group = "verification"
@@ -349,79 +473,106 @@ tasks.register<Exec>("frontendImageProbe") {
     runFrontendTask("frontendImageProbe")
 }
 
-val typeIdTypeScriptVectors = tasks.register<Exec>("typeIdTypeScriptVectors") {
-    group = "verification"
-    description = "Compile the isolated TypeScript probe and verify Kotlin TypeID bytes."
-    dependsOn("typeIdJvmVectors")
-    runFrontendTask("scopedNpmBuild")
-    val fixture = typeIdFixture.asFile
-    val kotlin = kotlinExchange.get().asFile
-    val typeScript = typeScriptExchange.get().asFile
-    args(
-        "-PprobeNpmDir=probe/typeid", "-PprobeNpmScript=check-vectors",
-        "-PprobeNpmInputs=${rootProject.relativePath(fixture)},${rootProject.relativePath(kotlin)}",
-        "-PprobeNpmOutputs=${rootProject.relativePath(typeScript)}",
-    )
-    inputs.files(fixture, kotlin).withPathSensitivity(PathSensitivity.RELATIVE)
-    outputs.file(typeScriptExchange)
-    outputs.upToDateWhen { false }
-    timeout = Duration.ofMinutes(4)
-    environment("PROBE_TYPEID_FIXTURE", fixture.absolutePath)
-    environment("PROBE_TYPEID_KOTLIN", kotlin.absolutePath)
-    environment("PROBE_TYPEID_TYPESCRIPT", typeScript.absolutePath)
-    environment("PROBE_TYPEID_RUN_ID", typeIdRunId.get())
-    environment("PROBE_TYPEID_EXCHANGE_ID", typeIdExchangeId)
-    lateinit var lockBefore: ByteArray
-    doFirst {
-        lockBefore = typeIdLockfile.asFile.readBytes()
-        check(!typeScript.exists() || typeScript.delete()) { "Could not clear old TypeScript exchange" }
+val typeIdTypeScriptVectors =
+    tasks.register<Exec>("typeIdTypeScriptVectors") {
+        group = "verification"
+        description = "Compile the isolated TypeScript probe and verify Kotlin TypeID bytes."
+        dependsOn("typeIdJvmVectors")
+        runFrontendTask("scopedNpmBuild")
+        val fixture = typeIdFixture.asFile
+        val kotlin = kotlinExchange.get().asFile
+        val typeScript = typeScriptExchange.get().asFile
+        args(
+            "-PprobeNpmDir=probe/typeid",
+            "-PprobeNpmScript=check-vectors",
+            "-PprobeNpmInputs=${rootProject.relativePath(fixture)},${rootProject.relativePath(kotlin)}",
+            "-PprobeNpmOutputs=${rootProject.relativePath(typeScript)}",
+        )
+        inputs.files(fixture, kotlin).withPathSensitivity(PathSensitivity.RELATIVE)
+        outputs.file(typeScriptExchange)
+        outputs.upToDateWhen { false }
+        timeout = Duration.ofMinutes(4)
+        environment("PROBE_TYPEID_FIXTURE", fixture.absolutePath)
+        environment("PROBE_TYPEID_KOTLIN", kotlin.absolutePath)
+        environment("PROBE_TYPEID_TYPESCRIPT", typeScript.absolutePath)
+        environment("PROBE_TYPEID_RUN_ID", typeIdRunId.get())
+        environment("PROBE_TYPEID_EXCHANGE_ID", typeIdExchangeId)
+        lateinit var lockBefore: ByteArray
+        doFirst {
+            lockBefore = typeIdLockfile.asFile.readBytes()
+            check(!typeScript.exists() || typeScript.delete()) {
+                "Could not clear old TypeScript exchange"
+            }
+        }
+        doLast {
+            check(typeIdLockfile.asFile.readBytes().contentEquals(lockBefore)) {
+                "TypeScript execution changed the npm lockfile"
+            }
+            check(typeScript.isFile) { "TypeScript did not emit an exchange" }
+        }
     }
-    doLast {
-        check(typeIdLockfile.asFile.readBytes().contentEquals(lockBefore)) { "TypeScript execution changed the npm lockfile" }
-        check(typeScript.isFile) { "TypeScript did not emit an exchange" }
-    }
-}
 
 tasks.register<JavaExec>("typeIdProbe") {
     group = "verification"
-    description = "Validate independently produced Kotlin and TypeScript TypeID exchanges in both directions."
+    description =
+        "Validate independently produced Kotlin and TypeScript TypeID exchanges in both directions."
     dependsOn(typeIdTypeScriptVectors)
     javaLauncher = roleLauncher
     classpath(sourceSets.named("typeIdJvmVectors").map { it.runtimeClasspath })
     mainClass = "probe.TypeIdVectorsKt"
     val kotlin = kotlinExchange.get().asFile
     val typeScript = typeScriptExchange.get().asFile
-    inputs.files(typeIdFixture, kotlin, typeScript, typeIdLockfile).withPathSensitivity(PathSensitivity.RELATIVE)
-    args("consume", typeIdFixture.asFile.absolutePath, typeScript.absolutePath, typeIdRunId.get(), typeIdExchangeId)
+    inputs
+        .files(typeIdFixture, kotlin, typeScript, typeIdLockfile)
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+    args(
+        "consume",
+        typeIdFixture.asFile.absolutePath,
+        typeScript.absolutePath,
+        typeIdRunId.get(),
+        typeIdExchangeId,
+    )
     timeout = Duration.ofMinutes(2)
     doLast {
         verifySecondaryIsolation()
         val kotlinBytes = kotlin.readBytes()
         val typeScriptBytes = typeScript.readBytes()
         val fromKotlin = JsonSlurper().parseText(kotlinBytes.toString(Charsets.UTF_8)) as Map<*, *>
-        val fromTypeScript = JsonSlurper().parseText(typeScriptBytes.toString(Charsets.UTF_8)) as Map<*, *>
+        val fromTypeScript =
+            JsonSlurper().parseText(typeScriptBytes.toString(Charsets.UTF_8)) as Map<*, *>
         val fixture = JsonSlurper().parse(typeIdFixture.asFile) as Map<*, *>
         val revision = (fixture["source"] as Map<*, *>)["revision"] as String
         val kotlinVectors = fromKotlin["vectors"] as List<*>
         val typeScriptVectors = fromTypeScript["vectors"] as List<*>
-        val locked = (JsonSlurper().parse(typeIdLockfile.asFile) as Map<*, *>)["packages"] as Map<*, *>
-        fun lockedVersion(name: String) = (locked["node_modules/$name"] as Map<*, *>)["version"] as String
-        val npmOwner = JsonSlurper().parse(layout.projectDirectory.file("web/package.json").asFile) as Map<*, *>
+        val locked =
+            (JsonSlurper().parse(typeIdLockfile.asFile) as Map<*, *>)["packages"] as Map<*, *>
+        fun lockedVersion(name: String) =
+            (locked["node_modules/$name"] as Map<*, *>)["version"] as String
+        val npmOwner =
+            JsonSlurper().parse(layout.projectDirectory.file("web/package.json").asFile)
+                as Map<*, *>
         val node = "v" + rootProject.file(".nvmrc").readText().trim()
         val npm = (npmOwner["packageManager"] as String).removePrefix("npm@")
         val typeidJs = lockedVersion("typeid-js")
         val compiler = lockedVersion("typescript")
         val uuid = lockedVersion("uuid")
         val nativeCompiler = fromTypeScript["nativeCompiler"] as String
-        check(fromTypeScript["nodeVersion"] == node && fromTypeScript["npmVersion"] == npm &&
-            fromTypeScript["typeidJsVersion"] == typeidJs && fromTypeScript["typescriptVersion"] == compiler &&
-            fromTypeScript["uuidVersion"] == uuid && lockedVersion(nativeCompiler) == compiler) {
+        check(
+            fromTypeScript["nodeVersion"] == node &&
+                fromTypeScript["npmVersion"] == npm &&
+                fromTypeScript["typeidJsVersion"] == typeidJs &&
+                fromTypeScript["typescriptVersion"] == compiler &&
+                fromTypeScript["uuidVersion"] == uuid &&
+                lockedVersion(nativeCompiler) == compiler,
+        ) {
             "The TypeScript worker did not use the declared Node, npm and locked artifacts"
         }
-        check(fromTypeScript["sourceRevision"] == revision &&
-            fromTypeScript["positiveVectors"] == (fixture["valid"] as List<*>).size &&
-            fromTypeScript["negativeVectors"] == (fixture["invalid"] as List<*>).size &&
-            fromTypeScript["validatedKotlinVectors"] == kotlinVectors.size) {
+        check(
+            fromTypeScript["sourceRevision"] == revision &&
+                fromTypeScript["positiveVectors"] == (fixture["valid"] as List<*>).size &&
+                fromTypeScript["negativeVectors"] == (fixture["invalid"] as List<*>).size &&
+                fromTypeScript["validatedKotlinVectors"] == kotlinVectors.size,
+        ) {
             "The TypeScript worker did not report the expected fixture and inbound vector checks"
         }
         fun values(records: List<*>) = records.map { (it as Map<*, *>)["typeid"] as String }.toSet()
@@ -431,13 +582,33 @@ tasks.register<JavaExec>("typeIdProbe") {
 
         val forward = publishArtifact("typeid-kotlin-to-typescript.json", kotlinBytes)
         val reverse = publishArtifact("typeid-typescript-to-kotlin.json", typeScriptBytes)
-        observation("typeid-exchange", mapOf(
-            "artifacts" to listOf(forward, reverse), "sourceRevision" to revision,
-            "jvmToTs" to mapOf("vectorCount" to kotlinVectors.size, "validatedBytesAndPrefix" to true, "sha256" to sha256(kotlinBytes)),
-            "tsToJvm" to mapOf("vectorCount" to typeScriptVectors.size, "validatedBytesAndPrefix" to true, "sha256" to sha256(typeScriptBytes)),
-            "nodeVersion" to node, "npmVersion" to npm, "typeidJsVersion" to typeidJs, "typescriptVersion" to compiler,
-            "nativeCompiler" to nativeCompiler, "uuidVersion" to uuid, "exchangeId" to typeIdExchangeId,
-            "lockfileSha256" to sha256(typeIdLockfile.asFile.readBytes()), "coreDependenciesIsolated" to true,
-        ))
+        observation(
+            "typeid-exchange",
+            mapOf(
+                "artifacts" to listOf(forward, reverse),
+                "sourceRevision" to revision,
+                "jvmToTs" to
+                    mapOf(
+                        "vectorCount" to kotlinVectors.size,
+                        "validatedBytesAndPrefix" to true,
+                        "sha256" to sha256(kotlinBytes),
+                    ),
+                "tsToJvm" to
+                    mapOf(
+                        "vectorCount" to typeScriptVectors.size,
+                        "validatedBytesAndPrefix" to true,
+                        "sha256" to sha256(typeScriptBytes),
+                    ),
+                "nodeVersion" to node,
+                "npmVersion" to npm,
+                "typeidJsVersion" to typeidJs,
+                "typescriptVersion" to compiler,
+                "nativeCompiler" to nativeCompiler,
+                "uuidVersion" to uuid,
+                "exchangeId" to typeIdExchangeId,
+                "lockfileSha256" to sha256(typeIdLockfile.asFile.readBytes()),
+                "coreDependenciesIsolated" to true,
+            ),
+        )
     }
 }

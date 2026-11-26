@@ -1,0 +1,2 @@
+# Keep the editor profile out of revision archives used by the ordinary Qodana scan.
+/.idea/inspectionProfiles/Project_Default.xml export-ignore

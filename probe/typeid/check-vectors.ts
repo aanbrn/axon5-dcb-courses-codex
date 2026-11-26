@@ -14,7 +14,9 @@ declare const process: {
     equal(actual: unknown, expected: unknown, message: string): void;
     throws(action: () => unknown, expected: RegExp, message: string): void;
   };
-  getBuiltinModule(id: "node:test"): { test(name: string, action: () => void): void };
+  getBuiltinModule(id: "node:test"): {
+    test(name: string, action: () => void): void;
+  };
 };
 
 const { readFileSync, writeFileSync } = process.getBuiltinModule("node:fs");
@@ -24,7 +26,10 @@ const { test } = process.getBuiltinModule("node:test");
 type JsonObject = Record<string, unknown>;
 type Sample = { tag: string; prefix: string; uuid: Uint8Array };
 
-const tags = new Map([["courseId", "course"], ["studentId", "student"]]);
+const tags = new Map([
+  ["courseId", "course"],
+  ["studentId", "student"],
+]);
 
 function object(value: unknown, label: string): JsonObject {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
@@ -40,7 +45,8 @@ function readObject(file: string): JsonObject {
 
 function field(value: JsonObject, name: string): string {
   const result = value[name];
-  if (typeof result !== "string") throw new Error(`Expected string field ${name}`);
+  if (typeof result !== "string")
+    throw new Error(`Expected string field ${name}`);
   return result;
 }
 
@@ -67,14 +73,29 @@ function uuidBytes(uuid: string): Uint8Array {
 }
 
 function bytesHex(bytes: Uint8Array): string {
-  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join(
+    "",
+  );
 }
 
-function validateId(value: string, prefix: string, uuid: Uint8Array, label: string): void {
+function validateId(
+  value: string,
+  prefix: string,
+  uuid: Uint8Array,
+  label: string,
+): void {
   const decoded = TypeID.fromString(value, prefix);
   equal(decoded.getType(), prefix, `${label} decoded prefix`);
-  equal(bytesHex(decoded.toUUIDBytes()), bytesHex(uuid), `${label} decoded UUID bytes`);
-  equal(TypeID.fromUUIDBytes(prefix, uuid).toString(), value, `${label} canonical encoding`);
+  equal(
+    bytesHex(decoded.toUUIDBytes()),
+    bytesHex(uuid),
+    `${label} decoded UUID bytes`,
+  );
+  equal(
+    TypeID.fromUUIDBytes(prefix, uuid).toString(),
+    value,
+    `${label} canonical encoding`,
+  );
 }
 
 function samples(fixture: JsonObject, origin: string): Sample[] {
@@ -121,42 +142,94 @@ test("Kotlin exchange belongs to the current TypeScript invocation", () => {
   const positives = rows(fixture, "valid");
   const negatives = rows(fixture, "invalid");
   for (const vector of positives) {
-    validateId(field(vector, "typeid"), field(vector, "prefix"), uuidBytes(field(vector, "uuid")), field(vector, "name"));
+    validateId(
+      field(vector, "typeid"),
+      field(vector, "prefix"),
+      uuidBytes(field(vector, "uuid")),
+      field(vector, "name"),
+    );
   }
   for (const vector of negatives) {
-    throws(() => TypeID.fromString(field(vector, "typeid")), /./, `Rejected ${field(vector, "name")}`);
+    throws(
+      () => TypeID.fromString(field(vector, "typeid")),
+      /./,
+      `Rejected ${field(vector, "name")}`,
+    );
   }
 
   const inbound = readObject(requiredEnv("PROBE_TYPEID_KOTLIN"));
   const runId = requiredEnv("PROBE_TYPEID_RUN_ID");
-  equal(field(inbound, "exchangeId"), process.env.PROBE_TYPEID_EXCHANGE_ID, "Kotlin exchange ID must match the current invocation");
+  equal(
+    field(inbound, "exchangeId"),
+    process.env.PROBE_TYPEID_EXCHANGE_ID,
+    "Kotlin exchange ID must match the current invocation",
+  );
   const exchangeId = requiredEnv("PROBE_TYPEID_EXCHANGE_ID");
   const kotlin = samples(fixture, "kotlin");
-  const checked = validateExchange(inbound, "kotlin", kotlin, runId, exchangeId);
+  const checked = validateExchange(
+    inbound,
+    "kotlin",
+    kotlin,
+    runId,
+    exchangeId,
+  );
   const [first, ...rest] = rows(inbound, "vectors");
   const firstBytes = field(first, "uuidBytes");
-  const changedByte = (Number.parseInt(firstBytes.slice(0, 2), 16) ^ 1).toString(16).padStart(2, "0");
-  const changedVectors = (change: JsonObject) => ({ ...inbound, vectors: [{ ...first, ...change }, ...rest] });
+  const changedByte = (Number.parseInt(firstBytes.slice(0, 2), 16) ^ 1)
+    .toString(16)
+    .padStart(2, "0");
+  const changedVectors = (change: JsonObject) => ({
+    ...inbound,
+    vectors: [{ ...first, ...change }, ...rest],
+  });
   throws(
-    () => validateExchange(changedVectors({ uuidBytes: changedByte + firstBytes.slice(2) }), "kotlin", kotlin, runId, exchangeId),
+    () =>
+      validateExchange(
+        changedVectors({ uuidBytes: changedByte + firstBytes.slice(2) }),
+        "kotlin",
+        kotlin,
+        runId,
+        exchangeId,
+      ),
     /UUID bytes/,
     "TypeScript rejects a changed Kotlin UUID byte",
   );
   throws(
-    () => validateExchange(changedVectors({ prefix: "different" }), "kotlin", kotlin, runId, exchangeId),
+    () =>
+      validateExchange(
+        changedVectors({ prefix: "different" }),
+        "kotlin",
+        kotlin,
+        runId,
+        exchangeId,
+      ),
     /prefix/,
     "TypeScript rejects a changed Kotlin prefix",
   );
   throws(
-    () => validateExchange({ ...inbound, exchangeId: "previous-invocation" }, "kotlin", kotlin, runId, exchangeId),
+    () =>
+      validateExchange(
+        { ...inbound, exchangeId: "previous-invocation" },
+        "kotlin",
+        kotlin,
+        runId,
+        exchangeId,
+      ),
     /exchange ID/,
     "TypeScript rejects stale Kotlin output",
   );
 
   const inputs = samples(fixture, "typescript");
   const student = inputs[1];
-  const studentId = TypeID.fromUUIDBytes(student.prefix, student.uuid).toString();
-  throws(() => TypeID.fromString(studentId, "course"), /./, "A student TypeID cannot use the course slot");
+  const studentId = TypeID.fromUUIDBytes(
+    student.prefix,
+    student.uuid,
+  ).toString();
+  throws(
+    () => TypeID.fromString(studentId, "course"),
+    /./,
+    "A student TypeID cannot use the course slot",
+  );
   const exchange = {
     origin: "typescript",
     runId,
@@ -172,12 +245,29 @@ test("Kotlin exchange belongs to the current TypeScript invocation", () => {
     negativeVectors: negatives.length,
     validatedKotlinVectors: checked,
     nodeVersion: process.version,
-    npmVersion: /^npm\/([0-9.]+)\s/.exec(requiredEnv("npm_config_user_agent"))?.[1],
-    typeidJsVersion: field(readObject("node_modules/typeid-js/package.json"), "version"),
-    typescriptVersion: field(readObject("node_modules/typescript/package.json"), "version"),
-    nativeCompiler: field(readObject(`node_modules/@typescript/typescript-${process.platform}-${process.arch}/package.json`), "name"),
+    npmVersion: /^npm\/([0-9.]+)\s/.exec(
+      requiredEnv("npm_config_user_agent"),
+    )?.[1],
+    typeidJsVersion: field(
+      readObject("node_modules/typeid-js/package.json"),
+      "version",
+    ),
+    typescriptVersion: field(
+      readObject("node_modules/typescript/package.json"),
+      "version",
+    ),
+    nativeCompiler: field(
+      readObject(
+        `node_modules/@typescript/typescript-${process.platform}-${process.arch}/package.json`,
+      ),
+      "name",
+    ),
     uuidVersion: field(readObject("node_modules/uuid/package.json"), "version"),
   };
   validateExchange(exchange, "typescript", inputs, runId, exchangeId);
-  writeFileSync(requiredEnv("PROBE_TYPEID_TYPESCRIPT"), JSON.stringify(exchange, null, 2) + "\n", { flag: "wx" });
+  writeFileSync(
+    requiredEnv("PROBE_TYPEID_TYPESCRIPT"),
+    JSON.stringify(exchange, null, 2) + "\n",
+    { flag: "wx" },
+  );
 });

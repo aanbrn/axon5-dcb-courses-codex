@@ -1,0 +1,18 @@
+# Use this explicit configuration without --build-upon-default-config.
+build:
+  maxIssues: 0
+
+config:
+  validation: true
+  warningsAsErrors: true
+
+comments:
+  active: true
+  DeprecatedBlockTag:
+    active: true
+  EndOfSentenceFormat:
+    active: true
+  KDocReferencesNonPublicProperty:
+    active: true
+  OutdatedDocumentation:
+    active: true

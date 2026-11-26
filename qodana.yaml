@@ -1,0 +1,3 @@
+version: "1.0"
+plugins:
+  - id: io.axoniq.ide.intellij

@@ -18,7 +18,8 @@ class KotestInteropTest {
         val iterations = 32
         var checks = 0
 
-        checkAll(PropTestConfig(seed = seed, iterations = iterations), Arb.int(-1000..1000)) { value ->
+        checkAll(PropTestConfig(seed = seed, iterations = iterations), Arb.int(-1000..1000)) { value
+            ->
             value.toString().toInt() shouldBe value
             checks += 1
         }

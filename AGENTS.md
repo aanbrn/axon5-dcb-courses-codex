@@ -30,15 +30,17 @@ A reference implementation of students subscribing to courses, built on Axon Fra
 ## Backend and Event Store
 
 ## Build, Tests, and Frontend
-| Area | Direction | Verification evidence |
-| --- | --- | --- |
-| Gradle and tools | Wrapper, catalog, Temurin feature version, mise, Node version file, package metadata and lockfile, and SHA-pinned Actions each own their inputs. | Record the observed JDK patch/build in the Phase 1 probe. Verify the clean build and inventory in Phase 2. |
-| JVM tests | JUnit 6 runner with Kotest assertions and property checks. Organize Gradle JVM Test Suites and share Kotlin helpers through Java Test Fixtures. Run Testcontainers against the selected Axon Server and PostgreSQL images. | Run a small Kotlin and Kotest check in Phase 1 and exercise shared fixtures in Phase 2. Verify application behavior with the integration suites as the services are built. |
-| TypeID | Use type-prefixed UUIDv7 IDs in contracts and native UUID storage. | Compare Kotlin and TypeScript test vectors in Phase 1. Prove the application UUID round trip in Phase 3. |
-| Web build | Use the Gradle Node plugin for React/TypeScript and the docs site. Make OpenAPI generation, client generation, and frontend build explicit task inputs and outputs. | Regenerate the client from a clean build in Phase 2. |
-| JVM images | Use Spring Boot `bootBuildImage` with a Paketo builder. | Build and run the application role images in Phase 5. |
-| Frontend image | Use Gradle and `npm ci` to build static assets. Package those assets with Paketo Web Servers. | Probe the packaging and serving path in Phase 1 and use it for the application image in Phase 5. |
-| Documentation checks | Use ktfmt for Kotlin/KDoc, detekt `comments` rules, and Dokka warnings as errors. | Check ktfmt against a representative KDoc sample in Phase 1. Exercise the shared style and documentation checks in Phase 2. |
+
+| Area                 | Direction                                                                                                                                                                                                                  | Verification evidence                                                                                                                                                      |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Gradle and tools     | Wrapper, catalog, Temurin feature version, mise, Node version file, package metadata and lockfile, and SHA-pinned Actions each own their inputs.                                                                           | Record the observed JDK patch/build in the Phase 1 probe. Verify the clean build and inventory in Phase 2.                                                                 |
+| JVM tests            | JUnit 6 runner with Kotest assertions and property checks. Organize Gradle JVM Test Suites and share Kotlin helpers through Java Test Fixtures. Run Testcontainers against the selected Axon Server and PostgreSQL images. | Run a small Kotlin and Kotest check in Phase 1 and exercise shared fixtures in Phase 2. Verify application behavior with the integration suites as the services are built. |
+| TypeID               | Use type-prefixed UUIDv7 IDs in contracts and native UUID storage.                                                                                                                                                         | Compare Kotlin and TypeScript test vectors in Phase 1. Prove the application UUID round trip in Phase 3.                                                                   |
+| Web build            | Use the Gradle Node plugin for React/TypeScript and the docs site. Make OpenAPI generation, client generation, and frontend build explicit task inputs and outputs.                                                        | Regenerate the client from a clean build in Phase 2.                                                                                                                       |
+| JVM images           | Use Spring Boot `bootBuildImage` with a Paketo builder.                                                                                                                                                                    | Build and run the application role images in Phase 5.                                                                                                                      |
+| Frontend image       | Use Gradle and `npm ci` to build static assets. Package those assets with Paketo Web Servers.                                                                                                                              | Probe the packaging and serving path in Phase 1 and use it for the application image in Phase 5.                                                                           |
+| Documentation checks | Use ktfmt for Kotlin/KDoc, detekt `comments` rules, and Dokka warnings as errors.                                                                                                                                          | Check ktfmt against a representative KDoc sample in Phase 1. Exercise the shared style and documentation checks in Phase 2.                                                |
+
 ## Tooling for Delivery
 
 <!-- GSD:stack-end -->
@@ -71,6 +73,7 @@ No project skills found. Add skills to any of: `.claude/skills/`, `.agents/skill
 Before using Edit, Write, or other file-changing tools, start work through a GSD command so planning artifacts and execution context stay in sync.
 
 Use these entry points:
+
 - `$gsd-fast` for a trivial task inline, with no subagents and no PLAN.md
 - `$gsd-quick` for small fixes, doc updates, and ad-hoc tasks
 - `$gsd-debug` for investigation and bug fixing
@@ -85,4 +88,5 @@ Do not make direct repo edits outside a GSD workflow unless the user explicitly 
 
 > Profile not yet configured. Run `$gsd-profile-user` to generate your developer profile.
 > This section is managed by `generate-claude-profile` -- do not edit manually.
+
 <!-- GSD:profile-end -->

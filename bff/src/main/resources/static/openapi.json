@@ -1,0 +1,81 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Axon 5 DCB Courses BFF",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/demo-roles": {
+      "get": {
+        "operationId": "listDemoRoles",
+        "summary": "List the demo roles",
+        "responses": {
+          "200": {
+            "description": "The administrator and the ordered list of demo students. IDs are unique across all roles with case-sensitive comparison.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoRoleDirectory"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DemoRoleDirectory": {
+        "type": "object",
+        "description": "IDs are unique across the administrator and every student with case-sensitive comparison.",
+        "required": ["administrator", "students"],
+        "properties": {
+          "administrator": {
+            "$ref": "#/components/schemas/AdministratorRole"
+          },
+          "students": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StudentRole"
+            }
+          }
+        }
+      },
+      "AdministratorRole": {
+        "type": "object",
+        "required": ["id", "label", "kind"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "[^\\u0009-\\u000D\\u0020\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "[^\\u0009-\\u000D\\u0020\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]"
+          },
+          "kind": { "type": "string", "enum": ["administrator"] }
+        }
+      },
+      "StudentRole": {
+        "type": "object",
+        "required": ["id", "label", "kind"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "[^\\u0009-\\u000D\\u0020\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "[^\\u0009-\\u000D\\u0020\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]"
+          },
+          "kind": { "type": "string", "enum": ["student"] }
+        }
+      }
+    }
+  }
+}
