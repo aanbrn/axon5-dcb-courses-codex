@@ -115,7 +115,7 @@ mise exec python -- sh tools/qodana-scan.sh
 mise exec python -- sh tools/qodana-scan.sh HEAD~1
 ```
 
-The script uses the Qodana image pinned in the Gradle catalog and provides the Temurin feature version from the inspected revision's `.java-version`. It imports a separate source snapshot and runs `qodana.recommended`. Open the HTML or SARIF report in the printed directory under `.gradle/qodana/runs/`. Repeated scans reuse the cache in `.gradle/qodana/cache/`.
+The script uses the Qodana image pinned in the Gradle catalog and provides the Temurin feature version from the inspected revision's `.java-version`. It imports a separate source snapshot and runs `qodana.recommended`. Open the HTML or SARIF report in the printed directory under `.gradle/qodana/runs/`. Repeated scans share the analysis and Gradle caches in `.gradle/qodana/cache/`. Installed plugins use `.gradle/qodana/plugin-cache/`, keyed by the inspected revision's `qodana.yaml` Git blob. Revisions without that file use their own cache so historical scans respect their archived configuration.
 
 The local Community scan works without credentials. It loads the Axon Framework plugin declared in `qodana.yaml`. With Qodana 2026.3 and Axon Framework plugin 0.10.1, the Kotlin `UnusedSymbol` inspection recognized the probe's `@CommandHandler`, `@QueryHandler` and `@EventHandler` methods as used. [Axon Framework plugin](https://plugins.jetbrains.com/plugin/18628-axon-framework)
 

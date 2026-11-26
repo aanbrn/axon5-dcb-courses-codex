@@ -8,8 +8,14 @@ revision=$(git rev-parse --verify --end-of-options "${1:-HEAD}^{commit}")
 java_feature=$(git show "$revision:.java-version")
 image=$(python3 -c 'import tomllib; print(tomllib.load(open("gradle/libs.versions.toml", "rb"))["versions"]["qodana-jvm-community-image"])')
 
+# Qodana loads installed plugins from its cache even when the revision has no plugin declaration.
+if ! plugin_config=$(git rev-parse --verify --end-of-options "$revision:qodana.yaml" 2>/dev/null); then
+  plugin_config=no-config
+fi
+
 output="$PWD/.gradle/qodana"
-mkdir -p "$output/cache/gradle" "$output/runs"
+plugin_cache="$output/plugin-cache/$plugin_config"
+mkdir -p "$output/cache/gradle" "$output/runs" "$plugin_cache"
 lock="$output/cache.lock"
 if ! mkdir "$lock"; then
   printf '%s\n' 'The local Qodana cache is in use.' >&2
@@ -43,5 +49,6 @@ docker run --rm \
   --volume "$run/project:/data/project" \
   --volume "$run/results:/data/results" \
   --volume "$output/cache:/data/cache" \
+  --volume "$plugin_cache:/data/cache/plugins" \
   --volume "$run/temurin:/opt/temurin:ro" \
   "$image" scan --profile-name qodana.recommended --save-report --timeout 900000
