@@ -125,6 +125,14 @@ The launcher installs `.qodana/profiles/spring-beans.xml` as `.idea/misc.xml` in
 
 To repeat the Spring check, commit the same three controls in two disposable Git snapshots of the same revision. Add a public unused method with Spring's `@Bean`, one with a different `Bean` annotation, and one with no annotation. Remove `.qodana/profiles/spring-beans.xml` only from the control snapshot. Run the launcher on both. In `qodana.sarif.json`, confirm that only the four Spring factories lose their `UnusedSymbol` findings in the candidate, and check that the `projectStructure/Modules.json` files list the same Gradle modules. Full Spring inspections require Qodana for JVM with an Ultimate or Ultimate Plus license and an authorized project `QODANA_TOKEN`. [JVM feature matrix](https://www.jetbrains.com/help/qodana/jvm.html#Supported+technologies+and+features), [project token requirements](https://www.jetbrains.com/help/qodana/docker-image-configuration.html)
 
+## IntelliJ IDEA inspection profile
+
+Open the repository as a Gradle project. In **Settings → Editor → Inspections**, select **Project Default** from the project profiles. The shared profile keeps **Unstable API Usage** (`UnstableApiUsage`) enabled at **Warning** and removes only `org.gradle.api.Incubating` from its annotation list. The exclusion applies across the whole project, including future Gradle call sites. Current intentional uses include the JVM Test Suite DSL and the `dependencyScope`, `resolvable` and `consumable` configuration roles. [Inspection profiles](https://www.jetbrains.com/help/idea/customizing-profiles.html)
+
+If you use a custom project profile, keep it selected and remove the same annotation under **JVM languages → Unstable API Usage → Unstable API annotations**. For an IDE-level profile, first use **Copy to Project** to keep the change local to this project. After an IDE upgrade, compare the shared list with the bundled defaults and carry forward any new annotations. [Unstable API Usage defaults](https://www.jetbrains.com/help/inspectopedia/UnstableApiUsage.html)
+
+When upgrading the Gradle wrapper, run the build and the ordinary Qodana command above on the committed revision. Review new or changed `UnstableApiUsage` findings for Gradle APIs. The scanner selects `qodana.recommended`, which reports Gradle incubation independently of the editor profile.
+
 ## Feasibility probe
 
 The [probe build](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/probe/build.gradle.kts) provides the opt-in DCB integration suite. Follow the [probe runbook](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/probe/README.md) to reproduce the native proof. The [feasibility report](/feasibility/phase-01/#hosted-amd64-verification-and-retirement) records the evidence and conditions for retiring the probe.
