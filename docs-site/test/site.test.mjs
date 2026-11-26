@@ -12,7 +12,7 @@ import {
 import { dirname, join, relative, sep } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { DomUtils, parseDocument } from "htmlparser2";
+import { html, parse } from "parse5";
 import { verifyPublication } from "../verify-site.mjs";
 
 const project = fileURLToPath(new URL("../", import.meta.url));
@@ -70,25 +70,33 @@ function assertLaunch(output, href, label) {
 }
 
 function articleRegions(output, path) {
-  const { children } = parseDocument(readFileSync(join(output, path), "utf8"));
-  const blocks = DomUtils.findAll(
-    ({ name, children }) =>
-      name === "table" ||
-      (name === "pre" && children.some((child) => child.name === "code")),
-    children,
-  );
-  assert.ok(blocks.length > 0, `${path} contains tables or code samples`);
-  const names = blocks.map(({ name, parent }) => {
-    const kind = name === "table" ? "Data table" : "Code sample";
-    assert.equal(parent.attribs?.role, "region");
-    assert.equal(parent.attribs.tabindex, "0");
-    const label = parent.attribs["aria-label"]?.trim();
-    assert.ok(
-      label?.startsWith(`${kind} — `),
-      `${path} has a contextual ${kind}`,
-    );
-    return label;
-  });
+  const names = [];
+  function visit({ tagName, namespaceURI, childNodes = [], parentNode }) {
+    const isTable = tagName === "table";
+    const isCodeSample =
+      tagName === "pre" &&
+      childNodes.some(
+        (child) =>
+          child.tagName === "code" && child.namespaceURI === html.NS.HTML,
+      );
+    if (namespaceURI === html.NS.HTML && (isTable || isCodeSample)) {
+      const kind = isTable ? "Data table" : "Code sample";
+      const attributes = Object.fromEntries(
+        (parentNode.attrs ?? []).map(({ name, value }) => [name, value]),
+      );
+      assert.equal(attributes.role, "region");
+      assert.equal(attributes.tabindex, "0");
+      const label = attributes["aria-label"]?.trim();
+      assert.ok(
+        label?.startsWith(`${kind} — `),
+        `${path} has a contextual ${kind}`,
+      );
+      names.push(label);
+    }
+    for (const child of childNodes) visit(child);
+  }
+  visit(parse(readFileSync(join(output, path), "utf8")));
+  assert.ok(names.length > 0, `${path} contains tables or code samples`);
   assert.equal(
     new Set(names).size,
     names.length,

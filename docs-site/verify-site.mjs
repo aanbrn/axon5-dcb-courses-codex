@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative, sep } from "node:path";
-import { Parser } from "htmlparser2";
+import { html, parse } from "parse5";
 
 export const publicFiles = new Set([
   "index.html",
@@ -15,31 +15,35 @@ export const publicFiles = new Set([
 ]);
 const siteOrigin = "https://docs.invalid";
 
-function indexPage(html, source) {
+function indexPage(markup, source) {
   const links = [];
   const fragments = new Set();
-  let templateDepth = 0;
-  const parser = new Parser({
-    onopentag(tag, attributes) {
-      const isActive = templateDepth === 0;
-      if (tag === "template") templateDepth += 1;
-      if (!isActive) return;
-
-      const { href, src, id, name } = attributes;
-      if (tag === "base" && href !== undefined)
+  const pending = [parse(markup)];
+  while (pending.length > 0) {
+    const { attrs, childNodes = [], tagName, namespaceURI } = pending.pop();
+    if (attrs) {
+      const attribute = (name) =>
+        attrs.find((item) => item.name === name && !item.namespace)?.value;
+      const href = attribute("href");
+      const src = attribute("src");
+      const id = attribute("id");
+      const isHtml = namespaceURI === html.NS.HTML;
+      if (isHtml && tagName === "base" && href !== undefined)
         throw new Error(
           `Active base href in ${source}: ${JSON.stringify(href)}`,
         );
       if (href !== undefined) links.push(href);
       if (src !== undefined) links.push(src);
       if (id !== undefined) fragments.add(id);
-      if (tag === "a" && name !== undefined) fragments.add(name);
-    },
-    onclosetag(tag) {
-      if (tag === "template") templateDepth -= 1;
-    },
-  });
-  parser.end(html);
+      if (isHtml && tagName === "a") {
+        const name = attribute("name");
+        if (name !== undefined) fragments.add(name);
+      }
+    }
+    // The template's inert document fragment is separate from childNodes.
+    for (let index = childNodes.length - 1; index >= 0; index--)
+      pending.push(childNodes[index]);
+  }
   return { links, fragments };
 }
 
