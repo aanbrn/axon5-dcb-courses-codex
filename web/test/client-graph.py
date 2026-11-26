@@ -402,9 +402,8 @@ def verify_docs_base(candidate):
     candidate.reject_dev_startup(sentinel)
 
     candidate.environment.pop(DOCS_SETTING)
-    (candidate.project / "web/.env.production").write_text(
-        f"{DOCS_SETTING}={invalid_base}\n", encoding="utf-8"
-    )
+    production_env = candidate.project / "web/.env.production"
+    production_env.write_text(f"{DOCS_SETTING}={invalid_base}\n", encoding="utf-8")
     candidate.gradle(
         "Reject a malformed documentation base from the production env file",
         BUNDLE,
@@ -422,6 +421,24 @@ def verify_docs_base(candidate):
         "Override the production env file in the process environment", BUNDLE
     )
     candidate.frontend_assets(f"{docs_base}/")
+
+    candidate.environment.pop(DOCS_SETTING)
+    production_env.write_text(
+        f"{DOCS_SETTING}=https://docs.example.test:${{DOCS_PORT}}/${{DOCS_PREFIX}}/\n",
+        encoding="utf-8",
+    )
+    candidate.environment.update(DOCS_PORT="443", DOCS_PREFIX="first")
+    outcomes = candidate.gradle("Build with expanded production dotenv values", BUNDLE)
+    require(outcomes.get(BUNDLE) == "EXECUTED", "The initial bundle did not execute")
+    candidate.frontend_assets("https://docs.example.test/first/")
+
+    candidate.environment["DOCS_PREFIX"] = "second"
+    outcomes = candidate.gradle("Change only the inherited documentation path", BUNDLE)
+    require(
+        outcomes.get(BUNDLE) == "EXECUTED",
+        f"The bundle reported {outcomes.get(BUNDLE)} after the inherited path changed",
+    )
+    candidate.frontend_assets("https://docs.example.test/second/")
 
 
 def main():
