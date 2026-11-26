@@ -12,6 +12,7 @@ import {
 import { dirname, join, relative, sep } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { DomUtils, parseDocument } from "htmlparser2";
 import { verifyPublication } from "../verify-site.mjs";
 
 const project = fileURLToPath(new URL("../", import.meta.url));
@@ -66,6 +67,34 @@ function assertLaunch(output, href, label) {
     ([, target, text]) => [target.replaceAll("&amp;", "&"), text],
   );
   assert.deepEqual(actions, [[href, label]]);
+}
+
+function articleRegions(output, path) {
+  const { children } = parseDocument(readFileSync(join(output, path), "utf8"));
+  const blocks = DomUtils.findAll(
+    ({ name, children }) =>
+      name === "table" ||
+      (name === "pre" && children.some((child) => child.name === "code")),
+    children,
+  );
+  assert.ok(blocks.length > 0, `${path} contains tables or code samples`);
+  const names = blocks.map(({ name, parent }) => {
+    const kind = name === "table" ? "Data table" : "Code sample";
+    assert.equal(parent.attribs?.role, "region");
+    assert.equal(parent.attribs.tabindex, "0");
+    const label = parent.attribs["aria-label"]?.trim();
+    assert.ok(
+      label?.startsWith(`${kind} — `),
+      `${path} has a contextual ${kind}`,
+    );
+    return label;
+  });
+  assert.equal(
+    new Set(names).size,
+    names.length,
+    `${path} has duplicate region names: ${names.join("; ")}`,
+  );
+  return names;
 }
 
 test("Gradle stages only approved sources and preserves the canonical report bytes", () => {
@@ -261,6 +290,73 @@ test("the local Vite app origin is allowed under a nested base", (t) => {
   const result = site.build();
   assert.equal(result.status, 0, result.stderr);
   assertLaunch(site.output, app, "Open demo");
+});
+
+test("published article regions have distinct contextual names", () => {
+  const quickStart = articleRegions(distribution, "quick-start/index.html");
+  assert.deepEqual(
+    quickStart.filter((name) => name.includes("Start the shell")),
+    ["Start the BFF", "Start the web app", "Start the documentation"].map(
+      (step) => `Code sample — Start the shell — ${step}`,
+    ),
+  );
+
+  const report = articleRegions(
+    distribution,
+    "feasibility/phase-01/index.html",
+  );
+  assert.ok(report.includes("Data table — Phase 01 feasibility record"));
+  assert.deepEqual(
+    report.filter((name) => name.includes("Reproduce the proof")),
+    [1, 2].map((number) => `Code sample — Reproduce the proof (${number})`),
+  );
+
+  const guide = articleRegions(distribution, "maintainer-guide/index.html");
+  assert.ok(guide.includes("Data table — Version owners"));
+  assert.deepEqual(
+    guide.filter((name) => name.includes("Setup and diagnostics")),
+    [1, 2, 3, 4].map(
+      (number) => `Code sample — Setup and diagnostics (${number})`,
+    ),
+  );
+});
+
+test("region names stay distinct for repeated headings and tables without captions", (t) => {
+  const path = "quick-start/index.html";
+  const heading = '## Example **commands** &amp; "output"';
+  const fence = "```sh\nprintf '%s\\n' example\n```";
+  const table = "| Tool |\n| --- |\n| Gradle |";
+  const fixture = [
+    "",
+    "",
+    heading,
+    fence,
+    '**Comparison** &amp; "details":',
+    table,
+    "More examples.",
+    table,
+    "Additional examples.",
+    table,
+    heading,
+    fence,
+    "",
+  ].join("\n\n");
+
+  const labels = ["/", "/courses/"].map((base) => {
+    const site = variant(t, { base });
+    appendFileSync(join(site.input, "quick-start.md"), fixture);
+    const result = site.build();
+    assert.equal(result.status, 0, result.stderr);
+    return articleRegions(site.output, path).slice(-5);
+  });
+  assert.deepEqual(labels[0], [
+    'Code sample — Example commands & "output"',
+    'Data table — Example commands & "output" — Comparison & "details"',
+    'Data table — Example commands & "output" (2)',
+    'Data table — Example commands & "output" (3)',
+    'Code sample — Example commands & "output" (example-commands-output-2)',
+  ]);
+  assert.deepEqual(labels[1], labels[0]);
 });
 
 test("invalid launch URLs and deployment bases reject the build", async (t) => {
