@@ -50,7 +50,7 @@ The post-import `inspect.sh -v2` runs selected the XML profiles explicitly and a
 - `'com.google.common.hash.Funnels' is marked unstable with @Beta`
 - `'byteArrayFunnel()' is declared in unstable class 'com.google.common.hash.Funnels' marked with @Beta`
 
-The native evidence covers clean Gradle import and explicit batch inspection. Live editor profile selection remains unverified. The maintainer guide describes how to select the shared project profile or apply the same edit to a custom project profile. [Maintainer guide](../../../docs/maintainer-guide.md#intellij-idea-inspection-profile)
+The native batch evidence covers clean Gradle import and explicit profile selection. On 2026-11-26, the maintainer also confirmed that the Gradle incubation highlights disappeared in the open editor after closing and reopening the project. The running IDE had logged that it rejected `Project_Default.xml` because the in-memory scheme already used the name `Project Default`. Reopening let IDEA load the tracked profile during project initialization. IDEA then serialized the same nine annotation values in sorted order. [Maintainer guide](../../../docs/maintainer-guide.md#intellij-idea-inspection-profile)
 
 ## Qodana controls and ordinary scan
 

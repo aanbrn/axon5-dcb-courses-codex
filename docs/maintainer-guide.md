@@ -129,6 +129,8 @@ To repeat the Spring check, commit the same three controls in two disposable Git
 
 Open the repository as a Gradle project. In **Settings → Editor → Inspections**, select **Project Default** from the project profiles. The shared profile keeps **Unstable API Usage** (`UnstableApiUsage`) enabled at **Warning** and removes only `org.gradle.api.Incubating` from its annotation list. The exclusion applies across the whole project, including future Gradle call sites. Current intentional uses include the JVM Test Suite DSL and the `dependencyScope`, `resolvable` and `consumable` configuration roles. [Inspection profiles](https://www.jetbrains.com/help/idea/customizing-profiles.html)
 
+If IDEA was already open when the shared profile was added and reports a duplicate `Project Default` scheme, close and reopen the project to load the profile from disk.
+
 If you use a custom project profile, keep it selected and remove the same annotation under **JVM languages → Unstable API Usage → Unstable API annotations**. For an IDE-level profile, first use **Copy to Project** to keep the change local to this project. After an IDE upgrade, compare the shared list with the bundled defaults and carry forward any new annotations. [Unstable API Usage defaults](https://www.jetbrains.com/help/inspectopedia/UnstableApiUsage.html)
 
 When upgrading the Gradle wrapper, run the build and the ordinary Qodana command above on the committed revision. Review new or changed `UnstableApiUsage` findings for Gradle APIs. Git excludes the editor profile from source archives, including the snapshot that the scanner analyzes with `qodana.recommended`.
