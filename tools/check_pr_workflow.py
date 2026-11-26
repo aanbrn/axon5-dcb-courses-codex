@@ -1,4 +1,4 @@
-"""Verify the read-only pull request build policy and exercise failing controls."""
+"""Verify the read-only build policy for pull requests and pushes to main."""
 
 import argparse
 import json
@@ -108,7 +108,10 @@ def check_workflow(path):
         "Expected only name, on, permissions and jobs at workflow level.",
     )
     expect(workflow["name"] == "Build and style", "Unexpected workflow name.")
-    expect(workflow["on"] == {"pull_request": None}, "Use only the pull_request event.")
+    expect(
+        workflow["on"] == {"pull_request": None, "push": {"branches": ["main"]}},
+        EVENT_POLICY,
+    )
     expect(
         workflow["permissions"] == {"contents": "read"}, "Grant only contents: read."
     )
@@ -203,7 +206,9 @@ def main():
             verify_controls(WORKFLOW)
     except (OSError, ValueError, WorkflowError, subprocess.TimeoutExpired) as error:
         parser.exit(1, f"{error}\n")
-    print("Verified read-only pull request workflow and pinned build steps.")
+    print(
+        "Verified read-only builds for pull requests and pushes to main with pinned steps."
+    )
 
 
 if __name__ == "__main__":
