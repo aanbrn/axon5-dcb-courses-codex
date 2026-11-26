@@ -1,8 +1,11 @@
-# This file pins the independent Pack, Ruff and Taplo CLIs.
+# This file pins Python and the independent CLIs.
 # mise reads Java from .java-version and Node.js from .nvmrc.
 [tools]
+"aqua:rhysd/actionlint" = "1.7.12"
 pack = "0.40.11"
+python = "3.15.2"
 ruff = "0.17.4"
+shellcheck = "0.11.0"
 taplo = "0.10.0"
 
 [settings]

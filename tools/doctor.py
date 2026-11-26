@@ -376,6 +376,23 @@ def action_pins():
     )
 
 
+def gsd_for_codex():
+    cli = Path("gsd-core/bin/gsd-tools.cjs")
+    path = ROOT / ".codex" / cli
+    if not path.is_file():
+        codex_home = os.environ.get("CODEX_HOME") or os.path.expanduser("~/.codex")
+        path = Path(os.path.expanduser(codex_home)) / cli
+    return Check(
+        ADDITIONAL,
+        "GSD for Codex",
+        ".codex or CODEX_HOME",
+        "optional",
+        f"installed at {path}" if path.is_file() else "absent",
+        "INFO",
+        "",
+    )
+
+
 def checks(gradle):
     bootstrap = gradle is None
     yield from wrapper_checks(
@@ -421,14 +438,19 @@ def checks(gradle):
         supported,
         "Use a supported host.",
     )
+    pins = read_toml("mise.toml").get("tools", {})
+    if not isinstance(pins, dict):
+        pins = {}
+    python_pin = valid_value(pins.get("python"), VERSION)
+    python_version = platform.python_version()
     yield check(
         REQUIRED,
         "Python",
-        "tools/style/run.py",
-        "3.11+",
-        platform.python_version(),
-        sys.version_info >= (3, 11),
-        "Install Python 3.11 or newer.",
+        "mise.toml",
+        python_pin,
+        python_version,
+        python_version == python_pin,
+        "Run mise install python and use mise exec python or mise activate.",
     )
     git, unavailable = observation(
         ["git", "--version"], rf"^git version ({VERSION}(?:\.\d+)?)"
@@ -462,27 +484,31 @@ def checks(gradle):
         bool(mise),
         "Install mise and put it on PATH.",
     )
-    pins = read_toml("mise.toml").get("tools", {})
-    if not isinstance(pins, dict):
-        pins = {}
-    for tool, tier in (("ruff", REQUIRED), ("taplo", REQUIRED), ("pack", ADDITIONAL)):
-        expected = valid_value(pins.get(tool), VERSION)
+    for tool, pin_key, name, tier, version_prefix in (
+        ("actionlint", "aqua:rhysd/actionlint", "actionlint", REQUIRED, ""),
+        ("shellcheck", "shellcheck", "ShellCheck", REQUIRED, "version: "),
+        ("ruff", "ruff", "Ruff", REQUIRED, "(?:ruff )?"),
+        ("taplo", "taplo", "Taplo", REQUIRED, "(?:taplo )?"),
+        ("pack", "pack", "Pack", ADDITIONAL, "(?:pack )?"),
+    ):
+        expected = valid_value(pins.get(pin_key), VERSION)
         found, unavailable = observation(
-            [tool, "--version"], rf"^(?:{tool} )?v?({VERSION})(?:[+\s]|$)"
+            [tool, "--version"], rf"^{version_prefix}v?({VERSION})(?:[+\s]|$)"
         )
         yield check(
             tier,
-            tool.title(),
+            name,
             "mise.toml",
             expected,
             found or unavailable,
             bool(expected and found == expected),
-            f"Run mise install {tool}; expose it with mise exec or mise activate.",
+            f"Run mise install {pin_key} and use mise exec or mise activate.",
         )
     yield from npm_checks(
         {} if bootstrap else gradle.get("npm", {}), bootstrap=bootstrap
     )
     yield action_pins()
+    yield gsd_for_codex()
     docker, unavailable = observation(
         [
             "docker",
@@ -582,6 +608,10 @@ class DoctorTests(unittest.TestCase):
         (self.directory / "sh").symlink_to("/bin/sh")
         self.tool("git", "git version 2.52.0")
         self.tool("mise", "2026.11.14 macos-arm64")
+        self.tool("actionlint", "1.7.12\nbuilt with go1.26.1 compiler")
+        self.tool(
+            "shellcheck", "ShellCheck - shell script analysis tool\nversion: 0.11.0"
+        )
         self.tool("ruff", "ruff 0.17.4")
         self.tool("taplo", "taplo 0.10.0")
         self.java()
@@ -699,6 +729,39 @@ class DoctorTests(unittest.TestCase):
         self.assertIn("required | DEFERRED | BFF worker JVM", result.stdout)
         self.assertIn("required | DEFERRED | Managed Node", result.stdout)
         self.assertIn("required | PASS | Node version pin | .nvmrc", result.stdout)
+        pins = read_toml("mise.toml")["tools"]
+        self.assertIn(
+            f"required | PASS | Python | mise.toml | {pins['python']} | {platform.python_version()}",
+            result.stdout,
+        )
+
+    def test_gsd_location_is_informational_and_prefers_the_checkout(self):
+        checkout = self.directory / "checkout"
+        cli = Path("gsd-core/bin/gsd-tools.cjs")
+        default_home = self.directory / ".codex"
+        codex_home = self.directory / "custom-codex"
+        with (
+            patch(f"{__name__}.ROOT", checkout),
+            patch.dict(os.environ, {"HOME": str(self.directory)}, clear=True),
+        ):
+            missing = gsd_for_codex()
+            self.assertEqual(
+                (missing.tier, missing.status, missing.observed),
+                (ADDITIONAL, "INFO", "absent"),
+            )
+            default_cli = default_home / cli
+            default_cli.parent.mkdir(parents=True)
+            default_cli.touch()
+            self.assertEqual(gsd_for_codex().observed, f"installed at {default_cli}")
+            configured_cli = codex_home / cli
+            configured_cli.parent.mkdir(parents=True)
+            configured_cli.touch()
+            os.environ["CODEX_HOME"] = str(codex_home)
+            self.assertEqual(gsd_for_codex().observed, f"installed at {configured_cli}")
+            local_cli = checkout / ".codex" / cli
+            local_cli.parent.mkdir(parents=True)
+            local_cli.touch()
+            self.assertEqual(gsd_for_codex().observed, f"installed at {local_cli}")
 
     def test_wrong_python_patch_fails_in_both_modes(self):
         observed = platform.python_version()

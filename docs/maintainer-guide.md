@@ -15,12 +15,12 @@ layout: page.11ty.js
 | Node.js                                 | [Node version file](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/.nvmrc)                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | npm executables                         | The `packageManager` pins in [web](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/web/package.json), [docs-site](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/docs-site/package.json), [tools/style](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/tools/style/package.json) and [probe/web](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/probe/web/package.json). The standalone probe build also supplies that npm version to `probe/typeid`.                                                            |
 | npm package selections                  | [Web lockfile](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/web/package-lock.json), [docs lockfile](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/docs-site/package-lock.json), [style lockfile](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/tools/style/package-lock.json), [static probe lockfile](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/probe/web/package-lock.json) and [TypeID probe lockfile](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/probe/typeid/package-lock.json). |
-| Independent CLIs                        | [mise configuration](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/mise.toml)                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Python and independent CLIs             | [mise configuration](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/mise.toml)                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | GitHub Actions                          | Each external action uses a full commit SHA in its [workflow](https://github.com/aanbrn/axon5-dcb-courses-codex/tree/main/.github/workflows). Doctor reports the pins it can read from the checkout.                                                                                                                                                                                                                                                                                                                                                                |
 
 ## Setup and diagnostics
 
-Use an ARM64 or AMD64 host running macOS or Linux with Git, a POSIX shell, Python 3.11 or newer and mise. If mise requests trust, review `mise.toml` and run `mise trust` from the repository root.
+Use an ARM64 or AMD64 host running macOS or Linux with Git, a POSIX shell and mise. If mise requests trust, review `mise.toml` and run `mise trust` from the repository root.
 
 Install Eclipse Temurin at the feature release in `.java-version` and point `JAVA_HOME` at that JDK, or use mise to supply Eclipse Temurin and Node.js to individual commands. Gradle uses an Eclipse Adoptium toolchain for the BFF JVM suites. The complete vendor, patch and build strings in doctor are observations. The version file stays feature-only.
 
@@ -32,14 +32,14 @@ mise exec java node -- node --version
 mise exec java node -- ./gradlew --version
 ```
 
-The `Source` column shows `.java-version` for Java and `.nvmrc` for Node.js. Edit those files when changing the JDK feature or Node version. The project config excludes `.sdkmanrc`, `.node-version` and `package.json` from runtime discovery so these versions come from the same files used by CI and Gradle. Gradle installs its own Node.js and uses each consumer's `packageManager` pin for npm. The `mise.toml` pins control Pack, Ruff and Taplo.
+The `Source` column shows `.java-version` for Java and `.nvmrc` for Node.js. Edit those files when changing the JDK feature or Node version. The project config excludes `.sdkmanrc`, `.node-version` and `package.json` from runtime discovery so these versions come from the same files used by CI and Gradle. Gradle installs its own Node.js and uses each consumer's `packageManager` pin for npm. The `mise.toml` pins control Python, actionlint, ShellCheck, Ruff, Taplo and Pack. Install the required tools for diagnostics and style.
 
 ```sh
-mise install ruff taplo
-mise exec ruff taplo -- ./gradlew --console=plain doctor
+mise install python aqua:rhysd/actionlint shellcheck ruff taplo
+mise exec java python aqua:rhysd/actionlint shellcheck ruff taplo -- ./gradlew --console=plain doctor
 ```
 
-Doctor reports required checks for the regular build and repository style, plus additional checks for Docker, Compose, Pack and the retained probe. A failing required row sets a nonzero exit status. A failing additional row identifies which optional workflow needs attention. The observed managed Node and npm versions come from starting the executables at the reported paths. On a fresh checkout, the regular build provisions them, or run the setup tasks for the consumer you need.
+Doctor compares the running Python interpreter to the exact patch version in `mise.toml` and reads the versions of the workflow lint and style tools from their executables. A failing required row sets a nonzero exit status. Additional checks cover Docker, Compose, Pack and the retained probe. A failing additional row identifies which optional workflow needs attention. For GSD for Codex, doctor reports whether it finds the CLI file under the checkout's `.codex` or the configured `CODEX_HOME` (default `~/.codex`). This is an informational observation based on file presence. The observed managed Node and npm versions come from starting the executables at the reported paths. On a fresh checkout, the regular build provisions them, or run the setup tasks for the consumer you need.
 
 ```sh
 ./gradlew npmSetup :web:npmSetup :docs-site:npmSetup
@@ -50,10 +50,10 @@ Doctor reports required checks for the regular build and repository style, plus 
 When `./gradlew` cannot start, run the same diagnostic in bootstrap mode. Resolve each required failure using its repair column, then rerun `doctor`. Bootstrap checks local inputs and the launcher, and marks Gradle, the BFF worker and managed Node/npm observations as deferred.
 
 ```sh
-mise exec ruff taplo -- python3 tools/doctor.py
+mise exec java python aqua:rhysd/actionlint shellcheck ruff taplo -- python3 tools/doctor.py
 ```
 
-Run `./gradlew installGitHooks` to opt in to the staged-content hook. Run the full tracked-file check with `mise exec ruff taplo -- ./gradlew styleCheck`. Both entry points use the checked-in [style policy](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/tools/style/policy.json).
+Run `./gradlew installGitHooks` to opt in to the staged-content hook. Commit from a shell with mise activated so the hook inherits Python, Ruff and Taplo. For a single commit, use `mise exec python ruff taplo -- git commit`. Run the full tracked-file check with `mise exec python ruff taplo -- ./gradlew styleCheck`. Both entry points use the checked-in [style policy](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/tools/style/policy.json).
 
 The hook formats staged content and leaves your working files untouched. After a commit that applies formatting, use `git diff -- <path>` to review the unstaged changes. To copy the committed formatting back, use `git restore --patch --worktree -- <path>` and select only hunks that contain formatting you want to keep. If a hunk also contains local edits, carry the formatting over in your editor.
 
@@ -61,27 +61,28 @@ The hook formats staged content and leaves your working files untouched. After a
 
 The `build-and-style` job runs on GitHub's Ubuntu 24.04 x64 runner with read access to repository contents. It validates the Gradle wrapper before running it. The workflow pins each action to the publisher's full commit SHA. [Build workflow](https://github.com/aanbrn/axon5-dcb-courses-codex/blob/main/.github/workflows/build.yml)
 
-| Action                    | Release                                                             | Purpose                                                                    |
-| ------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Checkout                  | [v7.0.1](https://github.com/actions/checkout/releases/tag/v7.0.1)   | Check out the PR merge revision without retaining checkout credentials     |
-| Gradle Wrapper Validation | [v6.4.1](https://github.com/gradle/actions/releases/tag/v6.4.1)     | Compare the wrapper JAR with published Gradle checksums                    |
-| Setup Java                | [v6.3.0](https://github.com/actions/setup-java/releases/tag/v6.3.0) | Select Eclipse Temurin from `.java-version`                                |
-| Mise Action               | [v5.3.0](https://github.com/jdx/mise-action/releases/tag/v5.3.0)    | Run mise 2026.11.14 and install the Ruff and Taplo versions in `mise.toml` |
+| Action                    | Release                                                             | Purpose                                                                                                    |
+| ------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Checkout                  | [v7.0.1](https://github.com/actions/checkout/releases/tag/v7.0.1)   | Check out the PR merge revision without retaining checkout credentials                                     |
+| Gradle Wrapper Validation | [v6.4.1](https://github.com/gradle/actions/releases/tag/v6.4.1)     | Compare the wrapper JAR with published Gradle checksums                                                    |
+| Setup Java                | [v6.3.0](https://github.com/actions/setup-java/releases/tag/v6.3.0) | Select Eclipse Temurin from `.java-version`                                                                |
+| Mise Action               | [v5.3.0](https://github.com/jdx/mise-action/releases/tag/v5.3.0)    | Run mise 2026.11.14 and install the Python, actionlint, ShellCheck, Ruff and Taplo versions in `mise.toml` |
 
-The job logs the runner architecture and effective Java, Gradle, mise, Ruff and Taplo versions. Gradle provisions Node from `.nvmrc` and npm from each consumer's `packageManager` field. Run `doctor` after provisioning to see their resolved versions and the BFF test worker's JDK build.
+The job logs the runner architecture and effective Java, Gradle, mise, Python, actionlint, ShellCheck, Ruff and Taplo versions. It runs actionlint with ShellCheck on the GitHub Actions workflows before the tracked formatting and style check. Gradle provisions Node from `.nvmrc` and npm from each consumer's `packageManager` field. Run `doctor` after provisioning to see their resolved versions and the BFF test worker's JDK build.
 
 Run the same checks from the repository root. The style command also provisions the locked YAML parser used by the local workflow checker.
 
 ```sh
-mise exec ruff taplo -- ./gradlew --console=plain styleCheck
+mise exec aqua:rhysd/actionlint shellcheck -- actionlint -shellcheck=shellcheck -pyflakes=
+mise exec python ruff taplo -- ./gradlew --console=plain styleCheck
 DOCKER_HOST=tcp://127.0.0.1:1 ./gradlew --console=plain clean build --no-build-cache
-python3 tools/check_pr_workflow.py
+mise exec python -- python3 tools/check_pr_workflow.py
 ```
 
 The ordinary build generates and checks the web client, builds the app, Storybook and docs, and runs the JVM suites that use local files or loopback HTTP. The browser journey is a separate check with explicit Chromium provisioning. Keep ports 5173, 8080 and 8081 free when running these local checks.
 
 ```sh
-python3 tools/test_phase2_build.py
+mise exec python -- python3 tools/test_phase2_build.py
 ./gradlew --console=plain :web:provisionBrowser :web:siteSmoke
 ```
 
@@ -107,11 +108,11 @@ Set `VITE_DOCS_BASE` when building the hosted web app with `./gradlew :web:webBu
 
 ## Local Kotlin inspections
 
-Run Qodana Community for JVM with Docker and Python 3.11 or newer. The command inspects a committed revision, using `HEAD` by default.
+Run Qodana Community for JVM with Docker and the Python version in `mise.toml`. The command inspects a committed revision, using `HEAD` by default.
 
 ```sh
-sh tools/qodana-scan.sh
-sh tools/qodana-scan.sh HEAD~1
+mise exec python -- sh tools/qodana-scan.sh
+mise exec python -- sh tools/qodana-scan.sh HEAD~1
 ```
 
 The script uses the Qodana image pinned in the Gradle catalog and provides the Temurin feature version from the inspected revision's `.java-version`. It imports a separate source snapshot and runs `qodana.recommended`. Open the HTML or SARIF report in the printed directory under `.gradle/qodana/runs/`. Repeated scans reuse the cache in `.gradle/qodana/cache/`.
@@ -137,9 +138,9 @@ The source brief cites the 2026-11-24 historical records in `phases/01-axon-serv
 ### Public JVM selection evidence
 
 ```sh
-python3 tools/verify_dependency_evidence.py
+mise exec python -- python3 tools/verify_dependency_evidence.py
 # With the public artifacts already cached
-python3 tools/verify_dependency_evidence.py --offline
+mise exec python -- python3 tools/verify_dependency_evidence.py --offline
 ```
 
 The verifier uses disposable build sources to record Gradle `dependencies`, `dependencyInsight` and selected graph edges. It compares the checked-in graph, a baseline with only the ordinary Guava bounds removed, and the restored graph. The BFF unit and component tests, fixture isolation, ktfmt, probe unit tests and KDoc fixture run across those states. Probe integration compile and runtime graphs are included. The Docker-backed integration suite is opt-in and its runtime needs separate evidence.

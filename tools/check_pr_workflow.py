@@ -13,6 +13,11 @@ CHECKOUT = "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1"
 WRAPPER = "gradle/actions/wrapper-validation@8da46b539cd8fe6ab27ca75128919a18d757604c"
 SETUP_JAVA = "actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880"
 SETUP_MISE = "jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78"
+MISE_TOOLS = ("python", "aqua:rhysd/actionlint", "shellcheck", "ruff", "taplo")
+WORKFLOW_LINT = (
+    "mise exec aqua:rhysd/actionlint shellcheck -- "
+    "actionlint -shellcheck=shellcheck -pyflakes="
+)
 STEPS = [
     {"uses": CHECKOUT, "with": {"persist-credentials": False}},
     {"uses": WRAPPER},
@@ -22,22 +27,27 @@ STEPS = [
     },
     {
         "uses": SETUP_MISE,
-        "with": {"version": "2026.11.14", "install_args": "ruff taplo", "cache": False},
+        "with": {
+            "version": "2026.11.14",
+            "install_args": " ".join(MISE_TOOLS),
+            "cache": False,
+        },
     },
     {
-        "run": "\n".join(
-            [
-                "uname -sm",
-                "java -version",
-                "./gradlew --console=plain --version",
-                "mise --version",
-                "mise exec ruff taplo -- ruff --version",
-                "mise exec ruff taplo -- taplo --version",
-                "",
-            ]
+        "run": (
+            "uname -sm\n"
+            "java -version\n"
+            "./gradlew --console=plain --version\n"
+            "mise --version\n"
+            "mise exec python -- python3 --version\n"
+            "mise exec aqua:rhysd/actionlint shellcheck -- actionlint --version\n"
+            "mise exec aqua:rhysd/actionlint shellcheck -- shellcheck --version\n"
+            "mise exec ruff taplo -- ruff --version\n"
+            "mise exec ruff taplo -- taplo --version\n"
         )
     },
-    {"run": "mise exec ruff taplo -- ./gradlew --console=plain styleCheck"},
+    {"run": WORKFLOW_LINT},
+    {"run": "mise exec python ruff taplo -- ./gradlew --console=plain styleCheck"},
     {"run": "./gradlew --console=plain clean build --no-build-cache"},
 ]
 PARSE_YAML = """
@@ -118,7 +128,10 @@ def check_workflow(path):
     )
     expect(
         job["env"]
-        == {"DOCKER_HOST": "tcp://127.0.0.1:1", "MISE_ENABLE_TOOLS": "ruff,taplo"},
+        == {
+            "DOCKER_HOST": "tcp://127.0.0.1:1",
+            "MISE_ENABLE_TOOLS": ",".join(MISE_TOOLS),
+        },
         "Keep only the unreachable Docker endpoint and regular style tools in the job environment.",
     )
     steps = job["steps"]
@@ -148,6 +161,11 @@ def verify_controls(workflow):
     controls = [
         ("contents: read", "contents: write", "Grant only contents: read."),
         (CHECKOUT, "actions/checkout@v7.0.1", "Step 1 must use the reviewed action"),
+        (
+            WORKFLOW_LINT,
+            "mise exec aqua:rhysd/actionlint -- actionlint -shellcheck= -pyflakes=",
+            "Step 6 must use the reviewed action",
+        ),
     ]
     with tempfile.TemporaryDirectory(prefix="courses-pr-workflow-") as directory:
         fixture = Path(directory) / "build.yml"

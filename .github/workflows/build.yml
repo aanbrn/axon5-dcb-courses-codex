@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 15
     env:
       DOCKER_HOST: tcp://127.0.0.1:1
-      MISE_ENABLE_TOOLS: ruff,taplo
+      MISE_ENABLE_TOOLS: python,aqua:rhysd/actionlint,shellcheck,ruff,taplo
 
     steps:
       - name: Check out the pull request
@@ -33,7 +33,7 @@ jobs:
         uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
         with:
           version: "2026.11.14"
-          install_args: ruff taplo
+          install_args: python aqua:rhysd/actionlint shellcheck ruff taplo
           cache: false
 
       - name: Report effective tool versions
@@ -42,11 +42,17 @@ jobs:
           java -version
           ./gradlew --console=plain --version
           mise --version
+          mise exec python -- python3 --version
+          mise exec aqua:rhysd/actionlint shellcheck -- actionlint --version
+          mise exec aqua:rhysd/actionlint shellcheck -- shellcheck --version
           mise exec ruff taplo -- ruff --version
           mise exec ruff taplo -- taplo --version
 
+      - name: Lint GitHub Actions workflows
+        run: mise exec aqua:rhysd/actionlint shellcheck -- actionlint -shellcheck=shellcheck -pyflakes=
+
       - name: Check tracked formatting and style
-        run: mise exec ruff taplo -- ./gradlew --console=plain styleCheck
+        run: mise exec python ruff taplo -- ./gradlew --console=plain styleCheck
 
       - name: Build and test from clean outputs
         run: ./gradlew --console=plain clean build --no-build-cache
