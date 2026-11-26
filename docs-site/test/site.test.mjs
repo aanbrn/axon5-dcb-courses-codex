@@ -354,7 +354,7 @@ test("region names stay distinct for repeated headings and tables without captio
     'Data table — Example commands & "output" — Comparison & "details"',
     'Data table — Example commands & "output" (2)',
     'Data table — Example commands & "output" (3)',
-    'Code sample — Example commands & "output" (example-commands-output-2)',
+    'Code sample — Example commands & "output" (example-commands-and-amp-output-2)',
   ]);
   assert.deepEqual(labels[1], labels[0]);
 });

@@ -28,6 +28,25 @@ const docsPages = [
   ],
   ["Maintainer guide", "maintainer-guide/", "Maintainer guide"],
 ];
+const articleRegionNames = {
+  "quick-start/": [
+    "Code sample — Start the shell — Start the BFF",
+    "Code sample — Start the shell — Start the web app",
+    "Code sample — Start the shell — Start the documentation",
+  ],
+  "feasibility/phase-01/": [
+    "Data table — Phase 01 feasibility record",
+    "Code sample — Reproduce the proof (1)",
+    "Code sample — Reproduce the proof (2)",
+  ],
+  "maintainer-guide/": [
+    "Data table — Version owners",
+    "Code sample — Setup and diagnostics (1)",
+    "Code sample — Setup and diagnostics (2)",
+    "Code sample — Setup and diagnostics (3)",
+    "Code sample — Setup and diagnostics (4)",
+  ],
+};
 
 function run(command, args, options = {}) {
   const child = spawn(command, args, {
@@ -228,10 +247,12 @@ async function assertDocsNavigation(page) {
       .waitFor();
     assert.equal(await link.getAttribute("aria-current"), "page");
     await assertResponsive(page, label);
+    if (path)
+      await assertArticleKeyboard(page, label, articleRegionNames[path]);
   }
 }
 
-async function assertReportKeyboard(page) {
+async function assertArticleKeyboard(page, label, expectedNames) {
   await page.setViewportSize({ width: 320, height: 900 });
   await page.evaluate(() => {
     document.documentElement.style.fontSize = "200%";
@@ -247,32 +268,57 @@ async function assertReportKeyboard(page) {
   assert.ok(
     await main.evaluate((element) => element === document.activeElement),
   );
-  const table = page.getByRole("region", {
-    name: /^Data table — Phase 01 feasibility record$/,
-  });
-  const code = page
-    .getByRole("region", { name: /^Code sample — Reproduce the proof$/ })
-    .first();
-  for (const region of [table, code]) {
-    const previous = await region.evaluate(
-      (element) => element.scrollWidth > element.clientWidth,
+  for (const name of expectedNames) {
+    assert.equal(
+      await main.getByRole("region", { name, exact: true }).count(),
+      1,
+      `${label} has one region named ${name}`,
     );
-    assert.ok(
-      previous,
-      "The report region contains horizontally scrollable content",
-    );
-    await region.focus();
-    const focused = await region.evaluate((element) => ({
-      focused: element === document.activeElement,
-      outline: getComputedStyle(element).outlineStyle,
-      tabIndex: element.tabIndex,
-    }));
-    assert.deepEqual(focused, { focused: true, outline: "solid", tabIndex: 0 });
-    await page.keyboard.press("ArrowRight");
-    const element = await region.elementHandle();
-    await page.waitForFunction((target) => target.scrollLeft > 0, element);
   }
-  await assertPageFits(page, "Keyboard-scrolled report");
+
+  const names = await main
+    .getByRole("region")
+    .evaluateAll((regions) => regions.map((region) => region.ariaLabel));
+  const reached = [];
+  let scrolled = 0;
+  const tabStops = await main.locator('a[href], [tabindex="0"]').count();
+  for (let step = 0; step < tabStops && reached.length < names.length; step++) {
+    await page.keyboard.press("Tab");
+    const name = await main
+      .locator('[role="region"]:focus')
+      .evaluateAll(([region]) => region?.ariaLabel ?? null);
+    if (!name) continue;
+    reached.push(name);
+    const region = main.getByRole("region", { name, exact: true });
+    const focused = await region.evaluate((element) => ({
+      tabIndex: element.tabIndex,
+      outline: getComputedStyle(element).outlineStyle,
+      overflow: element.scrollWidth > element.clientWidth,
+      scrollLeft: element.scrollLeft,
+    }));
+    assert.equal(focused.tabIndex, 0, name);
+    assert.equal(
+      focused.outline,
+      "solid",
+      `${name} has a visible focus outline`,
+    );
+    if (focused.overflow) {
+      await page.keyboard.press("ArrowRight");
+      const element = await region.elementHandle();
+      await page.waitForFunction(
+        ({ element, before }) => element.scrollLeft > before,
+        { element, before: focused.scrollLeft },
+      );
+      scrolled++;
+    }
+  }
+  assert.deepEqual(
+    reached,
+    names,
+    `${label} regions follow document tab order`,
+  );
+  assert.ok(scrolled > 0, `${label} has a keyboard-scrollable region`);
+  await assertPageFits(page, `Keyboard-scrolled ${label}`);
 }
 
 async function assertDocsFonts(page) {
@@ -393,10 +439,6 @@ test(
         first.getByRole("link", { name, exact: true }),
         new URL(path, docsUrl).href,
       );
-      if (name === "Read feasibility report") {
-        await assertReportKeyboard(first);
-        await first.goBack(); // Return from the skip-link fragment to the report URL.
-      }
       if (name !== "Documentation") {
         await first.goBack();
         assert.equal(first.url(), webUrl);
