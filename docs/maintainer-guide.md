@@ -131,7 +131,7 @@ Open the repository as a Gradle project. In **Settings → Editor → Inspection
 
 If you use a custom project profile, keep it selected and remove the same annotation under **JVM languages → Unstable API Usage → Unstable API annotations**. For an IDE-level profile, first use **Copy to Project** to keep the change local to this project. After an IDE upgrade, compare the shared list with the bundled defaults and carry forward any new annotations. [Unstable API Usage defaults](https://www.jetbrains.com/help/inspectopedia/UnstableApiUsage.html)
 
-When upgrading the Gradle wrapper, run the build and the ordinary Qodana command above on the committed revision. Review new or changed `UnstableApiUsage` findings for Gradle APIs. The scanner selects `qodana.recommended`, which reports Gradle incubation independently of the editor profile.
+When upgrading the Gradle wrapper, run the build and the ordinary Qodana command above on the committed revision. Review new or changed `UnstableApiUsage` findings for Gradle APIs. Git excludes the editor profile from source archives, including the snapshot that the scanner analyzes with `qodana.recommended`.
 
 ## Feasibility probe
 
