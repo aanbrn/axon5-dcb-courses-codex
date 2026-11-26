@@ -31,9 +31,13 @@ findings:
     severity: warning
     disposition: fixed
     title: "Gradle's comment check breaks on a path containing a comma"
-open: 0
-total: 7
-recorded: 2026-11-25T17:02:30.778Z
+  - id: CR-04
+    severity: critical
+    disposition: open
+    title: "Historical Qodana scans silently use the editor profile and can contaminate later scans"
+open: 1
+total: 8
+recorded: 2026-11-26T08:16:50.893Z
 ---
 
 # Phase 02: Code Review Disposition
@@ -47,6 +51,7 @@ recorded: 2026-11-25T17:02:30.778Z
 | WR-02 | warning | fixed | 02-REVIEW-FIX.md |
 | WR-03 | warning | fixed | 02-REVIEW-FIX.md |
 | WR-04 | warning | fixed | 02-REVIEW-FIX.md |
+| CR-04 | critical | open | - |
 
 Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
 Set `deferred` by hand and put the reason in the Source cell; both are preserved. A `|` in the reason is kept as prose and escaped on the next run.
