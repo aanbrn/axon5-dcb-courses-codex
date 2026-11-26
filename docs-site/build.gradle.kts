@@ -82,10 +82,11 @@ val stageDocs =
         }
         into(staged)
         doFirst {
-            val allowedSources =
-                publicArticles.map(content::file) +
-                    publicTemplates.map(templates::file) +
-                    publicFonts.map { it.second }
+            val allowedSources = buildList {
+                publicArticles.mapTo(this, content::file)
+                publicTemplates.mapTo(this, templates::file)
+                publicFonts.mapTo(this) { it.second }
+            }
             val repositoryPath = repository.asFile.toPath()
             val canonicalRepository = repository.asFile.canonicalFile.toPath()
             for (source in allowedSources) {
