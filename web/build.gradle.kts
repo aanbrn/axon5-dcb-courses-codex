@@ -110,13 +110,14 @@ val webBuild =
     tasks.register<NodeTask>("webBuild") {
         dependsOn(typecheck)
         useWebDependencies(source, generated, "index.html", "vite.config.ts", "tsconfig.json")
-        inputs
-            .files(
-                fileTree(projectDir) {
-                    include(".env", ".env.local", ".env.production", ".env.production.local")
-                },
-            )
-            .withPathSensitivity(PathSensitivity.RELATIVE)
+        val productionDotenvFiles =
+            fileTree(projectDir) {
+                include(".env", ".env.local", ".env.production", ".env.production.local")
+            }
+        inputs.files(productionDotenvFiles).withPathSensitivity(PathSensitivity.RELATIVE)
+        // An unchanged dotenv file can expand inherited variables. Run Vite whenever one exists,
+        // including when a direct documentation base override is set.
+        outputs.upToDateWhen { productionDotenvFiles.isEmpty }
         inputs.property(
             "docsBase",
             providers.environmentVariable("VITE_DOCS_BASE").map { listOf(it) }.orElse(emptyList()),
