@@ -1,8 +1,8 @@
 ---
 phase: 02-build-and-ui-foundations
-verified: 2026-11-26T04:20:12Z
+verified: 2026-11-26T04:42:31Z
 status: human_needed
-score: 29/31 must-haves verified
+score: 30/31 must-haves verified
 covered_files: [
   ".githooks/pre-commit",
   ".github/workflows/build.yml",
@@ -89,6 +89,7 @@ covered_files: [
   "tools/check_kotlin_quality.py",
   "tools/check_pr_workflow.py",
   "tools/doctor.py",
+  "tools/qodana-scan.sh",
   "tools/style/package-lock.json",
   "tools/style/package.json",
   "tools/style/policy.json",
@@ -129,7 +130,7 @@ covered_files: [
   "web/vite.config.ts",
   "web/vitest.config.ts"
   ]
-covered_digest: "v4:sha256:e30c0e676164cda08bd2b8a1bbeed5f78166d86c2227684f53a6569fbc88b2cb"
+covered_digest: "v4:sha256:a66886552576f7938cc145c53a08e377718f924115699a371b08bb8f87bbc1cc"
 behavior_unverified: 0
 overrides_applied: 0
 re_verification:
@@ -143,24 +144,6 @@ decision_coverage:
   total: 15
   not_honored: []
 human_verification:
-  - test: "Native role selector and forced colors. In the running shell use Tab and Shift+Tab to reach Demo role. Open the native list with the platform shortcut, move through the options with arrows, select a student, then reopen it and close it with Escape. Repeat in a platform-supported forced-colors mode. Record browser, OS and mode."
-    expected: "The popup opens and closes, offers Administrator, Maya Chen and Alex Rivera in that order, and keeps the selected role when Escape cancels a tentative choice. Focus returns to the selector and remains visibly outlined."
-    why_human: "The automated browser checks exercise DOM state, keyboard order and forced-colors CSS. The native popup and its platform focus treatment need visual observation."
-  - test: "Screen-reader announcements. With a real screen reader, exercise the loading, initial error, retry failure, retry success and missing saved student Storybook states. Retry once with focus on the button and once after moving to Quick start. Record the browser, OS, reader and spoken sequence."
-    expected: "Loading and fallback are spoken through the polite status, and failure is announced inline. Retry becomes available again after failure. Fallback selects Administrator and is announced once. Successful retry restores selector focus only if focus remained on Retry loading roles."
-    why_human: "DOM roles, focus assertions and axe establish the DOM behavior. Spoken output, order and duplicates depend on the browser and reader combination."
-  - test: "Actual 200% text zoom. Use a browser with text-only zoom at 200%. Inspect the app and prefixed docs at 320, 768 and 1280 CSS px, plus the narrow long-name story. Tab through the header and the feasibility report's wide table and code sample."
-    expected: "Header, feedback, controls and focus rings fit without page-wide scrolling. A clipped selection has its full wrapped name below the control. Wide content scrolls within its named, keyboard-accessible region."
-    why_human: "Automation exercised 200% CSS root font sizing. The browser text-zoom setting and native select rendering remain unobserved."
-  - test: "Demo role boundary. Review the production selector, its storage and the BFF route before resolving the role-boundary prohibition."
-    expected: "Approve the tab-local teaching selection and confirm that it grants no login session or authorization."
-    why_human: "This judgment-tier prohibition requires explicit maintainer acceptance. The shipped code supports the boundary."
-  - test: "Private advisory boundary. Review the docs output allowlist, workflow permissions and public guide using the public evidence."
-    expected: "Approve that private inventories, feeds, credentials and scanner output remain outside the repository, site, CI and logs. B8 remains incomplete until authorized inputs and scanner are available."
-    why_human: "This judgment-tier prohibition crosses publication surfaces. The generated site and leak controls provide scoped evidence."
-  - test: "Phase 1 handoff. Read the rendered feasibility handoff and confirm Phase 7 owns the first hosted AMD64 DCB runtime run."
-    expected: "Approve the historical ARM64 scope and the preservation of the runnable probe until the replacement criteria are met."
-    why_human: "This judgment-tier prohibition includes acceptance of the scope of a public claim and retirement criteria."
   - test: "Test-tier prohibition review. Review the four test-tier prohibition projections against the linked task-level controls."
     expected: "Record the maintainer's disposition for local contract generation, the single-operation OpenAPI contract, staged-file isolation and the ordinary build graph."
     why_human: "The fallback projection has no structured enforcement descriptors. The individual controls passed, and the machine verdict stays fail-closed."
@@ -170,9 +153,9 @@ human_verification:
 
 **Phase goal** — As a maintainer, I want to build and test the demo shell and generated BFF client through shared conventions, so that I can verify later feature slices from a clean checkout.
 
-**Verdict** — `human_needed` · 29/31 must-haves verified · initial implementation checked at `d9a9614`, with targeted re-verification at `d92322e`
+**Verdict** — `human_needed` · 30/31 must-haves verified · initial implementation checked at `d9a9614`, with follow-ups at `d92322e` and `9af7b3f`
 
-The clean-checkout outcome was demonstrated locally. Phase acceptance still needs native browser and assistive-technology observations. The matching hosted PR job is a ship checkpoint. No implementation blocker was found.
+The clean-checkout outcome was demonstrated locally. The maintainer accepted six manual checks. The test-tier prohibition review and the matching hosted PR job remain open.
 
 ## User Flow Coverage
 
@@ -213,15 +196,15 @@ The clean-checkout outcome was demonstrated locally. Phase acceptance still need
 | 12 | 02-04 | Canonical feasibility Markdown renders the Phase 7 AMD64 handoff and retained probe criteria. | Verified | The staged Markdown matches the source bytes. Rendered output contains the handoff fragment. The canonical report lists the replacement criteria and preserves historical ARM64 scope. |
 | 13 | 02-05 | Representative KDoc preserves semantics and ktfmt is byte-idempotent. | Verified | The quality control compares sections before and after the first format, then exact bytes after the second. The original unwrapped Phase 1 input is byte-identical to the Phase 1 revision and passed its own check. |
 | 14 | 02-05 | A missing sentence terminator triggers the configured detekt rule and an actual Dokka warning fails publication. | Verified | The comment witness produces `EndOfSentenceFormat` under its original path, including a comma-bearing filename. Retained Gradle control output reports `warningCount=1 and errorCount=0` and failure for both publication tasks, then successful documented builds. |
-| 15 | 02-06 | Header and feedback wrap. Wide samples and tables scroll in their regions. The page fits at 320px and actual 200% text zoom. | Uncertain · warning | Chromium exercised 320, 768 and 1280 CSS px, scrollable regions and 200% CSS root sizing. Actual browser text zoom is pending. |
+| 15 | 02-06 | Header and feedback wrap. Wide samples and tables scroll in their regions. The page fits at 320px and actual 200% text zoom. | Verified by UAT | Chromium exercised 320, 768 and 1280 CSS px, scrollable regions and 200% CSS root sizing. The maintainer accepted actual 200% text zoom in [UAT test 3](02-UAT.md#3-actual-200-text-zoom). |
 | 16 | 02-06 | Options retain complete names. A clipped selected value appears in full below the control. Long labels, links, headings and status wrap. | Verified | The production component measures clipping across font and size changes. The long-name story and Chromium responsive test check the full wrapping value. |
 | 17 | 02-07 | Empty staged input is a no-op. Adjacent staged and unstaged edits remain distinct and overlaps preserve exact unstaged bytes. | Verified | Real Git fixtures assert index and worktree bytes, mode and overlap behavior. Publication affects the candidate index. |
 | 18 | 02-07 | Format precedes lint on the candidate, and a rerun preserves bytes, modes and unaffected worktree content. | Verified | Candidate-config detekt and repeated-hook fixtures observe the formatting order and compare original and resulting Git and worktree state. |
 | 19 | 02-07 | A competing writer, lock or formatter failure preserves staged and unstaged work. | Verified | The hook opens an exclusive lock and compares original index bytes before publishing. Independent concurrent-writer, existing-lock and failing-tool checks demonstrate preservation. |
-| 20 | 02-08 | Doctor reports declared and observed versions, provenance, required tier and repair. Optional infrastructure failure allows a regular build. | Verified | Six doctor self-tests passed. The Gradle doctor report passed all required rows with refused Docker, and the same Docker setting allowed a clean build. |
+| 20 | 02-08 | Doctor reports declared and observed versions, provenance, required tier and repair. Optional infrastructure failure allows a regular build. | Verified | The current eight-test run passed. Independent spot-checks confirmed exact Python patch rejection in both modes and informational GSD detection. The Gradle doctor report passed all required rows with refused Docker, and the same Docker setting allowed a clean build. |
 | 21 | 02-08 | The public guide identifies actual selections, controls and missing records, and leaves B8 incomplete. | Verified | The public dependency runner checks selected Gradle graphs and pinned metadata. The guide cites unavailable historical paths and records the private scope and incomplete status. |
 | 22 | 02-09 | An ordinary clean build regenerates the client and builds the app, Storybook and docs without infrastructure. | Verified | The post-review harness checked graph order, byte-identical client recovery, public startup, JVM cases, lock stability and failure on an injected opt-in edge. |
-| 23 | 02-09 | The pushed PR has a successful read-only and SHA-pinned hosted job for the reviewed revision. | Uncertain · warning | Workflow wiring, actionlint, local style and clean build passed. The hosted job conclusion and exact reviewed head or PR merge mapping belong to the ship checkpoint. |
+| 23 | 02-09 | The pushed PR has a successful read-only and SHA-pinned hosted job for the reviewed revision. | Uncertain · warning | Workflow wiring, actionlint with ShellCheck, local style and clean build passed. The hosted job conclusion and exact reviewed head or PR merge mapping belong to the ship checkpoint. |
 | 24 | 02-10 | Generation uses the contract and managed tools, restores deleted output and invalidates consumers after changes. | Verified | The retained direct runner observed generation alone, a no-change `UP-TO-DATE`, byte-identical recovery, rejected external schema reference and a changed operation export that triggers `TS2305` before bundling. |
 | 25 | 02-10 | Malformed successful HTTP responses fail before persona data reaches the page. | Verified | The generated Zod schemas reject missing fields, empty labels and wrong discriminator. The adapter rejects duplicate IDs, undocumented status/media and redirects. All 19 boundary checks passed. |
 | 26 | 02-11 | Storybook publishes production role states and retries. Steiger and axe reject controlled violations. | Verified | Thirteen stories run against real page and control implementations. Steiger reports `fsd/forbidden-imports` and axe reports `button-name` on deliberately broken variants. Repair restores passing results. |
@@ -232,13 +215,13 @@ The clean-checkout outcome was demonstrated locally. Phase acceptance still need
 | --- | --- | --- |
 | 02-01 | Generation needs no BFF, runtime API call or Docker. | The published variant is a local file. The standalone runner checks the generation-only task set and rejects a remote schema reference. Public package and tool provisioning uses the declared pins. Test-tier projection remains flagged. |
 | 02-01 | The initial contract publishes only the implemented demo operation. | `DirectoryHttpTest` asserts exact path, method and operation ID on the served contract. Test-tier projection remains flagged. |
-| 02-03 | Demo selection grants no login or authorization. | The read-only endpoint supplies catalog values. React holds the active selection in tab storage and never sends it as a credential. Judgment-tier acceptance remains open. |
-| 02-04 | Keep private data outside the repository, site and CI. | The staged inputs and published outputs have exact allowlists, reject symlinks or contamination, and include a private-fixture control. The workflow runs only the public checks. Judgment-tier acceptance remains open. |
-| 02-04 | Preserve the probe without claiming hosted AMD64 DCB proof. | The probe remains callable. The rendered guide retains its replacement criteria, and Phase 7 owns the first hosted runtime proof. Judgment-tier acceptance remains open. |
+| 02-03 | Demo selection grants no login or authorization. | The read-only endpoint supplies catalog values. React holds the active selection in tab storage and never sends it as a credential. Accepted in [UAT test 4](02-UAT.md#4-demo-role-boundary). |
+| 02-04 | Keep private data outside the repository, site and CI. | The staged inputs and published outputs have exact allowlists, reject symlinks or contamination, and include a private-fixture control. The workflow runs only the public checks. Accepted in [UAT test 5](02-UAT.md#5-private-advisory-boundary). |
+| 02-04 | Preserve the probe without claiming hosted AMD64 DCB proof. | The probe remains callable. The rendered guide retains its replacement criteria, and Phase 7 owns the first hosted runtime proof. Accepted in [UAT test 6](02-UAT.md#6-phase-1-handoff). |
 | 02-07 | Preserve unstaged work and competing index updates. | Real Git fixtures cover overlap, editor saves during publication, and an independent index writer. Test-tier projection remains flagged. |
 | 02-09 | Keep Docker, packaging and infrastructure test tasks out of ordinary builds. | The refused-Docker build, selected-task inspection, injected forbidden edge and opt-in task presence were exercised. Test-tier projection remains flagged. |
 
-The four test-tier projections lack structured enforcement descriptors. Their automatic disposition remains unverified. The report links the direct controls for explicit review and carries each judgment-tier item into manual acceptance.
+The four test-tier projections lack structured enforcement descriptors. Their automatic disposition remains unverified. The report links the direct controls for explicit review and records the three completed judgment-tier acceptances in UAT.
 
 ## Required Artifacts and Key Links
 
@@ -293,14 +276,14 @@ The linked suites have active contract, state and failure assertions. The JUnit 
 
 | Requirement | Plans | Status | Evidence |
 | --- | --- | --- | --- |
-| FND-02 | 01, 05, 07, 08, 09 | Satisfied | Wrapper, catalog, JDK and Node pins, scoped npm metadata and locks, mise and workflow pins align with the inventory. Doctor observed the actual Temurin 25.0.5.1+2-LTS worker and required tools. |
+| FND-02 | 01, 05, 07, 08, 09 | Satisfied | Wrapper, catalog, JDK and Node pins, scoped npm metadata and locks, mise and workflow pins align with the inventory. Doctor observed the actual Temurin 25.0.5.1+2-LTS worker and required tools. The follow-up confirms the exact Python patch and workflow lint pins. |
 | FND-05 | 02 | Satisfied | Gradle JVM suites run Jupiter with Kotest assertions and properties. Both BFF suites resolve the shared fixture variant and production excludes test tools. |
 | FND-06 | 01, 04, 09, 10 | Satisfied | Clean Gradle build emits web, docs and Storybook. The BFF contract is explicitly consumed before frontend checks and output. |
 | CQRS-04 | 01, 02, 03, 09, 10 | Satisfied at Phase 2 scope (D-04) | The implemented GET directory is contract-first, served exactly, independently validated and consumed through its generated client. Full browser command, read and live operation coverage remains pending with the later slices, starting in Phase 3. |
-| UI-01 | 03, 04, 06, 09, 11 | Foundation verified, manual acceptance pending | Approved UI-SPEC, production components, Steiger and its negative control, required Storybook states and axe checks. Native and assistive observations remain below. |
+| UI-01 | 03, 04, 06, 09, 11 | Foundation and manual checks verified | Approved UI-SPEC, production components, Steiger and its negative control, required Storybook states and axe checks. The maintainer accepted the three native and assistive checks in UAT. |
 | UI-03 | 01, 03, 06, 09, 11 | Implemented behavior verified | Real browser selection of all three roles, tab independence, reload, validated fallback and retry. |
 | QA-07 | 02, 05, 07, 09 | Satisfied | ktfmt semantics and two-pass proof, detekt negative witness, and both Dokka warning failures and repairs. The Phase 1 specimen is preserved. |
-| QA-08 | 05, 07, 09 | Local implementation verified, hosted evidence pending | Shared staged and full-tree policy, real Git controls, validated PR workflow and local clean build. The traceability row stays pending until the matching hosted job passes. |
+| QA-08 | 05, 07, 09 | Local implementation verified, hosted evidence pending | Shared staged and full-tree policy, real Git controls, validated PR workflow, workflow lint with ShellCheck and local clean build. The traceability row stays pending until the matching hosted job passes. |
 | DOC-06 | 04, 08, 09 | Satisfied | Reconciled public B17/B8 provenance, public selected-graph reproduction, explicit incomplete B8 status and verified publication boundaries. |
 
 All nine Phase 2 IDs occur in at least one plan. No orphaned requirements were found.
@@ -320,12 +303,26 @@ On 2026-11-26, the stale fingerprint named `mise.toml` and `docs/maintainer-guid
 | Check | Observed evidence |
 | --- | --- |
 | Authoritative version files | `mise ls --current` showed Java feature `25` from `.java-version`, exact Node.js `26.13.1` from `.nvmrc`, and Pack, Ruff and Taplo from `mise.toml`. A disposable copy with conflicting `.sdkmanrc`, `.node-version` and `package.json` files selected the same owners. The documented `mise exec java node` commands reported Temurin build `25.0.5.1+2-LTS` and Node.js `v26.13.1`. |
-| CI and Gradle runtime selection | The pinned CI setup action reads `.java-version` with `distribution: temurin`. The workflow installs only Ruff and Taplo with mise, and an empty mise install directory produced no `JAVA_HOME` export. The JVM convention uses `.java-version` and `JvmVendorSpec.ADOPTIUM`. The Gradle Node consumers download from `.nvmrc` and select npm from their `packageManager` entries. `python3 tools/check_pr_workflow.py` accepted the reviewed workflow and rejected both negative controls. |
+| CI and Gradle runtime selection | The pinned CI setup action reads `.java-version` with `distribution: temurin`. At that revision, the workflow installed only Ruff and Taplo with mise, and an empty mise install directory produced no `JAVA_HOME` export. The JVM convention uses `.java-version` and `JvmVendorSpec.ADOPTIUM`. The Gradle Node consumers download from `.nvmrc` and select npm from their `packageManager` entries. `python3 tools/check_pr_workflow.py` accepted the reviewed workflow and rejected both negative controls. |
 | Published maintainer guide | `cmp` confirmed the staged guide is byte-identical to the canonical Markdown. The rendered maintainer guide includes the trust and install commands, the runtime source and version checks, Gradle launcher inspection and the scoped style command. The [quick task results](../../quick/261126-fhh-document-mise-and-enable-canonical-java-/261126-fhh-SUMMARY.md#verification) record a passing `styleCheck`, `doctor` and all 14 `docsCheck` tests. |
 
 FND-02 and roadmap criterion 4 remain verified. This re-verification used targeted checks and the quick task's build results. The phase score and acceptance checkpoints carry forward from the initial verification. Hosted execution remains a ship checkpoint.
 
-## Human Verification Required
+### Targeted Re-verification After Qodana and Quick Task 261126-fxn
+
+The stale status at `9af7b3f` identified six changed paths. The review checked the PR workflow, maintainer guide, Gradle catalog, mise configuration, workflow guard and doctor. It also covered the new `tools/qodana-scan.sh` entry point.
+
+| Check | Observed evidence |
+| --- | --- |
+| Tool ownership and doctor | `mise.toml` owns Python `3.15.2`, actionlint `1.7.12` and ShellCheck `0.11.0`. Both doctor modes use the same exact-Python comparison. Two independently run named tests passed for same-minor patch drift and informational GSD path precedence. |
+| PR workflow and guide | The workflow retains read-only permissions, pinned actions and Temurin selection from `.java-version`. Its mise allowlist installs the five CI tools. The actionlint command with ShellCheck passed independently. The workflow guard accepted the reviewed workflow and rejected write permission, unpinned checkout and disabled ShellCheck. The staged guide matched its source bytes and the rendered guide included the lint and Qodana commands. [Quick task results](../../quick/261126-fxn-pin-python-for-local-tooling-and-the-pr-/261126-fxn-SUMMARY.md#verification) record the passing style, doctor, hook and docs checks. |
+| Opt-in Qodana runner | Shell syntax and ShellCheck passed independently. The script archives the selected revision, reads its `.java-version`, supplies Linux Temurin to the catalog-pinned Qodana image, and stores reports under the ignored `.gradle/qodana/runs/` path. The retained `e765a30` outputs contain HTML and a SARIF report with 61 results. The runner is invoked through the documented opt-in command. [Local Qodana evidence](02-VALIDATION.md#local-qodana-follow-up) |
+
+FND-02 and the local checks for QA-08 remain verified. The hosted QA-08 check still needs a matching `build-and-style` run.
+
+## Manual Acceptance
+
+[UAT](02-UAT.md) records maintainer acceptance for checks 1–6. The verifier used those recorded results for the manual coverage, including the 200% text zoom criterion. Test 7 awaits a decision.
 
 ### 1. Native role selector and forced colors
 
@@ -349,7 +346,7 @@ FND-02 and roadmap criterion 4 remain verified. This re-verification used target
 
 **Expected** — Header, feedback, controls and focus rings fit without page-wide scrolling. A clipped selection has its full wrapped name below the control. Wide content scrolls within its named, keyboard-accessible region.
 
-**Why human** — Automation exercised 200% CSS root font sizing. The browser text-zoom setting and native select rendering remain unobserved.
+**Why human** — Automation exercised 200% CSS root font sizing. UAT records acceptance of the browser text-zoom check.
 
 ### 4. Demo role boundary
 
@@ -385,11 +382,12 @@ FND-02 and roadmap criterion 4 remain verified. This re-verification used target
 
 ## Hosted Evidence at Ship
 
-After the authorized workflow pushes the branch and opens the PR, run `gh pr checks --watch` and inspect the matching run with `gh run view <run-id>`. Before merge, record the run link, matched head SHA or PR merge mapping, runner architecture, and successful wrapper validation, `styleCheck` and `clean build --no-build-cache`. Changes to the reviewed head require a matching new run.
+After the authorized workflow pushes the branch and opens the PR, run `gh pr checks --watch` and inspect the matching run with `gh run view <run-id>`. Before merge, record the run link, matched head SHA or PR merge mapping, runner architecture, and successful wrapper validation, actionlint with ShellCheck, `styleCheck` and `clean build --no-build-cache`. Changes to the reviewed head require a matching new run.
 
 ## Gaps Summary
 
-No failed implementation truths were found. Actual 200% text zoom and the matching hosted PR job account for the two uncertain truths. The remaining native-accessibility and explicit judgment checks are listed above. The private B8 scan is incomplete pending authorized inputs and the first hosted AMD64 DCB runtime proof belongs to Phase 7.
+The matching hosted PR job is the sole remaining uncertain truth. The test-tier prohibition review awaits the maintainer's disposition. The private B8 scan is incomplete pending authorized inputs and the first hosted AMD64 DCB runtime proof belongs to Phase 7.
 
 _Initially verified 2026-11-25T17:10:17Z by gsd-verifier._
 _Targeted re-verification completed 2026-11-26T04:20:12Z by gsd-verifier._
+_Tooling and UAT follow-up verified 2026-11-26T04:42:31Z by gsd-verifier._
