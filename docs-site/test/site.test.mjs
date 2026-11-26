@@ -197,6 +197,24 @@ for (const base of ["/", "/courses/"]) {
       "Missing fragment",
       "#template-only",
     ],
+    [
+      "path with an uppercase encoded slash",
+      '<a href="../feasibility%2Fphase-01/">Report</a>',
+      "Missing destination",
+      "../feasibility%2Fphase-01/",
+    ],
+    [
+      "path with a lowercase encoded slash",
+      '<a href="../feasibility%2fphase-01/">Report</a>',
+      "Missing destination",
+      "../feasibility%2fphase-01/",
+    ],
+    [
+      "path with an encoded letter",
+      '<a href="../feasibility/%70hase-01/">Report</a>',
+      "Missing destination",
+      "../feasibility/%70hase-01/",
+    ],
   ]) {
     test(`publication at ${base} rejects a broken ${name}`, (t) => {
       const site = variant(t, { base });
