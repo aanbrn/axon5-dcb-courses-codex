@@ -115,9 +115,9 @@ The fallback prohibitions in the owner plans use the descriptor-less `projectPro
 - [x] Commands finish without watch mode and their feedback latency is recorded.
 - [ ] Actual verification supports `nyquist_compliant: true`.
 
-The plan summaries record the local results for all 25 tasks. The package preflight row records registry evidence and its disposition. The hosted PR run and native accessibility acceptance remain separate verification steps.
+The plan summaries record the local results for all 25 tasks. The package preflight row records registry evidence and its disposition. The maintainer accepted all seven manual checks, including native accessibility and the four test-tier controls. [UAT results](02-UAT.md)
 
-**Approval** pending hosted and manual evidence.
+**Approval** pending the hosted `build-and-style` evidence.
 
 ## Validation Audit 2026-11-25
 
@@ -145,6 +145,8 @@ On 2026-11-26, two runs at `f879e15` passed on macOS ARM64 with Colima and Docke
 | `./gradlew --no-daemon --console=plain :probe:frontendImageProbe --rerun-tasks` | Pack 0.40.11 detected the Nginx buildpack. Both variants returned HTTP 200 with bytes matching their respective staged assets. The two variants differed from each other and the probe removed its owned resources. |
 
 The local JUnit XML is under `probe/build/test-results/integrationTest/`. The correlated DCB records and native packaging evidence are under `probe/build/reports/feasibility/`. Phase 7 still owns the first hosted AMD64 DCB runtime run.
+
+The post-UAT regression run at `aa577c5` on the same native ARM64 Docker setup passed `:probe:test`, `:probe:kotestProbe`, `:probe:typeIdProbe`, `:probe:kdocProbe`, `:probe:integrationTest`, and `:probe:frontendImageProbe` with `--rerun-tasks`. The four JVM suite reports recorded six passing cases with zero failures, errors, or skips. The TypeScript exchange, KDoc second-pass hash, and both images' HTTP 200 responses with matching asset bytes also passed.
 
 ## Local Qodana Follow-Up
 
