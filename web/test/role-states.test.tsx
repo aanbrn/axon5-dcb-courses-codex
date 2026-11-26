@@ -92,6 +92,10 @@ const failureResponses = {
     route.fulfill({
       json: { administrator, students: [{ id: maya.id, kind: maya.kind }] },
     }),
+  "a whitespace-only student label": (route: Route) =>
+    route.fulfill({
+      json: { administrator, students: [{ ...maya, label: " \t" }] },
+    }),
   "an invalid student kind": (route: Route) =>
     route.fulfill({
       json: {
@@ -183,7 +187,7 @@ export function registerRoleStateTests({
     await page.route(roleRequest, async (route) => {
       switch (++attempts) {
         case 1:
-          return failHttp(route);
+          return failureResponses["a whitespace-only student label"](route);
         case 2:
           await failedRetry.promise;
           return failHttp(route);
@@ -248,6 +252,7 @@ export function registerRoleStateTests({
         .locator(`option[value="${maya.id}"]`)
         .waitFor({ state: "attached" });
       assert.equal(await select.inputValue(), maya.id);
+      assert.equal(await select.isEnabled(), true);
       assert.equal(
         await select.evaluate((element) => element === document.activeElement),
         true,

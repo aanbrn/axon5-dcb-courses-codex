@@ -9,8 +9,71 @@ import io.kotest.property.arbitrary.int
 import io.kotest.property.checkAll
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 class DirectoryUnitTest {
+    private val administrator = DemoRole("admin", "Administrator", "administrator")
+    private val maya = DemoRole("maya", "Maya Chen", "student")
+    private val alex = DemoRole("alex", "Alex Rivera", "student")
+    private val blankValues = listOf("", " \t", "\u00A0", "\uFEFF")
+
+    @Test
+    fun `role identifiers cannot be blank`() {
+        for (blank in blankValues) {
+            assertThrows<IllegalArgumentException> { maya.copy(id = blank) }
+        }
+    }
+
+    @Test
+    fun `role labels cannot be blank`() {
+        for (blank in blankValues) {
+            assertThrows<IllegalArgumentException> { maya.copy(label = blank) }
+        }
+    }
+
+    @Test
+    fun `role strings keep content and surrounding whitespace`() {
+        val role = maya.copy(id = "\u0085", label = " \u00A0Maya Chen \t")
+
+        role.id shouldBe "\u0085"
+        role.label shouldBe " \u00A0Maya Chen \t"
+    }
+
+    @Test
+    fun `students cannot share an identifier`() {
+        assertThrows<IllegalArgumentException> {
+            DemoRoleDirectory(administrator, listOf(maya, alex.copy(id = maya.id)))
+        }
+    }
+
+    @Test
+    fun `students cannot use the administrator identifier`() {
+        assertThrows<IllegalArgumentException> {
+            DemoRoleDirectory(administrator, listOf(maya.copy(id = administrator.id)))
+        }
+    }
+
+    @Test
+    fun `directory identifiers are case sensitive`() {
+        val student = maya.copy(id = "ADMIN")
+        val directory = DemoRoleDirectory(administrator, listOf(student))
+
+        directory.students shouldBe listOf(student)
+    }
+
+    @Test
+    fun `directory keeps an unmodifiable snapshot of the student order`() {
+        val students = mutableListOf(alex, maya)
+        val directory = DemoRoleDirectory(administrator, students)
+
+        students.clear()
+
+        directory.students shouldBe listOf(alex, maya)
+        assertThrows<UnsupportedOperationException> {
+            (directory.students as MutableList<DemoRole>).clear()
+        }
+    }
+
     @OptIn(ExperimentalKotest::class)
     @Test
     fun `demo roles have identifiers and labels`() = runBlocking {
