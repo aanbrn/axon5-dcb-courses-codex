@@ -145,3 +145,9 @@ On 2026-11-26, two runs at `f879e15` passed on macOS ARM64 with Colima and Docke
 | `./gradlew --no-daemon --console=plain :probe:frontendImageProbe --rerun-tasks` | Pack 0.40.11 detected the Nginx buildpack. Both variants returned HTTP 200 with bytes matching their respective staged assets. The two variants differed from each other and the probe removed its owned resources. |
 
 The local JUnit XML is under `probe/build/test-results/integrationTest/`. The correlated DCB records and native packaging evidence are under `probe/build/reports/feasibility/`. Phase 7 still owns the first hosted AMD64 DCB runtime run.
+
+## Local Qodana Follow-Up
+
+Qodana Community for JVM 2026.3 (`QDJVM-263.8362`) imported the Gradle 9.9.2 project and ran `qodana.recommended` on Colima ARM64. The first import stopped because the bundled JBR could not satisfy the project's Temurin toolchain. Supplying a Linux Temurin SDK from the feature version in `.java-version` restored the import. The [local inspection command](../../../docs/maintainer-guide.md#local-kotlin-inspections) uses the digest-pinned OCI index and saves HTML and SARIF for the selected revision under `.gradle/qodana/runs/`.
+
+The successful pilot reported 60 findings. The repeat through `tools/qodana-scan.sh` at `e765a30` exited 0 with 61 findings. Both runs inspected the same Kotlin and Gradle sources. The repeat reported 51 Gradle `@Incubating` uses, seven Spring/Axon methods called through annotations, two inferred platform types and one collection-builder suggestion. It omitted one previously reported `getSuites()` occurrence. The scan reported unresolved generated `pluginUnderTestMetadata` for the empty `build-logic.test` module. The counts describe the local inspection output. The Phase 7 CI scope and the Phase 2 hosted `build-and-style` checkpoint still follow the roadmap.
