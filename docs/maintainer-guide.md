@@ -94,6 +94,8 @@ mise exec python -- python3 tools/test_phase2_build.py
 
 Gradle stages the public sources and renders the static site into `docs-site/build/site`. The optional `docsBase` is a deployment path with a leading and trailing slash. With `/courses/`, mount the output there. The local preview prints `http://127.0.0.1:8081/courses/` when it is ready.
 
+Use document-relative links such as `../feasibility/phase-01/` from the Maintainer guide. Write the published path as it appears, with literal `/` separators. The build rejects an active `<base href>` so links resolve from the published page URL. Link fragments to element IDs or named anchors in the active page. An ID on a `<template>` element can be targeted. Its contents are inert.
+
 To try the prefixed site with the live demo, run these commands in separate terminals. Both the app's documentation links and the site's **Open demo** action use the URLs below.
 
 ```sh

@@ -247,6 +247,11 @@ for (const base of ["/", "/courses/"]) {
         "<a href=#legacy-target>Legacy anchor link</a>",
         '<a href = "../site.css">Stylesheet</a>',
         "[Guide](../maintainer-guide/#setup-and-diagnostics)",
+        "[Report](../feasibility/phase-01/)",
+        "[Report file](../feasibility/phase-01/index.html)",
+        '<a href="../feasibility/phase-01/?view=events%2Ftags">Report query</a>',
+        '<span id="section/part">ID with a slash</span>',
+        '<a href="#section%2Fpart">Encoded slash in fragment</a>',
         "",
         '<template id="template-element">',
         '  <template><base href="../missing-inert-base/"></template>',
@@ -266,6 +271,28 @@ for (const base of ["/", "/courses/"]) {
     const result = site.build();
     assert.equal(result.status, 0, result.stderr);
     verifyPublication(site.output, base);
+    const files = readdirSync(site.output, {
+      recursive: true,
+      withFileTypes: true,
+    })
+      .filter((entry) => entry.isFile())
+      .map((entry) =>
+        relative(site.output, join(entry.parentPath, entry.name))
+          .split(sep)
+          .join("/"),
+      )
+      .sort();
+    assert.deepEqual(files, [
+      "feasibility/phase-01/index.html",
+      "fonts/geist-LICENSE.txt",
+      "fonts/geist-latin-wght-normal.woff2",
+      "fonts/geist-mono-LICENSE.txt",
+      "fonts/geist-mono-latin-wght-normal.woff2",
+      "index.html",
+      "maintainer-guide/index.html",
+      "quick-start/index.html",
+      "site.css",
+    ]);
   });
 }
 

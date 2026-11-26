@@ -86,7 +86,8 @@ export function verifyPublication(
       if (target.origin !== siteOrigin || !target.pathname.startsWith(base)) {
         throw new Error(`Invalid site link in ${name}: ${link}`);
       }
-      let destination = decodeURIComponent(target.pathname.slice(base.length));
+      // The preview looks up the request pathname verbatim.
+      let destination = target.pathname.slice(base.length);
       if (target.pathname.endsWith("/")) destination += "index.html";
       if (!files.has(destination))
         throw new Error(`Missing destination in ${name}: ${link}`);
