@@ -7,10 +7,10 @@ current_phase_name: Build and UI Foundations
 current_plan: 11
 status: verifying
 stopped_at: Phase 02 UAT complete and local verification refreshed; hosted build-and-style pending
-last_updated: "2026-11-26T09:01:18.231Z"
+last_updated: "2026-11-26T09:01:40.944Z"
 last_activity: 2026-11-26
-last_activity_desc: "Completed quick task 261126-lmn: Reject invalid demo shell settings and role data"
-state_head: cca11b1248b4f1c6b64aab557c98afa1173fc46b
+last_activity_desc: "Verified quick task 261126-lmh: Isolate historical Qodana scans from IDEA profiles"
+state_head: fa19e734e2894f8fd983f14132218570709a757a
 progress:
   total_phases: 8
   completed_phases: 1
@@ -34,7 +34,7 @@ Phase: 02 (Build and UI Foundations)
 Current Plan: 11
 Total Plans in Phase: 11
 Status: UAT complete and implementation verified locally. Hosted build-and-style evidence pending.
-Last activity: 2026-11-26 -- Completed quick task 261126-lmn: Reject invalid demo shell settings and role data
+Last activity: 2026-11-26 -- Verified quick task 261126-lmh: Isolate historical Qodana scans from IDEA profiles
 
 Progress: [█░░░░░░░░░] 13%
 
@@ -136,6 +136,7 @@ None yet.
 | 9 | Record live IntelliJ inspection profile verification | 2026-11-26 | 3b26378 | — |
 | 261126-lmx | Validate rendered docs links and distinguish code landmarks | 2026-11-26 | a702e28 | [261126-lmx-validate-rendered-docs-links-and-disting](./quick/261126-lmx-validate-rendered-docs-links-and-disting/) |
 | 261126-lmn | Reject invalid demo shell settings and role data | 2026-11-26 | cca11b1 | [261126-lmn-reject-invalid-demo-shell-settings-and-r](./quick/261126-lmn-reject-invalid-demo-shell-settings-and-r/) |
+| 261126-lmh | Isolate historical Qodana scans from IDEA profiles | 2026-11-26 | 3df371b | [261126-lmh-isolate-historical-qodana-scans-from-ide](./quick/261126-lmh-isolate-historical-qodana-scans-from-ide/) |
 
 ## Session Continuity
 
