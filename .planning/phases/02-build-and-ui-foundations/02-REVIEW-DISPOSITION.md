@@ -3,21 +3,25 @@ phase: 02
 review: 02-REVIEW.md
 titles: json
 findings:
+  - id: WR-08
+    severity: warning
+    disposition: open
+    title: "The publication gate mistakes literal textarea content for an active base"
   - id: CR-05
     severity: critical
-    disposition: open
+    disposition: fixed
     title: "Gradle skips documentation URL validation after a dotenv substitution changes"
   - id: WR-05
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "The publication gate resolves relative URLs against the wrong base"
   - id: WR-06
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "Inert template content can satisfy a fragment check"
   - id: WR-07
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "The verifier accepts encoded paths that the preview cannot serve"
   - id: CR-01
     severity: critical
@@ -51,19 +55,20 @@ findings:
     severity: critical
     disposition: fixed
     title: "Historical Qodana scans silently use the editor profile and can contaminate later scans"
-open: 4
-total: 12
-recorded: 2026-11-26T09:10:29.576Z
+open: 1
+total: 13
+recorded: 2026-11-26T09:23:07.411Z
 ---
 
 # Phase 02: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| CR-05 | critical | open | - |
-| WR-05 | warning | open | - |
-| WR-06 | warning | open | - |
-| WR-07 | warning | open | - |
+| WR-08 | warning | open | - |
+| CR-05 | critical | fixed | [`68c43a0` and Gradle invalidation tests](../../quick/261126-mdh-invalidate-the-vite-build-when-dotenv-ex/261126-mdh-SUMMARY.md) (not in the current review) |
+| WR-05 | warning | fixed | [`c967802` and the two-base publication tests](../../quick/261126-mcu-match-published-link-verification-to-bro/261126-mcu-SUMMARY.md) (not in the current review) |
+| WR-06 | warning | fixed | [`c967802` and the two-base publication tests](../../quick/261126-mcu-match-published-link-verification-to-bro/261126-mcu-SUMMARY.md) (not in the current review) |
+| WR-07 | warning | fixed | [`c967802` and local preview HTTP checks](../../quick/261126-mcu-match-published-link-verification-to-bro/261126-mcu-SUMMARY.md) (not in the current review) |
 | CR-01 | critical | fixed | 02-REVIEW-FIX.md (not in the current review) |
 | CR-02 | critical | fixed | 02-REVIEW-FIX.md (not in the current review) |
 | CR-03 | critical | fixed | 02-REVIEW-FIX.md (not in the current review) |
